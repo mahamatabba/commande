@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# documents contenant des identifiants réels — ne jamais versionner
+Acces-application-AEI.html
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
