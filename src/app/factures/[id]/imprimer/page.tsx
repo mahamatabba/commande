@@ -40,14 +40,15 @@ export default async function PageImpressionFacture({
   const resteAPayer = facture.resteAPayer ?? montantTTC - montantRegle;
 
   return (
-    <div id="feuille-document" className="mx-auto max-w-[794px] bg-white print:max-w-none">
+    <div className="mx-auto max-w-[794px] print:max-w-none">
       <div className="flex justify-end px-10 pt-4 print:hidden">
         <ImprimerBouton />
       </div>
 
-      <DocumentHeader label="FACTURE" numero={facture.numero} date={formatDate(facture.dateFacture)} />
+      <div id="feuille-document" className="bg-white">
+        <DocumentHeader label="FACTURE" numero={facture.numero} date={formatDate(facture.dateFacture)} />
 
-      <div className="px-14 pb-10 text-[#1A1917] print:px-10 print:pb-10">
+        <div className="px-14 pb-10 text-[#1A1917] print:px-10 print:pb-10">
         <section className="mb-8 grid grid-cols-2 gap-4">
           <div className="rounded-[2px] border border-[#D9D6D0] p-4">
             <h3 className="mb-2 text-[11px] font-semibold tracking-wide text-[#6B6862] uppercase">
@@ -159,6 +160,7 @@ export default async function PageImpressionFacture({
       </div>
 
       <DocumentFooter />
+      </div>
     </div>
   );
 }

@@ -33,16 +33,17 @@ export default async function PageImpressionCommandeFournisseur({
   if (!commande) notFound();
 
   return (
-    <div id="feuille-document" className="mx-auto max-w-[794px] bg-white print:max-w-none">
+    <div className="mx-auto max-w-[794px] print:max-w-none">
       <div className="flex justify-end px-10 pt-4 print:hidden">
         <ImprimerBouton />
       </div>
 
-      <DocumentHeader
-        label="BON DE COMMANDE"
-        numero={commande.numero}
-        date={formatDate(commande.dateCommande)}
-      />
+      <div id="feuille-document" className="bg-white">
+        <DocumentHeader
+          label="BON DE COMMANDE"
+          numero={commande.numero}
+          date={formatDate(commande.dateCommande)}
+        />
 
       <div className="px-14 pb-10 text-[#1A1917] print:px-10 print:pb-10">
         <section className="mb-8 grid grid-cols-2 gap-4">
@@ -126,6 +127,7 @@ export default async function PageImpressionCommandeFournisseur({
       </div>
 
       <DocumentFooter />
+      </div>
     </div>
   );
 }

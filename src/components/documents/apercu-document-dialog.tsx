@@ -64,10 +64,19 @@ export function ApercuDocumentDialog({
       const canvas = await html2canvas(feuille, { scale: 2, useCORS: true });
       const image = canvas.toDataURL("image/png");
 
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const LARGEUR_A4_MM = 210;
+      const HAUTEUR_A4_MM = 297;
+      const hauteurImage = (canvas.height * LARGEUR_A4_MM) / canvas.width;
+
+      // Si le document tient sur une page, on crée une page à la taille exacte
+      // du contenu pour éviter un grand espace blanc sous le pied de page.
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: hauteurImage <= HAUTEUR_A4_MM ? [LARGEUR_A4_MM, hauteurImage] : "a4",
+      });
       const largeurPage = pdf.internal.pageSize.getWidth();
       const hauteurPage = pdf.internal.pageSize.getHeight();
-      const hauteurImage = (canvas.height * largeurPage) / canvas.width;
 
       let hauteurRestante = hauteurImage;
       let position = 0;
