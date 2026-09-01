@@ -1,0 +1,93 @@
+"use client";
+
+import { useActionState, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { modifierUtilisateur } from "@/app/(dashboard)/utilisateurs/actions";
+
+type Utilisateur = {
+  id: number;
+  nomComplet: string;
+  role: "AGENT" | "SUPERVISEUR" | "ADMIN";
+  actif: boolean;
+};
+
+export function UtilisateurEditDialog({ utilisateur }: { utilisateur: Utilisateur }) {
+  const [open, setOpen] = useState(false);
+  const [role, setRole] = useState(utilisateur.role);
+  const action = modifierUtilisateur.bind(null, utilisateur.id);
+  const [state, formAction, pending] = useActionState(action, {
+    error: null,
+    success: false,
+  });
+
+  useEffect(() => {
+    if (state.success) {
+      setOpen(false);
+      toast.success("Utilisateur modifié");
+    }
+  }, [state]);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger render={<Button variant="ghost" size="sm">Modifier</Button>} />
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Modifier l&apos;utilisateur</DialogTitle>
+        </DialogHeader>
+        <form action={formAction} className="space-y-4">
+          <div className="space-y-1">
+            <Label htmlFor="nomComplet">Nom complet *</Label>
+            <Input id="nomComplet" name="nomComplet" required defaultValue={utilisateur.nomComplet} />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="role">Rôle *</Label>
+            <Select name="role" value={role} onValueChange={(v) => setRole((v ?? "AGENT") as Utilisateur["role"])} required>
+              <SelectTrigger id="role" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="AGENT">Agent</SelectItem>
+                <SelectItem value="SUPERVISEUR">Superviseur</SelectItem>
+                <SelectItem value="ADMIN">Administrateur</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              id="actif"
+              name="actif"
+              type="checkbox"
+              defaultChecked={utilisateur.actif}
+              className="size-4 rounded border-zinc-300"
+            />
+            <Label htmlFor="actif">Compte actif</Label>
+          </div>
+          {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+          <DialogFooter>
+            <Button type="submit" disabled={pending}>
+              {pending ? "Enregistrement..." : "Enregistrer"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1788203558581,
+      "tag": "0000_new_kabuki",
+      "breakpoints": true
+    }
+  ]
+}
