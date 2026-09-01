@@ -1,38 +1,206 @@
+import Link from "next/link";
+import { eq, inArray, ne, gte, and, sql } from "drizzle-orm";
 import { auth } from "@/auth";
-import { PERMISSIONS, hasPermission, type Permission } from "@/lib/permissions";
+import { db } from "@/db";
+import { commandesFournisseur, commandesClient, factures, mouvementsCaisse } from "@/db/schema";
+import { can } from "@/lib/permissions";
+import { calculerSoldeCaisse } from "@/lib/caisse";
+import { debutPeriode } from "@/lib/stats";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { StatTile } from "@/components/statistiques/stat-tile";
+
+function CountTile({ label, valeur, href, note }: { label: string; valeur: number; href: string; note?: string }) {
+  return (
+    <Link href={href}>
+      <Card className="transition-colors hover:bg-zinc-50">
+        <CardContent className="space-y-1">
+          <p className="text-sm text-muted-foreground">{label}</p>
+          <p className="text-2xl font-semibold">{valeur}</p>
+          {note && <p className="text-xs text-muted-foreground">{note}</p>}
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
 
 export default async function PageTableauDeBord() {
   const session = await auth();
-  const role = session!.user.role;
+  const debutMois = debutPeriode(1);
 
-  const permissionsAccordees = PERMISSIONS.filter((p: Permission) =>
-    hasPermission(role, p),
-  );
+  const peutCommandesFournisseur = can(session, "commandes_fournisseur:read");
+  const peutCommandesClient = can(session, "commandes_client:read");
+  const peutFactures = can(session, "factures:read");
+  const peutStatsAchats = can(session, "statistiques:achats_sorties");
+  const peutStatsVentes = can(session, "statistiques:globales_marge");
+  const peutSoldeCaisse = can(session, "caisse:solde:read");
+  const peutImpayes = can(session, "impayes:read");
+  const peutEncaissements = can(session, "encaissements:read");
+  const peutDecaissements = can(session, "decaissements:read");
+  const peutUtilisateurs = can(session, "utilisateurs:gerer");
+  const peutJournal = can(session, "journal:consulter");
+
+  const afficheActivite = peutCommandesFournisseur || peutCommandesClient || peutFactures;
+  const afficheStats = peutStatsAchats || peutStatsVentes;
+  const afficheCaisse = peutSoldeCaisse || peutImpayes || peutEncaissements || peutDecaissements;
+  const afficheAdmin = peutUtilisateurs || peutJournal;
+
+  const [
+    commandesFournisseurEnCours,
+    commandesClientEnCours,
+    facturesImpayees,
+    achatsMoisRows,
+    ventesMoisRows,
+    soldeCaisse,
+    totalImpayesRows,
+    encaissementsMoisRows,
+    decaissementsMoisRows,
+  ] = await Promise.all([
+    peutCommandesFournisseur
+      ? db
+          .select({ n: sql<string>`count(*)` })
+          .from(commandesFournisseur)
+          .where(eq(commandesFournisseur.statut, "VALIDEE"))
+      : Promise.resolve([{ n: "0" }]),
+    peutCommandesClient
+      ? db
+          .select({ n: sql<string>`count(*)` })
+          .from(commandesClient)
+          .where(eq(commandesClient.statut, "VALIDEE"))
+      : Promise.resolve([{ n: "0" }]),
+    peutFactures
+      ? db
+          .select({ n: sql<string>`count(*)` })
+          .from(factures)
+          .where(inArray(factures.statut, ["NON_PAYEE", "PARTIELLEMENT_PAYEE"]))
+      : Promise.resolve([{ n: "0" }]),
+    peutStatsAchats
+      ? db
+          .select({ total: sql<string>`COALESCE(SUM(${commandesFournisseur.montantTotal}), 0)` })
+          .from(commandesFournisseur)
+          .where(and(ne(commandesFournisseur.statut, "ANNULEE"), gte(commandesFournisseur.dateCommande, debutMois)))
+      : Promise.resolve([{ total: "0" }]),
+    peutStatsVentes
+      ? db
+          .select({ total: sql<string>`COALESCE(SUM(${factures.montantTotal}), 0)` })
+          .from(factures)
+          .where(and(ne(factures.statut, "ANNULEE"), gte(factures.dateFacture, debutMois)))
+      : Promise.resolve([{ total: "0" }]),
+    peutSoldeCaisse ? calculerSoldeCaisse(db) : Promise.resolve(0),
+    peutImpayes
+      ? db
+          .select({ total: sql<string>`COALESCE(SUM(${factures.resteAPayer}), 0)` })
+          .from(factures)
+          .where(inArray(factures.statut, ["NON_PAYEE", "PARTIELLEMENT_PAYEE"]))
+      : Promise.resolve([{ total: "0" }]),
+    peutEncaissements
+      ? db
+          .select({ total: sql<string>`COALESCE(SUM(${mouvementsCaisse.montant}), 0)` })
+          .from(mouvementsCaisse)
+          .where(and(eq(mouvementsCaisse.sens, "ENCAISSEMENT"), gte(mouvementsCaisse.dateMouvement, debutMois)))
+      : Promise.resolve([{ total: "0" }]),
+    peutDecaissements
+      ? db
+          .select({ total: sql<string>`COALESCE(SUM(${mouvementsCaisse.montant}), 0)` })
+          .from(mouvementsCaisse)
+          .where(and(eq(mouvementsCaisse.sens, "DECAISSEMENT"), gte(mouvementsCaisse.dateMouvement, debutMois)))
+      : Promise.resolve([{ total: "0" }]),
+  ]);
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Tableau de bord</h1>
-      <p className="text-zinc-600">
-        Connecté en tant que <strong>{session!.user.name}</strong> — rôle{" "}
-        <strong>{role}</strong>.
-      </p>
-      <div className="rounded-lg border bg-white p-4">
-        <h2 className="mb-2 font-medium">
-          Permissions accordées (vérification de la matrice)
-        </h2>
-        <ul className="grid grid-cols-1 gap-1 text-sm text-zinc-700 sm:grid-cols-2">
-          {permissionsAccordees.map((p) => (
-            <li key={p} className="rounded bg-zinc-100 px-2 py-1">
-              {p}
-            </li>
-          ))}
-        </ul>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold">Tableau de bord</h1>
+        <p className="text-zinc-600">
+          Connecté en tant que <strong>{session!.user.name}</strong> — rôle{" "}
+          <strong>{session!.user.role}</strong>.
+        </p>
       </div>
-      <p className="text-sm text-zinc-400">
-        Écran temporaire — le contenu définitif par rôle sera construit après
-        validation du schéma, de la matrice de permissions et de
-        l&apos;authentification.
-      </p>
+
+      {afficheActivite && (
+        <section className="space-y-4">
+          <h2 className="text-lg font-medium">Activité en cours</h2>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {peutCommandesFournisseur && (
+              <CountTile
+                label="Commandes fournisseur validées"
+                valeur={Number(commandesFournisseurEnCours[0]?.n ?? 0)}
+                href="/commandes-fournisseur"
+                note="En attente de réception"
+              />
+            )}
+            {peutCommandesClient && (
+              <CountTile
+                label="Commandes client validées"
+                valeur={Number(commandesClientEnCours[0]?.n ?? 0)}
+                href="/commandes-client"
+                note="En attente de facturation"
+              />
+            )}
+            {peutFactures && (
+              <CountTile
+                label="Factures impayées"
+                valeur={Number(facturesImpayees[0]?.n ?? 0)}
+                href="/factures"
+                note="Non soldées ou partiellement réglées"
+              />
+            )}
+          </div>
+        </section>
+      )}
+
+      {afficheStats && (
+        <section className="space-y-4">
+          <h2 className="text-lg font-medium">Ce mois-ci</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {peutStatsAchats && (
+              <StatTile label="Achats fournisseurs" montant={Number(achatsMoisRows[0]?.total ?? 0)} />
+            )}
+            {peutStatsVentes && (
+              <StatTile label="Ventes facturées" montant={Number(ventesMoisRows[0]?.total ?? 0)} />
+            )}
+          </div>
+          <Link href="/statistiques" className="text-sm font-medium text-blue-600 hover:underline">
+            Voir les statistiques détaillées →
+          </Link>
+        </section>
+      )}
+
+      {afficheCaisse && (
+        <section className="space-y-4">
+          <h2 className="text-lg font-medium">Caisse</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {peutSoldeCaisse && <StatTile label="Solde de caisse" montant={soldeCaisse} />}
+            {peutImpayes && (
+              <StatTile label="Total impayés" montant={Number(totalImpayesRows[0]?.total ?? 0)} />
+            )}
+            {peutEncaissements && (
+              <StatTile label="Encaissements (mois)" montant={Number(encaissementsMoisRows[0]?.total ?? 0)} />
+            )}
+            {peutDecaissements && (
+              <StatTile label="Décaissements (mois)" montant={Number(decaissementsMoisRows[0]?.total ?? 0)} />
+            )}
+          </div>
+        </section>
+      )}
+
+      {afficheAdmin && (
+        <section className="space-y-4">
+          <h2 className="text-lg font-medium">Administration</h2>
+          <div className="flex flex-wrap gap-3">
+            {peutUtilisateurs && (
+              <Button variant="outline" render={<Link href="/utilisateurs" />}>
+                Gérer les utilisateurs
+              </Button>
+            )}
+            {peutJournal && (
+              <Button variant="outline" render={<Link href="/journal" />}>
+                Consulter le journal d&apos;activité
+              </Button>
+            )}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
