@@ -19,9 +19,14 @@ export function MobileNav({ items }: { items: NavItem[] }) {
           </Button>
         }
       />
-      <SheetContent side="left" className="w-64 p-4">
+      <SheetContent
+        side="left"
+        className="w-64 border-sidebar-border bg-sidebar p-4"
+      >
         <SheetHeader className="p-0 pb-2">
-          <SheetTitle>AEI — Gestion commerciale</SheetTitle>
+          <SheetTitle className="text-sidebar-foreground">
+            AEI — Gestion commerciale
+          </SheetTitle>
         </SheetHeader>
         <SidebarNav items={items} onNavigate={() => setOuvert(false)} />
       </SheetContent>

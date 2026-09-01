@@ -77,7 +77,7 @@ export async function creerCommandeClient(
   });
 
   revalidatePath("/commandes-client");
-  redirect(`/commandes-client/${commandeId}`);
+  redirect(`/commandes-client/${commandeId}?nouveau=1`);
 }
 
 export async function validerCommandeClient(id: number) {

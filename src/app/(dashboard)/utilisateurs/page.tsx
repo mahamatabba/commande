@@ -28,7 +28,7 @@ export default async function PageUtilisateurs() {
         <UtilisateurCreationDialog />
       </div>
 
-      <div className="overflow-x-auto rounded-lg border bg-white">
+      <div className="overflow-x-auto rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -46,7 +46,7 @@ export default async function PageUtilisateurs() {
                 <TableCell className="font-medium">
                   {u.nomComplet}
                   {u.id === Number(session.user.id) && (
-                    <span className="ml-2 text-xs text-zinc-500">(vous)</span>
+                    <span className="ml-2 text-xs text-muted-foreground">(vous)</span>
                   )}
                 </TableCell>
                 <TableCell>{u.email}</TableCell>
@@ -56,7 +56,7 @@ export default async function PageUtilisateurs() {
                     {u.actif ? "Actif" : "Inactif"}
                   </Badge>
                 </TableCell>
-                <TableCell>{formatDateHeure(u.createdAt)}</TableCell>
+                <TableCell className="font-mono tabular-nums">{formatDateHeure(u.createdAt)}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
                     <UtilisateurEditDialog utilisateur={u} />
@@ -67,7 +67,7 @@ export default async function PageUtilisateurs() {
             ))}
             {liste.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-zinc-500">
+                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
                   Aucun utilisateur.
                 </TableCell>
               </TableRow>

@@ -15,7 +15,7 @@ export function SidebarNav({
   const pathname = usePathname();
 
   return (
-    <nav className="flex flex-col gap-1">
+    <nav className="flex flex-col gap-0.5">
       {items.map((item) => {
         const actif =
           pathname === item.href ||
@@ -26,10 +26,10 @@ export function SidebarNav({
             href={item.href}
             onClick={onNavigate}
             className={cn(
-              "rounded-md px-3 py-2 text-sm font-medium transition-colors",
+              "rounded-[2px] border-l-2 px-2.5 py-2.25 text-sm font-medium transition-colors",
               actif
-                ? "bg-zinc-900 text-white"
-                : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900",
+                ? "border-l-[#8FB2DD] bg-[#22405F] text-white"
+                : "border-l-transparent text-[#A9BBD1] hover:bg-[#1B3450] hover:text-[#E8EDF4]",
             )}
           >
             {item.label}

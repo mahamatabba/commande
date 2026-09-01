@@ -30,10 +30,12 @@ export function ClientFormDialog({
   action,
   client,
   trigger,
+  onCreated,
 }: {
   action: (prevState: EtatFormulaire, formData: FormData) => Promise<EtatFormulaire>;
   client?: Client;
   trigger?: React.ReactElement;
+  onCreated?: (client: { id: number; nom: string; prenom: string | null; raisonSociale: string | null }) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(action, {
@@ -45,8 +47,11 @@ export function ClientFormDialog({
     if (state.success) {
       setOpen(false);
       toast.success(client ? "Client modifié" : "Client créé");
+      if (!client && state.client) {
+        onCreated?.(state.client);
+      }
     }
-  }, [state, client]);
+  }, [state, client, onCreated]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -86,7 +91,7 @@ export function ClientFormDialog({
             <Label htmlFor="nif">NIF</Label>
             <Input id="nif" name="nif" defaultValue={client?.nif ?? ""} />
           </div>
-          {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+          {state.error && <p className="text-sm text-[#8A211C]">{state.error}</p>}
           <DialogFooter>
             <Button type="submit" disabled={pending}>
               {pending ? "Enregistrement..." : "Enregistrer"}

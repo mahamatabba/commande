@@ -13,7 +13,7 @@ export function EmettreFactureForm({ commandeClientId }: { commandeClientId: num
   return (
     <form action={formAction} className="space-y-3">
       <input type="hidden" name="commandeClientId" value={commandeClientId} />
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {state.error && <p className="text-sm text-[#8A211C]">{state.error}</p>}
       <Button type="submit" disabled={pending}>
         {pending ? "Émission..." : "Émettre la facture"}
       </Button>

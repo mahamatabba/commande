@@ -28,10 +28,12 @@ export function FournisseurFormDialog({
   action,
   fournisseur,
   trigger,
+  onCreated,
 }: {
   action: (prevState: EtatFormulaire, formData: FormData) => Promise<EtatFormulaire>;
   fournisseur?: Fournisseur;
   trigger?: React.ReactElement;
+  onCreated?: (fournisseur: { id: number; nom: string }) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(action, {
@@ -43,8 +45,11 @@ export function FournisseurFormDialog({
     if (state.success) {
       setOpen(false);
       toast.success(fournisseur ? "Fournisseur modifié" : "Fournisseur créé");
+      if (!fournisseur && state.fournisseur) {
+        onCreated?.(state.fournisseur);
+      }
     }
-  }, [state, fournisseur]);
+  }, [state, fournisseur, onCreated]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -74,7 +79,7 @@ export function FournisseurFormDialog({
             <Label htmlFor="nif">NIF</Label>
             <Input id="nif" name="nif" defaultValue={fournisseur?.nif ?? ""} />
           </div>
-          {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+          {state.error && <p className="text-sm text-[#8A211C]">{state.error}</p>}
           <DialogFooter>
             <Button type="submit" disabled={pending}>
               {pending ? "Enregistrement..." : "Enregistrer"}

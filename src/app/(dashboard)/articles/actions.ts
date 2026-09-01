@@ -9,7 +9,11 @@ import { requirePermission } from "@/lib/permissions";
 import { articleSchema } from "@/lib/validations";
 import { tracerActivite } from "@/lib/journal";
 
-export type EtatFormulaire = { error: string | null; success: boolean };
+export type EtatFormulaire = {
+  error: string | null;
+  success: boolean;
+  article?: { id: number; code: string; designation: string; prixAchatIndicatif: number; prixVente: number };
+};
 
 export async function creerArticle(
   _prevState: EtatFormulaire,
@@ -23,7 +27,13 @@ export async function creerArticle(
     return { error: parsed.error.issues[0].message, success: false };
   }
 
-  const [article] = await db.insert(articles).values(parsed.data).returning({ id: articles.id });
+  const [article] = await db.insert(articles).values(parsed.data).returning({
+    id: articles.id,
+    code: articles.code,
+    designation: articles.designation,
+    prixAchatIndicatif: articles.prixAchatIndicatif,
+    prixVente: articles.prixVente,
+  });
 
   await tracerActivite(db, {
     userId: Number(session.user.id),
@@ -34,7 +44,7 @@ export async function creerArticle(
   });
 
   revalidatePath("/articles");
-  return { error: null, success: true };
+  return { error: null, success: true, article };
 }
 
 export async function modifierArticle(

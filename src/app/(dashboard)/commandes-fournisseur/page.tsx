@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { commandesFournisseur, fournisseurs } from "@/db/schema";
 import { can } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
+import { STATUT_COMMANDE_FOURNISSEUR_CLASS } from "@/lib/statut-style";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
+import { Eye } from "lucide-react";
 
 const STATUT_LABEL: Record<string, string> = {
   BROUILLON: "Brouillon",
@@ -59,10 +62,10 @@ export default async function PageCommandesFournisseur({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Commandes fournisseur</h1>
+        <h1 className="text-2xl font-semibold">Achats</h1>
         {peutEcrire && (
           <Button render={<Link href="/commandes-fournisseur/nouvelle" />}>
-            Nouvelle commande
+            Nouvel achat
           </Button>
         )}
       </div>
@@ -100,7 +103,7 @@ export default async function PageCommandesFournisseur({
         )}
       </form>
 
-      <div className="overflow-x-auto rounded-lg border bg-white">
+      <div className="overflow-x-auto rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -110,30 +113,46 @@ export default async function PageCommandesFournisseur({
               <TableHead>Statut</TableHead>
               <TableHead className="text-right">Montant</TableHead>
               {peutVoirDecaissements && <TableHead className="text-right">Réglé</TableHead>}
+              <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {commandes.map((c) => (
               <TableRow key={c.id}>
                 <TableCell>
-                  <Link href={`/commandes-fournisseur/${c.id}`} className="font-medium hover:underline">
+                  <Link href={`/commandes-fournisseur/${c.id}`} className="font-mono tabular-nums font-medium hover:underline">
                     {c.numero}
                   </Link>
                 </TableCell>
                 <TableCell>{c.fournisseurNom}</TableCell>
-                <TableCell>{formatDate(c.dateCommande)}</TableCell>
+                <TableCell className="font-mono tabular-nums">{formatDate(c.dateCommande)}</TableCell>
                 <TableCell>
-                  <Badge variant="outline">{STATUT_LABEL[c.statut]}</Badge>
+                  <Badge variant="outline" className={STATUT_COMMANDE_FOURNISSEUR_CLASS[c.statut]}>
+                    {STATUT_LABEL[c.statut]}
+                  </Badge>
                 </TableCell>
-                <TableCell className="text-right">{formatMontant(c.montantTotal)}</TableCell>
+                <TableCell className="text-right font-mono tabular-nums">{formatMontant(c.montantTotal)}</TableCell>
                 {peutVoirDecaissements && (
-                  <TableCell className="text-right">{formatMontant(c.montantRegle!)}</TableCell>
+                  <TableCell className="text-right font-mono tabular-nums">{formatMontant(c.montantRegle!)}</TableCell>
                 )}
+                <TableCell>
+                  <ApercuDocumentDialog
+                    href={`/commandes-fournisseur/${c.id}/imprimer`}
+                    titre={`Bon de commande ${c.numero}`}
+                    nomFichier={`bon-commande-${c.numero}`}
+                    trigger={
+                      <Button variant="ghost" size="icon-sm">
+                        <Eye />
+                        <span className="sr-only">Voir</span>
+                      </Button>
+                    }
+                  />
+                </TableCell>
               </TableRow>
             ))}
             {commandes.length === 0 && (
               <TableRow>
-                <TableCell colSpan={peutVoirDecaissements ? 6 : 5} className="py-8 text-center text-zinc-500">
+                <TableCell colSpan={peutVoirDecaissements ? 7 : 6} className="py-8 text-center text-muted-foreground">
                   Aucune commande.
                 </TableCell>
               </TableRow>

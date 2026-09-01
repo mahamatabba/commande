@@ -5,18 +5,31 @@ import { db } from "@/db";
 import { commandesFournisseur, commandesClient, factures, mouvementsCaisse } from "@/db/schema";
 import { can } from "@/lib/permissions";
 import { calculerSoldeCaisse } from "@/lib/caisse";
-import { debutPeriode } from "@/lib/stats";
-import { Card, CardContent } from "@/components/ui/card";
+import { CHART_COLORS } from "@/lib/constants";
+import { cleMois, debutPeriode, derniersMois, libelleMois } from "@/lib/stats";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatTile } from "@/components/statistiques/stat-tile";
+import { EvolutionChart } from "@/components/statistiques/evolution-chart";
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <h2 className="text-lg font-semibold tracking-tight text-foreground">{children}</h2>;
+}
+
+const NB_MOIS_GRAPHIQUE = 6;
+
+function serieMensuelle(lignes: { mois: string; total: string }[]): { cle: string; label: string; valeur: number }[] {
+  const parCle = new Map(lignes.map((l) => [cleMois(l.mois), Number(l.total)]));
+  return derniersMois(NB_MOIS_GRAPHIQUE).map((cle) => ({ cle, label: libelleMois(cle), valeur: parCle.get(cle) ?? 0 }));
+}
 
 function CountTile({ label, valeur, href, note }: { label: string; valeur: number; href: string; note?: string }) {
   return (
     <Link href={href}>
-      <Card className="transition-colors hover:bg-zinc-50">
+      <Card className="transition-colors hover:border-primary/30 hover:bg-accent">
         <CardContent className="space-y-1">
           <p className="text-sm text-muted-foreground">{label}</p>
-          <p className="text-2xl font-semibold">{valeur}</p>
+          <p className="text-2xl font-semibold tabular-nums">{valeur}</p>
           {note && <p className="text-xs text-muted-foreground">{note}</p>}
         </CardContent>
       </Card>
@@ -27,6 +40,7 @@ function CountTile({ label, valeur, href, note }: { label: string; valeur: numbe
 export default async function PageTableauDeBord() {
   const session = await auth();
   const debutMois = debutPeriode(1);
+  const debutGraphique = debutPeriode(NB_MOIS_GRAPHIQUE);
 
   const peutCommandesFournisseur = can(session, "commandes_fournisseur:read");
   const peutCommandesClient = can(session, "commandes_client:read");
@@ -55,6 +69,8 @@ export default async function PageTableauDeBord() {
     totalImpayesRows,
     encaissementsMoisRows,
     decaissementsMoisRows,
+    achatsParMois,
+    ventesParMois,
   ] = await Promise.all([
     peutCommandesFournisseur
       ? db
@@ -105,25 +121,48 @@ export default async function PageTableauDeBord() {
           .from(mouvementsCaisse)
           .where(and(eq(mouvementsCaisse.sens, "DECAISSEMENT"), gte(mouvementsCaisse.dateMouvement, debutMois)))
       : Promise.resolve([{ total: "0" }]),
+    peutStatsAchats
+      ? db
+          .select({
+            mois: sql<string>`date_trunc('month', ${commandesFournisseur.dateCommande})`,
+            total: sql<string>`SUM(${commandesFournisseur.montantTotal})`,
+          })
+          .from(commandesFournisseur)
+          .where(and(ne(commandesFournisseur.statut, "ANNULEE"), gte(commandesFournisseur.dateCommande, debutGraphique)))
+          .groupBy(sql`1`)
+      : Promise.resolve([]),
+    peutStatsVentes
+      ? db
+          .select({
+            mois: sql<string>`date_trunc('month', ${factures.dateFacture})`,
+            total: sql<string>`SUM(${factures.montantTotal})`,
+          })
+          .from(factures)
+          .where(and(ne(factures.statut, "ANNULEE"), gte(factures.dateFacture, debutGraphique)))
+          .groupBy(sql`1`)
+      : Promise.resolve([]),
   ]);
+
+  const achatsSerie = serieMensuelle(achatsParMois);
+  const ventesSerie = serieMensuelle(ventesParMois);
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold">Tableau de bord</h1>
-        <p className="text-zinc-600">
-          Connecté en tant que <strong>{session!.user.name}</strong> — rôle{" "}
-          <strong>{session!.user.role}</strong>.
+        <p className="text-muted-foreground">
+          Connecté en tant que <strong className="text-foreground">{session!.user.name}</strong> — rôle{" "}
+          <strong className="text-foreground">{session!.user.role}</strong>.
         </p>
       </div>
 
       {afficheActivite && (
         <section className="space-y-4">
-          <h2 className="text-lg font-medium">Activité en cours</h2>
+          <SectionTitle>Activité en cours</SectionTitle>
           <div className="grid gap-4 sm:grid-cols-3">
             {peutCommandesFournisseur && (
               <CountTile
-                label="Commandes fournisseur validées"
+                label="Achats validés"
                 valeur={Number(commandesFournisseurEnCours[0]?.n ?? 0)}
                 href="/commandes-fournisseur"
                 note="En attente de réception"
@@ -131,7 +170,7 @@ export default async function PageTableauDeBord() {
             )}
             {peutCommandesClient && (
               <CountTile
-                label="Commandes client validées"
+                label="Ventes validées"
                 valeur={Number(commandesClientEnCours[0]?.n ?? 0)}
                 href="/commandes-client"
                 note="En attente de facturation"
@@ -151,7 +190,7 @@ export default async function PageTableauDeBord() {
 
       {afficheStats && (
         <section className="space-y-4">
-          <h2 className="text-lg font-medium">Ce mois-ci</h2>
+          <SectionTitle>Ce mois-ci</SectionTitle>
           <div className="grid gap-4 sm:grid-cols-2">
             {peutStatsAchats && (
               <StatTile label="Achats fournisseurs" montant={Number(achatsMoisRows[0]?.total ?? 0)} />
@@ -160,7 +199,29 @@ export default async function PageTableauDeBord() {
               <StatTile label="Ventes facturées" montant={Number(ventesMoisRows[0]?.total ?? 0)} />
             )}
           </div>
-          <Link href="/statistiques" className="text-sm font-medium text-blue-600 hover:underline">
+          <div className="grid gap-4 lg:grid-cols-2">
+            {peutStatsAchats && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Évolution des achats ({NB_MOIS_GRAPHIQUE} derniers mois)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <EvolutionChart data={achatsSerie} couleur={CHART_COLORS.bleu} libelleSerie="Achats" />
+                </CardContent>
+              </Card>
+            )}
+            {peutStatsVentes && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Évolution des ventes ({NB_MOIS_GRAPHIQUE} derniers mois)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <EvolutionChart data={ventesSerie} couleur={CHART_COLORS.orange} libelleSerie="Ventes" />
+                </CardContent>
+              </Card>
+            )}
+          </div>
+          <Link href="/statistiques" className="text-sm font-medium text-primary hover:underline">
             Voir les statistiques détaillées →
           </Link>
         </section>
@@ -168,9 +229,9 @@ export default async function PageTableauDeBord() {
 
       {afficheCaisse && (
         <section className="space-y-4">
-          <h2 className="text-lg font-medium">Caisse</h2>
+          <SectionTitle>Caisse</SectionTitle>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {peutSoldeCaisse && <StatTile label="Solde de caisse" montant={soldeCaisse} />}
+            {peutSoldeCaisse && <StatTile label="Solde de caisse" montant={soldeCaisse} highlight />}
             {peutImpayes && (
               <StatTile label="Total impayés" montant={Number(totalImpayesRows[0]?.total ?? 0)} />
             )}
@@ -186,18 +247,20 @@ export default async function PageTableauDeBord() {
 
       {afficheAdmin && (
         <section className="space-y-4">
-          <h2 className="text-lg font-medium">Administration</h2>
-          <div className="flex flex-wrap gap-3">
-            {peutUtilisateurs && (
-              <Button variant="outline" render={<Link href="/utilisateurs" />}>
-                Gérer les utilisateurs
-              </Button>
-            )}
-            {peutJournal && (
-              <Button variant="outline" render={<Link href="/journal" />}>
-                Consulter le journal d&apos;activité
-              </Button>
-            )}
+          <SectionTitle>Administration</SectionTitle>
+          <div className="rounded-lg border border-border bg-muted/50 p-4">
+            <div className="flex flex-wrap gap-3">
+              {peutUtilisateurs && (
+                <Button variant="outline" render={<Link href="/utilisateurs" />}>
+                  Gérer les utilisateurs
+                </Button>
+              )}
+              {peutJournal && (
+                <Button variant="outline" render={<Link href="/journal" />}>
+                  Consulter le journal d&apos;activité
+                </Button>
+              )}
+            </div>
           </div>
         </section>
       )}

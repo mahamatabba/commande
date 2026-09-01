@@ -46,7 +46,7 @@ export default async function PageClients({
         <Input name="q" placeholder="Rechercher un client..." defaultValue={q} />
       </form>
 
-      <div className="overflow-x-auto rounded-lg border bg-white">
+      <div className="overflow-x-auto rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -65,7 +65,7 @@ export default async function PageClients({
                     {nomAffiche(c)}
                   </Link>
                 </TableCell>
-                <TableCell>{c.telephone}</TableCell>
+                <TableCell className="font-mono tabular-nums">{c.telephone}</TableCell>
                 <TableCell>{c.nif ? <Badge variant="secondary">NIF</Badge> : "—"}</TableCell>
                 <TableCell>
                   <Badge variant={c.actif ? "default" : "outline"}>{c.actif ? "Actif" : "Inactif"}</Badge>
@@ -88,7 +88,7 @@ export default async function PageClients({
             ))}
             {liste.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-zinc-500">
+                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
                   Aucun client.
                 </TableCell>
               </TableRow>

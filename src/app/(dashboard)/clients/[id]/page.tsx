@@ -6,6 +6,7 @@ import { db } from "@/db";
 import { clients, commandesClient, factures } from "@/db/schema";
 import { can } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
+import { STATUT_COMMANDE_CLIENT_CLASS, STATUT_FACTURE_CLASS } from "@/lib/statut-style";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ClientFormDialog } from "@/components/clients/client-form-dialog";
@@ -68,17 +69,31 @@ export default async function PageClient({
           <h1 className="text-2xl font-semibold">
             {client.raisonSociale || `${client.nom} ${client.prenom ?? ""}`.trim()}
           </h1>
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
-            <span>{client.telephone}</span>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <span className="font-mono tabular-nums">{client.telephone}</span>
             {client.email && <span>· {client.email}</span>}
-            {client.nif && <Badge variant="secondary">NIF {client.nif}</Badge>}
+            {client.nif && (
+              <Badge variant="secondary" className="font-mono tabular-nums">
+                NIF {client.nif}
+              </Badge>
+            )}
             <Badge variant={client.actif ? "default" : "outline"}>{client.actif ? "Actif" : "Inactif"}</Badge>
           </div>
-          {client.adresse && <p className="mt-1 text-sm text-zinc-500">{client.adresse}</p>}
+          {client.adresse && <p className="mt-1 text-sm text-muted-foreground">{client.adresse}</p>}
           {peutVoirSolde && (
-            <p className="mt-2 text-sm">
-              Solde dû : <span className="font-semibold">{formatMontant(soldeDu)}</span>
-            </p>
+            soldeDu > 0 ? (
+              <div className="mt-3 inline-flex items-center gap-2 rounded-lg border border-[#E3BEBB] bg-[#F8E8E6] px-3 py-1.5 text-sm text-[#8A211C]">
+                <span>Solde dû :</span>
+                <span className="font-mono text-base font-semibold tabular-nums">{formatMontant(soldeDu)}</span>
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-muted-foreground">
+                Solde dû :{" "}
+                <span className="font-mono font-semibold tabular-nums text-foreground">
+                  {formatMontant(soldeDu)}
+                </span>
+              </p>
+            )
           )}
         </div>
         {peutEcrire && (
@@ -91,8 +106,8 @@ export default async function PageClient({
       </div>
 
       <div>
-        <h2 className="mb-2 text-lg font-medium">Commandes</h2>
-        <div className="overflow-x-auto rounded-lg border bg-white">
+        <h2 className="mb-2 text-lg font-medium">Ventes</h2>
+        <div className="overflow-x-auto rounded-lg border bg-card">
           <Table>
             <TableHeader>
               <TableRow>
@@ -107,21 +122,28 @@ export default async function PageClient({
               {commandes.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell>
-                    <Link href={`/commandes-client/${c.id}`} className="font-medium hover:underline">
+                    <Link
+                      href={`/commandes-client/${c.id}`}
+                      className="font-mono font-medium tabular-nums hover:underline"
+                    >
                       {c.numero}
                     </Link>
                   </TableCell>
-                  <TableCell>{formatDate(c.dateCommande)}</TableCell>
+                  <TableCell className="font-mono tabular-nums">{formatDate(c.dateCommande)}</TableCell>
                   <TableCell>{c.modeReglement === "ESPECES" ? "Espèces" : "Bon de commande"}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{STATUT_COMMANDE_LABEL[c.statut]}</Badge>
+                    <Badge variant="outline" className={STATUT_COMMANDE_CLIENT_CLASS[c.statut]}>
+                      {STATUT_COMMANDE_LABEL[c.statut]}
+                    </Badge>
                   </TableCell>
-                  <TableCell className="text-right">{formatMontant(c.montantTotal)}</TableCell>
+                  <TableCell className="text-right font-mono tabular-nums">
+                    {formatMontant(c.montantTotal)}
+                  </TableCell>
                 </TableRow>
               ))}
               {commandes.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-6 text-center text-zinc-500">
+                  <TableCell colSpan={5} className="py-6 text-center text-muted-foreground">
                     Aucune commande.
                   </TableCell>
                 </TableRow>
@@ -133,7 +155,7 @@ export default async function PageClient({
 
       <div>
         <h2 className="mb-2 text-lg font-medium">Factures</h2>
-        <div className="overflow-x-auto rounded-lg border bg-white">
+        <div className="overflow-x-auto rounded-lg border bg-card">
           <Table>
             <TableHeader>
               <TableRow>
@@ -148,25 +170,31 @@ export default async function PageClient({
               {facturesClient.map((f) => (
                 <TableRow key={f.id}>
                   <TableCell>
-                    <Link href={`/factures/${f.id}`} className="font-medium hover:underline">
+                    <Link href={`/factures/${f.id}`} className="font-mono font-medium tabular-nums hover:underline">
                       {f.numero}
                     </Link>
                   </TableCell>
-                  <TableCell>{formatDate(f.dateFacture)}</TableCell>
+                  <TableCell className="font-mono tabular-nums">{formatDate(f.dateFacture)}</TableCell>
                   {peutVoirSolde && (
                     <TableCell>
-                      <Badge variant="outline">{STATUT_FACTURE_LABEL[f.statut]}</Badge>
+                      <Badge variant="outline" className={STATUT_FACTURE_CLASS[f.statut]}>
+                        {STATUT_FACTURE_LABEL[f.statut]}
+                      </Badge>
                     </TableCell>
                   )}
-                  <TableCell className="text-right">{formatMontant(f.montantTotal)}</TableCell>
+                  <TableCell className="text-right font-mono tabular-nums">
+                    {formatMontant(f.montantTotal)}
+                  </TableCell>
                   {peutVoirSolde && (
-                    <TableCell className="text-right">{formatMontant(f.resteAPayer ?? 0)}</TableCell>
+                    <TableCell className="text-right font-mono tabular-nums">
+                      {formatMontant(f.resteAPayer ?? 0)}
+                    </TableCell>
                   )}
                 </TableRow>
               ))}
               {facturesClient.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={peutVoirSolde ? 5 : 3} className="py-6 text-center text-zinc-500">
+                  <TableCell colSpan={peutVoirSolde ? 5 : 3} className="py-6 text-center text-muted-foreground">
                     Aucune facture.
                   </TableCell>
                 </TableRow>

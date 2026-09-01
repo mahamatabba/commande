@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { clients, commandesClient } from "@/db/schema";
 import { can } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
+import { STATUT_COMMANDE_CLIENT_CLASS } from "@/lib/statut-style";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
+import { Eye } from "lucide-react";
 
 const STATUT_LABEL: Record<string, string> = {
   BROUILLON: "Brouillon",
@@ -70,10 +73,10 @@ export default async function PageCommandesClient({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Commandes client</h1>
+        <h1 className="text-2xl font-semibold">Ventes</h1>
         {peutEcrire && (
           <Button render={<Link href="/commandes-client/nouvelle" />}>
-            Nouvelle commande
+            Nouvelle vente
           </Button>
         )}
       </div>
@@ -111,7 +114,7 @@ export default async function PageCommandesClient({
         )}
       </form>
 
-      <div className="overflow-x-auto rounded-lg border bg-white">
+      <div className="overflow-x-auto rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -121,28 +124,44 @@ export default async function PageCommandesClient({
               <TableHead>Mode</TableHead>
               <TableHead>Statut</TableHead>
               <TableHead className="text-right">Montant</TableHead>
+              <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {commandes.map((c) => (
               <TableRow key={c.id}>
                 <TableCell>
-                  <Link href={`/commandes-client/${c.id}`} className="font-medium hover:underline">
+                  <Link href={`/commandes-client/${c.id}`} className="font-mono tabular-nums font-medium hover:underline">
                     {c.numero}
                   </Link>
                 </TableCell>
                 <TableCell>{nomAffiche({ nom: c.clientNom, prenom: c.clientPrenom, raisonSociale: c.clientRaisonSociale })}</TableCell>
-                <TableCell>{formatDate(c.dateCommande)}</TableCell>
+                <TableCell className="font-mono tabular-nums">{formatDate(c.dateCommande)}</TableCell>
                 <TableCell>{MODE_LABEL[c.modeReglement]}</TableCell>
                 <TableCell>
-                  <Badge variant="outline">{STATUT_LABEL[c.statut]}</Badge>
+                  <Badge variant="outline" className={STATUT_COMMANDE_CLIENT_CLASS[c.statut]}>
+                    {STATUT_LABEL[c.statut]}
+                  </Badge>
                 </TableCell>
-                <TableCell className="text-right">{formatMontant(c.montantTotal)}</TableCell>
+                <TableCell className="text-right font-mono tabular-nums">{formatMontant(c.montantTotal)}</TableCell>
+                <TableCell>
+                  <ApercuDocumentDialog
+                    href={`/commandes-client/${c.id}/imprimer`}
+                    titre={`Bon de commande ${c.numero}`}
+                    nomFichier={`bon-commande-${c.numero}`}
+                    trigger={
+                      <Button variant="ghost" size="icon-sm">
+                        <Eye />
+                        <span className="sr-only">Voir</span>
+                      </Button>
+                    }
+                  />
+                </TableCell>
               </TableRow>
             ))}
             {commandes.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-zinc-500">
+                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                   Aucune commande.
                 </TableCell>
               </TableRow>

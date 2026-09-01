@@ -4,10 +4,12 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { can } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
+import { STATUT_COMMANDE_CLIENT_CLASS } from "@/lib/statut-style";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AnnulationDialog } from "@/components/shared/annulation-dialog";
+import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
 import { annulerCommandeClient, validerCommandeClient } from "../actions";
 
 const STATUT_LABEL: Record<string, string> = {
@@ -29,10 +31,13 @@ function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: stri
 
 export default async function PageCommandeClient({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ nouveau?: string }>;
 }) {
   const { id } = await params;
+  const { nouveau } = await searchParams;
   const commandeId = Number(id);
   const session = await auth();
   const peutEcrire = can(session, "commandes_client:write");
@@ -51,17 +56,27 @@ export default async function PageCommandeClient({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold">{commande.numero}</h1>
-            <Badge variant="outline">{STATUT_LABEL[commande.statut]}</Badge>
+            <h1 className="font-mono text-2xl font-semibold tabular-nums">{commande.numero}</h1>
+            <Badge variant="outline" className={STATUT_COMMANDE_CLIENT_CLASS[commande.statut]}>
+              {STATUT_LABEL[commande.statut]}
+            </Badge>
           </div>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             <Link href={`/clients/${commande.client.id}`} className="hover:underline">
               {nomAffiche(commande.client)}
             </Link>{" "}
-            · {formatDate(commande.dateCommande)} · {MODE_LABEL[commande.modeReglement]}
+            · <span className="font-mono tabular-nums">{formatDate(commande.dateCommande)}</span> ·{" "}
+            {MODE_LABEL[commande.modeReglement]}
           </p>
         </div>
         <div className="flex gap-2">
+          <ApercuDocumentDialog
+            href={`/commandes-client/${commande.id}/imprimer`}
+            titre={`Bon de commande ${commande.numero}`}
+            nomFichier={`bon-commande-${commande.numero}`}
+            trigger={<Button variant="outline">Voir le bon de commande</Button>}
+            defaultOpen={nouveau === "1"}
+          />
           {peutEcrire && commande.statut === "BROUILLON" && (
             <form action={validerCommandeClient.bind(null, commande.id)}>
               <Button type="submit">Valider</Button>
@@ -81,7 +96,7 @@ export default async function PageCommandeClient({
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border bg-white">
+      <div className="overflow-x-auto rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -95,15 +110,19 @@ export default async function PageCommandeClient({
             {commande.lignes.map((l) => (
               <TableRow key={l.id}>
                 <TableCell>{l.designation}</TableCell>
-                <TableCell className="text-right">{l.quantite}</TableCell>
-                <TableCell className="text-right">{formatMontant(l.prixUnitaire)}</TableCell>
-                <TableCell className="text-right">{formatMontant(l.montantLigne)}</TableCell>
+                <TableCell className="text-right font-mono tabular-nums">{l.quantite}</TableCell>
+                <TableCell className="text-right font-mono tabular-nums">
+                  {formatMontant(l.prixUnitaire)}
+                </TableCell>
+                <TableCell className="text-right font-mono tabular-nums">
+                  {formatMontant(l.montantLigne)}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
-        <div className="flex justify-end border-t bg-zinc-50 p-3 text-sm">
-          <span>
+        <div className="flex justify-end border-t bg-muted/50 p-3 text-sm">
+          <span className="font-mono tabular-nums">
             Total : <strong>{formatMontant(commande.montantTotal)}</strong>
           </span>
         </div>

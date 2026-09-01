@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { clients, factures } from "@/db/schema";
 import { can } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
+import { STATUT_FACTURE_CLASS } from "@/lib/statut-style";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,19 +18,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
+import { Eye } from "lucide-react";
 
 const STATUT_LABEL: Record<string, string> = {
   NON_PAYEE: "Non payée",
   PARTIELLEMENT_PAYEE: "Partiellement payée",
   SOLDEE: "Soldée",
   ANNULEE: "Annulée",
-};
-
-const STATUT_VARIANT: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
-  NON_PAYEE: "destructive",
-  PARTIELLEMENT_PAYEE: "secondary",
-  SOLDEE: "default",
-  ANNULEE: "outline",
 };
 
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
@@ -111,7 +107,7 @@ export default async function PageFactures({
         )}
       </form>
 
-      <div className="overflow-x-auto rounded-lg border bg-white">
+      <div className="overflow-x-auto rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -121,32 +117,48 @@ export default async function PageFactures({
               {peutVoirImpayes && <TableHead>Statut</TableHead>}
               <TableHead className="text-right">Montant</TableHead>
               {peutVoirImpayes && <TableHead className="text-right">Reste à payer</TableHead>}
+              <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {liste.map((f) => (
               <TableRow key={f.id}>
                 <TableCell>
-                  <Link href={`/factures/${f.id}`} className="font-medium hover:underline">
+                  <Link href={`/factures/${f.id}`} className="font-mono tabular-nums font-medium hover:underline">
                     {f.numero}
                   </Link>
                 </TableCell>
                 <TableCell>{nomAffiche({ nom: f.clientNom, prenom: f.clientPrenom, raisonSociale: f.clientRaisonSociale })}</TableCell>
-                <TableCell>{formatDate(f.dateFacture)}</TableCell>
+                <TableCell className="font-mono tabular-nums">{formatDate(f.dateFacture)}</TableCell>
                 {peutVoirImpayes && (
                   <TableCell>
-                    <Badge variant={STATUT_VARIANT[f.statut!]}>{STATUT_LABEL[f.statut!]}</Badge>
+                    <Badge variant="outline" className={STATUT_FACTURE_CLASS[f.statut!]}>
+                      {STATUT_LABEL[f.statut!]}
+                    </Badge>
                   </TableCell>
                 )}
-                <TableCell className="text-right">{formatMontant(f.montantTotal)}</TableCell>
+                <TableCell className="text-right font-mono tabular-nums">{formatMontant(f.montantTotal)}</TableCell>
                 {peutVoirImpayes && (
-                  <TableCell className="text-right">{formatMontant(f.resteAPayer!)}</TableCell>
+                  <TableCell className="text-right font-mono tabular-nums">{formatMontant(f.resteAPayer!)}</TableCell>
                 )}
+                <TableCell>
+                  <ApercuDocumentDialog
+                    href={`/factures/${f.id}/imprimer`}
+                    titre={`Facture ${f.numero}`}
+                    nomFichier={`facture-${f.numero}`}
+                    trigger={
+                      <Button variant="ghost" size="icon-sm">
+                        <Eye />
+                        <span className="sr-only">Voir</span>
+                      </Button>
+                    }
+                  />
+                </TableCell>
               </TableRow>
             ))}
             {liste.length === 0 && (
               <TableRow>
-                <TableCell colSpan={peutVoirImpayes ? 6 : 4} className="py-8 text-center text-zinc-500">
+                <TableCell colSpan={peutVoirImpayes ? 7 : 5} className="py-8 text-center text-muted-foreground">
                   Aucune facture.
                 </TableCell>
               </TableRow>

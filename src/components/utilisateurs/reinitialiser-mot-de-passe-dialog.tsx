@@ -42,7 +42,7 @@ export function ReinitialiserMotDePasseDialog({ id, nom }: { id: number; nom: st
             <Label htmlFor="motDePasse">Nouveau mot de passe *</Label>
             <Input id="motDePasse" name="motDePasse" type="password" required minLength={8} />
           </div>
-          {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+          {state.error && <p className="text-sm text-[#8A211C]">{state.error}</p>}
           <DialogFooter>
             <Button type="submit" disabled={pending}>
               {pending ? "Enregistrement..." : "Réinitialiser"}

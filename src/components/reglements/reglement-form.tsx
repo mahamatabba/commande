@@ -91,14 +91,14 @@ export function ReglementForm({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="facture">Encaissement — Facture client</SelectItem>
-                <SelectItem value="commande_fournisseur">Décaissement — Commande fournisseur</SelectItem>
+                <SelectItem value="commande_fournisseur">Décaissement — Achat fournisseur</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="cibleId">
-              {cible === "facture" ? "Facture *" : "Commande fournisseur *"}
+              {cible === "facture" ? "Facture *" : "Achat fournisseur *"}
             </Label>
             <Select
               name="cibleId"
@@ -135,9 +135,12 @@ export function ReglementForm({
                 min={1}
                 max={resteAPayer ?? undefined}
                 required
+                className="font-mono tabular-nums"
               />
               {resteAPayer !== null && (
-                <p className="text-xs text-zinc-500">Reste à payer : {formatMontant(resteAPayer)}</p>
+                <p className="font-mono text-xs tabular-nums text-muted-foreground">
+                  Reste à payer : {formatMontant(resteAPayer)}
+                </p>
               )}
             </div>
             <div className="space-y-1">
@@ -171,7 +174,7 @@ export function ReglementForm({
             <Textarea id="commentaire" name="commentaire" rows={2} />
           </div>
 
-          {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+          {state.error && <p className="text-sm text-[#8A211C]">{state.error}</p>}
 
           <DialogFooter>
             <Button type="submit" disabled={pending || !cibleId}>

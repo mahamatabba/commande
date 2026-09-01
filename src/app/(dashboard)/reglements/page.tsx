@@ -78,7 +78,7 @@ export default async function PageReglements() {
         />
       </div>
 
-      <div className="overflow-x-auto rounded-lg border bg-white">
+      <div className="overflow-x-auto rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -92,22 +92,22 @@ export default async function PageReglements() {
           <TableBody>
             {historique.map((r) => (
               <TableRow key={r.id}>
-                <TableCell>{formatDate(r.dateReglement)}</TableCell>
+                <TableCell className="font-mono tabular-nums">{formatDate(r.dateReglement)}</TableCell>
                 <TableCell>{r.sens === "ENCAISSEMENT" ? "Encaissement" : "Décaissement"}</TableCell>
                 <TableCell>
                   {r.facture
                     ? `Facture ${r.facture.numero} — ${nomAffiche(r.facture.client)}`
                     : r.commandeFournisseur
-                      ? `Commande ${r.commandeFournisseur.numero} — ${r.commandeFournisseur.fournisseur.nom}`
+                      ? `Achat ${r.commandeFournisseur.numero} — ${r.commandeFournisseur.fournisseur.nom}`
                       : "—"}
                 </TableCell>
                 <TableCell>{r.moyen}</TableCell>
-                <TableCell className="text-right">{formatMontant(r.montant)}</TableCell>
+                <TableCell className="text-right font-mono tabular-nums">{formatMontant(r.montant)}</TableCell>
               </TableRow>
             ))}
             {historique.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="py-6 text-center text-zinc-500">
+                <TableCell colSpan={5} className="py-6 text-center text-muted-foreground">
                   Aucun règlement enregistré.
                 </TableCell>
               </TableRow>

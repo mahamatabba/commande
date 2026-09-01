@@ -15,12 +15,12 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/articles", label: "Articles", permissions: ["referentiels:read"] },
   {
     href: "/commandes-fournisseur",
-    label: "Commandes fournisseur",
+    label: "Achats",
     permissions: ["commandes_fournisseur:read"],
   },
   {
     href: "/commandes-client",
-    label: "Commandes client",
+    label: "Ventes",
     permissions: ["commandes_client:read"],
   },
   { href: "/factures", label: "Factures", permissions: ["factures:read"] },

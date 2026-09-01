@@ -9,7 +9,11 @@ import { requirePermission } from "@/lib/permissions";
 import { fournisseurSchema } from "@/lib/validations";
 import { tracerActivite } from "@/lib/journal";
 
-export type EtatFormulaire = { error: string | null; success: boolean };
+export type EtatFormulaire = {
+  error: string | null;
+  success: boolean;
+  fournisseur?: { id: number; nom: string };
+};
 
 export async function creerFournisseur(
   _prevState: EtatFormulaire,
@@ -26,7 +30,7 @@ export async function creerFournisseur(
   const [fournisseur] = await db
     .insert(fournisseurs)
     .values(parsed.data)
-    .returning({ id: fournisseurs.id });
+    .returning({ id: fournisseurs.id, nom: fournisseurs.nom });
 
   await tracerActivite(db, {
     userId: Number(session.user.id),
@@ -37,7 +41,7 @@ export async function creerFournisseur(
   });
 
   revalidatePath("/fournisseurs");
-  return { error: null, success: true };
+  return { error: null, success: true, fournisseur };
 }
 
 export async function modifierFournisseur(

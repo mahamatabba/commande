@@ -94,7 +94,7 @@ export async function emettreFacture(
 
   revalidatePath("/factures");
   revalidatePath("/commandes-client");
-  redirect(`/factures/${factureId}`);
+  redirect(`/factures/${factureId}?nouveau=1`);
 }
 
 export async function annulerFacture(

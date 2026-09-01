@@ -134,7 +134,7 @@ export default async function PageStatistiques() {
 
       {peutVoirAchats && (
         <section className="space-y-4">
-          <h2 className="text-lg font-medium">Achats</h2>
+          <h2 className="text-lg font-semibold tracking-tight text-foreground">Achats</h2>
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
               <CardHeader>
@@ -155,7 +155,7 @@ export default async function PageStatistiques() {
                     couleur={CHART_COLORS.bleu}
                   />
                 ) : (
-                  <p className="py-6 text-center text-sm text-zinc-500">Aucune donnée.</p>
+                  <p className="py-6 text-center text-sm text-muted-foreground">Aucune donnée.</p>
                 )}
               </CardContent>
             </Card>
@@ -165,7 +165,7 @@ export default async function PageStatistiques() {
 
       {peutVoirVentes && (
         <section className="space-y-4">
-          <h2 className="text-lg font-medium">Ventes &amp; marge</h2>
+          <h2 className="text-lg font-semibold tracking-tight text-foreground">Ventes &amp; marge</h2>
           <div className="grid gap-4 sm:grid-cols-3">
             <StatTile label={`Ventes (${NB_MOIS} derniers mois)`} montant={ventes.totalPeriode} />
             <StatTile
@@ -176,7 +176,7 @@ export default async function PageStatistiques() {
             <StatTile
               label="Répartition par mode de règlement"
               montant={especesTotal + bonDeCommandeTotal}
-              note="Total commandes client actives"
+              note="Total ventes actives"
             />
           </div>
           <div className="grid gap-4 lg:grid-cols-2">
@@ -196,14 +196,14 @@ export default async function PageStatistiques() {
                 {topClients.length > 0 ? (
                   <ClassementChart data={topClients} couleur={CHART_COLORS.orange} />
                 ) : (
-                  <p className="py-6 text-center text-sm text-zinc-500">Aucune donnée.</p>
+                  <p className="py-6 text-center text-sm text-muted-foreground">Aucune donnée.</p>
                 )}
               </CardContent>
             </Card>
           </div>
           <Card>
             <CardHeader>
-              <CardTitle>Mode de règlement des commandes client</CardTitle>
+              <CardTitle>Mode de règlement des ventes</CardTitle>
             </CardHeader>
             <CardContent>
               {especesTotal + bonDeCommandeTotal > 0 ? (
@@ -214,23 +214,23 @@ export default async function PageStatistiques() {
                   couleurBonDeCommande={CHART_COLORS.orange}
                 />
               ) : (
-                <p className="py-6 text-center text-sm text-zinc-500">Aucune donnée.</p>
+                <p className="py-6 text-center text-sm text-muted-foreground">Aucune donnée.</p>
               )}
             </CardContent>
           </Card>
         </section>
       )}
 
-      <details className="rounded-lg border bg-white p-4 text-sm">
-        <summary className="cursor-pointer font-medium">Voir les données en tableau</summary>
+      <details className="rounded-lg border border-border bg-card p-4 text-sm">
+        <summary className="cursor-pointer font-medium text-foreground">Voir les données en tableau</summary>
         <div className="mt-4 space-y-4">
           {peutVoirAchats && (
             <div>
               <p className="mb-1 font-medium">Achats par mois</p>
-              <ul className="space-y-0.5 text-zinc-600">
+              <ul className="space-y-0.5 text-muted-foreground">
                 {achats.data.map((p) => (
                   <li key={p.cle}>
-                    {p.label} : {formatMontant(p.valeur)}
+                    {p.label} : <span className="font-mono tabular-nums">{formatMontant(p.valeur)}</span>
                   </li>
                 ))}
               </ul>
@@ -239,10 +239,10 @@ export default async function PageStatistiques() {
           {peutVoirVentes && (
             <div>
               <p className="mb-1 font-medium">Ventes par mois</p>
-              <ul className="space-y-0.5 text-zinc-600">
+              <ul className="space-y-0.5 text-muted-foreground">
                 {ventes.data.map((p) => (
                   <li key={p.cle}>
-                    {p.label} : {formatMontant(p.valeur)}
+                    {p.label} : <span className="font-mono tabular-nums">{formatMontant(p.valeur)}</span>
                   </li>
                 ))}
               </ul>

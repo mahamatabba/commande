@@ -28,10 +28,18 @@ export function ArticleFormDialog({
   action,
   article,
   trigger,
+  onCreated,
 }: {
   action: (prevState: EtatFormulaire, formData: FormData) => Promise<EtatFormulaire>;
   article?: Article;
   trigger?: React.ReactElement;
+  onCreated?: (article: {
+    id: number;
+    code: string;
+    designation: string;
+    prixAchatIndicatif: number;
+    prixVente: number;
+  }) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(action, {
@@ -43,8 +51,11 @@ export function ArticleFormDialog({
     if (state.success) {
       setOpen(false);
       toast.success(article ? "Article modifié" : "Article créé");
+      if (!article && state.article) {
+        onCreated?.(state.article);
+      }
     }
-  }, [state, article]);
+  }, [state, article, onCreated]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -66,6 +77,7 @@ export function ArticleFormDialog({
                 name="tauxTva"
                 type="number"
                 step="0.01"
+                className="font-mono tabular-nums"
                 defaultValue={article?.tauxTva ?? 18}
               />
             </div>
@@ -84,6 +96,7 @@ export function ArticleFormDialog({
                 min={0}
                 step={1}
                 required
+                className="font-mono tabular-nums"
                 defaultValue={article?.prixAchatIndicatif}
               />
             </div>
@@ -96,11 +109,12 @@ export function ArticleFormDialog({
                 min={0}
                 step={1}
                 required
+                className="font-mono tabular-nums"
                 defaultValue={article?.prixVente}
               />
             </div>
           </div>
-          {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+          {state.error && <p className="text-sm text-[#8A211C]">{state.error}</p>}
           <DialogFooter>
             <Button type="submit" disabled={pending}>
               {pending ? "Enregistrement..." : "Enregistrer"}

@@ -75,7 +75,7 @@ export async function creerCommandeFournisseur(
   });
 
   revalidatePath("/commandes-fournisseur");
-  redirect(`/commandes-fournisseur/${commandeId}`);
+  redirect(`/commandes-fournisseur/${commandeId}?nouveau=1`);
 }
 
 async function changerStatut(

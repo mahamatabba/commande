@@ -6,6 +6,7 @@ import { db } from "@/db";
 import { commandesFournisseur, fournisseurs } from "@/db/schema";
 import { can } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
+import { STATUT_COMMANDE_FOURNISSEUR_CLASS } from "@/lib/statut-style";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FournisseurFormDialog } from "@/components/fournisseurs/fournisseur-form-dialog";
@@ -60,15 +61,19 @@ export default async function PageFournisseur({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">{fournisseur.nom}</h1>
-          <div className="mt-1 flex items-center gap-2 text-sm text-zinc-500">
-            <span>{fournisseur.telephone}</span>
+          <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="font-mono tabular-nums">{fournisseur.telephone}</span>
             {fournisseur.email && <span>· {fournisseur.email}</span>}
-            {fournisseur.nif && <Badge variant="secondary">NIF {fournisseur.nif}</Badge>}
+            {fournisseur.nif && (
+              <Badge variant="secondary" className="font-mono tabular-nums">
+                NIF {fournisseur.nif}
+              </Badge>
+            )}
             <Badge variant={fournisseur.actif ? "default" : "outline"}>
               {fournisseur.actif ? "Actif" : "Inactif"}
             </Badge>
           </div>
-          {fournisseur.adresse && <p className="mt-1 text-sm text-zinc-500">{fournisseur.adresse}</p>}
+          {fournisseur.adresse && <p className="mt-1 text-sm text-muted-foreground">{fournisseur.adresse}</p>}
         </div>
         {peutEcrire && (
           <FournisseurFormDialog
@@ -80,8 +85,8 @@ export default async function PageFournisseur({
       </div>
 
       <div>
-        <h2 className="mb-2 text-lg font-medium">Commandes</h2>
-        <div className="overflow-x-auto rounded-lg border bg-white">
+        <h2 className="mb-2 text-lg font-medium">Achats</h2>
+        <div className="overflow-x-auto rounded-lg border bg-card">
           <Table>
             <TableHeader>
               <TableRow>
@@ -96,23 +101,35 @@ export default async function PageFournisseur({
               {commandes.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell>
-                    <Link href={`/commandes-fournisseur/${c.id}`} className="font-medium hover:underline">
+                    <Link
+                      href={`/commandes-fournisseur/${c.id}`}
+                      className="font-mono font-medium tabular-nums hover:underline"
+                    >
                       {c.numero}
                     </Link>
                   </TableCell>
-                  <TableCell>{formatDate(c.dateCommande)}</TableCell>
+                  <TableCell className="font-mono tabular-nums">{formatDate(c.dateCommande)}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{STATUT_LABEL[c.statut]}</Badge>
+                    <Badge variant="outline" className={STATUT_COMMANDE_FOURNISSEUR_CLASS[c.statut]}>
+                      {STATUT_LABEL[c.statut]}
+                    </Badge>
                   </TableCell>
-                  <TableCell className="text-right">{formatMontant(c.montantTotal)}</TableCell>
+                  <TableCell className="text-right font-mono tabular-nums">
+                    {formatMontant(c.montantTotal)}
+                  </TableCell>
                   {peutVoirDecaissements && (
-                    <TableCell className="text-right">{formatMontant(c.montantRegle)}</TableCell>
+                    <TableCell className="text-right font-mono tabular-nums">
+                      {formatMontant(c.montantRegle)}
+                    </TableCell>
                   )}
                 </TableRow>
               ))}
               {commandes.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={peutVoirDecaissements ? 5 : 4} className="py-6 text-center text-zinc-500">
+                  <TableCell
+                    colSpan={peutVoirDecaissements ? 5 : 4}
+                    className="py-6 text-center text-muted-foreground"
+                  >
                     Aucune commande.
                   </TableCell>
                 </TableRow>
@@ -125,7 +142,7 @@ export default async function PageFournisseur({
       {peutVoirDecaissements && (
         <div>
           <h2 className="mb-2 text-lg font-medium">Paiements (décaissements)</h2>
-          <div className="overflow-x-auto rounded-lg border bg-white">
+          <div className="overflow-x-auto rounded-lg border bg-card">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -137,14 +154,16 @@ export default async function PageFournisseur({
               <TableBody>
                 {paiementsFournisseur.map((p) => (
                   <TableRow key={p.id}>
-                    <TableCell>{formatDate(p.dateReglement)}</TableCell>
+                    <TableCell className="font-mono tabular-nums">{formatDate(p.dateReglement)}</TableCell>
                     <TableCell>{p.moyen}</TableCell>
-                    <TableCell className="text-right">{formatMontant(p.montant)}</TableCell>
+                    <TableCell className="text-right font-mono tabular-nums">
+                      {formatMontant(p.montant)}
+                    </TableCell>
                   </TableRow>
                 ))}
                 {paiementsFournisseur.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={3} className="py-6 text-center text-zinc-500">
+                    <TableCell colSpan={3} className="py-6 text-center text-muted-foreground">
                       Aucun paiement.
                     </TableCell>
                   </TableRow>

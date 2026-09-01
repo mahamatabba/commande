@@ -26,8 +26,8 @@ const LABEL_ACTION: Record<string, string> = {
 };
 
 const LABEL_ENTITE: Record<string, string> = {
-  commande_fournisseur: "Commande fournisseur",
-  commande_client: "Commande client",
+  commande_fournisseur: "Achat",
+  commande_client: "Vente",
   facture: "Facture",
   reglement: "Règlement",
   fournisseur: "Fournisseur",
@@ -91,7 +91,7 @@ export default async function PageJournal({
         </Button>
       </form>
 
-      <div className="overflow-x-auto rounded-lg border bg-white">
+      <div className="overflow-x-auto rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -106,19 +106,19 @@ export default async function PageJournal({
           <TableBody>
             {entrees.map((e) => (
               <TableRow key={e.id}>
-                <TableCell className="whitespace-nowrap">{formatDateHeure(e.createdAt)}</TableCell>
+                <TableCell className="font-mono tabular-nums whitespace-nowrap">{formatDateHeure(e.createdAt)}</TableCell>
                 <TableCell>{e.user?.nomComplet ?? "—"}</TableCell>
                 <TableCell>{LABEL_ACTION[e.action] ?? e.action}</TableCell>
-                <TableCell>{LABEL_ENTITE[e.entite] ?? e.entite}</TableCell>
-                <TableCell>{e.entiteId ?? "—"}</TableCell>
-                <TableCell className="max-w-xs truncate text-xs text-zinc-500">
+                <TableCell>{e.action === "connexion" ? "—" : (LABEL_ENTITE[e.entite] ?? e.entite)}</TableCell>
+                <TableCell className="font-mono tabular-nums">{e.action === "connexion" ? "—" : (e.entiteId ?? "—")}</TableCell>
+                <TableCell className="max-w-xs truncate text-xs text-muted-foreground">
                   {e.details ? JSON.stringify(e.details) : "—"}
                 </TableCell>
               </TableRow>
             ))}
             {entrees.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-zinc-500">
+                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
                   Aucune activité enregistrée.
                 </TableCell>
               </TableRow>

@@ -9,7 +9,11 @@ import { requirePermission } from "@/lib/permissions";
 import { clientSchema } from "@/lib/validations";
 import { tracerActivite } from "@/lib/journal";
 
-export type EtatFormulaire = { error: string | null; success: boolean };
+export type EtatFormulaire = {
+  error: string | null;
+  success: boolean;
+  client?: { id: number; nom: string; prenom: string | null; raisonSociale: string | null };
+};
 
 export async function creerClient(
   _prevState: EtatFormulaire,
@@ -23,7 +27,12 @@ export async function creerClient(
     return { error: parsed.error.issues[0].message, success: false };
   }
 
-  const [client] = await db.insert(clients).values(parsed.data).returning({ id: clients.id });
+  const [client] = await db.insert(clients).values(parsed.data).returning({
+    id: clients.id,
+    nom: clients.nom,
+    prenom: clients.prenom,
+    raisonSociale: clients.raisonSociale,
+  });
 
   await tracerActivite(db, {
     userId: Number(session.user.id),
@@ -34,7 +43,7 @@ export async function creerClient(
   });
 
   revalidatePath("/clients");
-  return { error: null, success: true };
+  return { error: null, success: true, client };
 }
 
 export async function modifierClient(

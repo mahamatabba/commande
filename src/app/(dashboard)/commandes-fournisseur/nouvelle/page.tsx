@@ -27,8 +27,13 @@ export default async function PageNouvelleCommandeFournisseur() {
   }));
 
   return (
-    <div className="max-w-4xl space-y-4">
-      <h1 className="text-2xl font-semibold">Nouvelle commande fournisseur</h1>
+    <div className="max-w-5xl space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold">Nouvel achat</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Sélectionnez le fournisseur, ajoutez les articles puis validez pour créer la commande.
+        </p>
+      </div>
       <CommandeFournisseurForm fournisseurs={listeFournisseurs} articles={catalogue} />
     </div>
   );

@@ -1,14 +1,15 @@
 /**
- * Coordonnées de l'entreprise pour l'en-tête des factures imprimées.
- * Valeurs à remplacer par les informations réelles d'AEI avant mise en
- * production (voir README).
+ * Coordonnées officielles de l'entreprise pour l'en-tête et le pied de page
+ * des documents imprimés (factures, bons de commande) — reprises de
+ * l'en-tête à lettre officielle.
  */
 export const AEI_INFO = {
-  nom: "Abdeldjalil Étude Informatique (AEI)",
-  adresse: "N'Djamena, Tchad",
-  telephone: "+235 00 00 00 00",
-  email: "contact@aei.td",
-  nif: "NIF-AEI-000000",
+  nom: "ABDELDJELIL ETUDE INFORMATIQUE",
+  tagline: "Partenaire agréé par HP (2BKEI)",
+  adresse: "Avenue Charles de Gaulle - B.P. 305 N'Djaména - Tchad",
+  telephones: ["+235 66 48 57 00", "66 27 11 69", "99 90 04 42"],
+  emails: ["aabdoulaye@abdeldjelilinfo.com", "zabdramane@abdeldjelilinfo.com"],
+  nif: "9011065V",
 };
 
 /**

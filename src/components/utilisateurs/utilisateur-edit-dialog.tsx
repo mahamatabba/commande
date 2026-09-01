@@ -76,11 +76,11 @@ export function UtilisateurEditDialog({ utilisateur }: { utilisateur: Utilisateu
               name="actif"
               type="checkbox"
               defaultChecked={utilisateur.actif}
-              className="size-4 rounded border-zinc-300"
+              className="size-4 rounded-[2px] border-input accent-primary"
             />
             <Label htmlFor="actif">Compte actif</Label>
           </div>
-          {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+          {state.error && <p className="text-sm text-[#8A211C]">{state.error}</p>}
           <DialogFooter>
             <Button type="submit" disabled={pending}>
               {pending ? "Enregistrement..." : "Enregistrer"}

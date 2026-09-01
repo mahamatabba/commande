@@ -4,10 +4,12 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { can } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
+import { STATUT_FACTURE_CLASS } from "@/lib/statut-style";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AnnulationDialog } from "@/components/shared/annulation-dialog";
+import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
 import { annulerFacture } from "../actions";
 
 const STATUT_LABEL: Record<string, string> = {
@@ -17,13 +19,6 @@ const STATUT_LABEL: Record<string, string> = {
   ANNULEE: "Annulée",
 };
 
-const STATUT_VARIANT: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
-  NON_PAYEE: "destructive",
-  PARTIELLEMENT_PAYEE: "secondary",
-  SOLDEE: "default",
-  ANNULEE: "outline",
-};
-
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
   if (c.raisonSociale) return c.raisonSociale;
   return c.prenom ? `${c.nom} ${c.prenom}` : c.nom;
@@ -31,10 +26,13 @@ function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: stri
 
 export default async function PageFacture({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ nouveau?: string }>;
 }) {
   const { id } = await params;
+  const { nouveau } = await searchParams;
   const factureId = Number(id);
   const session = await auth();
   const peutVoirImpayes = can(session, "impayes:read");
@@ -57,22 +55,28 @@ export default async function PageFacture({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold">{facture.numero}</h1>
+            <h1 className="font-mono text-2xl font-semibold tabular-nums">{facture.numero}</h1>
             {peutVoirImpayes && (
-              <Badge variant={STATUT_VARIANT[facture.statut]}>{STATUT_LABEL[facture.statut]}</Badge>
+              <Badge variant="outline" className={STATUT_FACTURE_CLASS[facture.statut]}>
+                {STATUT_LABEL[facture.statut]}
+              </Badge>
             )}
           </div>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             <Link href={`/clients/${facture.client.id}`} className="hover:underline">
               {nomAffiche(facture.client)}
             </Link>{" "}
-            · {formatDate(facture.dateFacture)}
+            · <span className="font-mono tabular-nums">{formatDate(facture.dateFacture)}</span>
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" render={<Link href={`/factures/${facture.id}/imprimer`} target="_blank" />}>
-            Imprimer
-          </Button>
+          <ApercuDocumentDialog
+            href={`/factures/${facture.id}/imprimer`}
+            titre={`Facture ${facture.numero}`}
+            nomFichier={`facture-${facture.numero}`}
+            trigger={<Button variant="outline">Voir la facture</Button>}
+            defaultOpen={nouveau === "1"}
+          />
           {peutAnnuler && facture.statut !== "ANNULEE" && (
             <AnnulationDialog
               action={annulerFacture.bind(null, facture.id)}
@@ -83,7 +87,7 @@ export default async function PageFacture({
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border bg-white">
+      <div className="overflow-x-auto rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -97,24 +101,31 @@ export default async function PageFacture({
             {facture.commandeClient.lignes.map((l) => (
               <TableRow key={l.id}>
                 <TableCell>{l.designation}</TableCell>
-                <TableCell className="text-right">{l.quantite}</TableCell>
-                <TableCell className="text-right">{formatMontant(l.prixUnitaire)}</TableCell>
-                <TableCell className="text-right">{formatMontant(l.montantLigne)}</TableCell>
+                <TableCell className="text-right font-mono tabular-nums">{l.quantite}</TableCell>
+                <TableCell className="text-right font-mono tabular-nums">
+                  {formatMontant(l.prixUnitaire)}
+                </TableCell>
+                <TableCell className="text-right font-mono tabular-nums">
+                  {formatMontant(l.montantLigne)}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
-        <div className="flex flex-wrap justify-end gap-8 border-t bg-zinc-50 p-3 text-sm">
-          <span>
+        <div className="flex flex-wrap justify-end gap-8 border-t bg-muted/50 p-3 text-sm">
+          <span className="font-mono tabular-nums">
             Total : <strong>{formatMontant(facture.montantTotal)}</strong>
           </span>
           {peutVoirImpayes && (
             <>
-              <span>
+              <span className="font-mono tabular-nums">
                 Réglé : <strong>{formatMontant(facture.montantRegle)}</strong>
               </span>
-              <span>
-                Reste à payer : <strong>{formatMontant(facture.resteAPayer ?? 0)}</strong>
+              <span className="font-mono tabular-nums">
+                Reste à payer :{" "}
+                <strong className={facture.resteAPayer && facture.resteAPayer > 0 ? "text-[#8A211C]" : undefined}>
+                  {formatMontant(facture.resteAPayer ?? 0)}
+                </strong>
               </span>
             </>
           )}
@@ -124,7 +135,7 @@ export default async function PageFacture({
       {peutVoirEncaissements && (
         <div>
           <h2 className="mb-2 text-lg font-medium">Règlements</h2>
-          <div className="overflow-x-auto rounded-lg border bg-white">
+          <div className="overflow-x-auto rounded-lg border bg-card">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -137,15 +148,15 @@ export default async function PageFacture({
               <TableBody>
                 {facture.reglements.map((r) => (
                   <TableRow key={r.id}>
-                    <TableCell>{formatDate(r.dateReglement)}</TableCell>
+                    <TableCell className="font-mono tabular-nums">{formatDate(r.dateReglement)}</TableCell>
                     <TableCell>{r.moyen}</TableCell>
                     <TableCell>{r.sens === "ENCAISSEMENT" ? "Encaissement" : "Reprise"}</TableCell>
-                    <TableCell className="text-right">{formatMontant(r.montant)}</TableCell>
+                    <TableCell className="text-right font-mono tabular-nums">{formatMontant(r.montant)}</TableCell>
                   </TableRow>
                 ))}
                 {facture.reglements.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="py-6 text-center text-zinc-500">
+                    <TableCell colSpan={4} className="py-6 text-center text-muted-foreground">
                       Aucun règlement.
                     </TableCell>
                   </TableRow>

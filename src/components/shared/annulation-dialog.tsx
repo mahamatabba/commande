@@ -57,7 +57,7 @@ export function AnnulationDialog({
             <Label htmlFor="motif">Motif *</Label>
             <Textarea id="motif" name="motif" required minLength={3} rows={3} />
           </div>
-          {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+          {state.error && <p className="text-sm text-[#8A211C]">{state.error}</p>}
           <DialogFooter>
             <Button type="submit" variant="destructive" disabled={pending}>
               {pending ? "Annulation..." : "Confirmer l'annulation"}

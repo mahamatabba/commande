@@ -37,7 +37,7 @@ export default async function PageArticles({
         <Input name="q" placeholder="Rechercher un article..." defaultValue={q} />
       </form>
 
-      <div className="overflow-x-auto rounded-lg border bg-white">
+      <div className="overflow-x-auto rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -53,11 +53,11 @@ export default async function PageArticles({
           <TableBody>
             {liste.map((a) => (
               <TableRow key={a.id}>
-                <TableCell className="font-mono text-xs">{a.code}</TableCell>
+                <TableCell className="font-mono text-xs tabular-nums">{a.code}</TableCell>
                 <TableCell className="font-medium">{a.designation}</TableCell>
-                <TableCell className="text-right">{formatMontant(a.prixAchatIndicatif)}</TableCell>
-                <TableCell className="text-right">{formatMontant(a.prixVente)}</TableCell>
-                <TableCell className="text-right">{a.tauxTva}%</TableCell>
+                <TableCell className="text-right font-mono tabular-nums">{formatMontant(a.prixAchatIndicatif)}</TableCell>
+                <TableCell className="text-right font-mono tabular-nums">{formatMontant(a.prixVente)}</TableCell>
+                <TableCell className="text-right font-mono tabular-nums">{a.tauxTva}%</TableCell>
                 <TableCell>
                   <Badge variant={a.actif ? "default" : "outline"}>{a.actif ? "Actif" : "Inactif"}</Badge>
                 </TableCell>
@@ -87,7 +87,7 @@ export default async function PageArticles({
             ))}
             {liste.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center text-zinc-500">
+                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                   Aucun article.
                 </TableCell>
               </TableRow>
