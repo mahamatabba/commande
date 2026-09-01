@@ -15,7 +15,7 @@ export function DocumentHeader({
   date: string;
 }) {
   return (
-    <header className="mb-8">
+    <header className="mb-8 print:mb-5 print:break-inside-avoid">
       <div className="h-2 bg-[#FAA755]" />
       <div className="flex items-start justify-between gap-6 px-10 py-5">
         <div className="flex items-start gap-3">
@@ -56,7 +56,7 @@ export function DocumentHeader({
 /** Pied de page officiel AEI — coordonnées et NIF, sur fond de marque. */
 export function DocumentFooter() {
   return (
-    <footer className="mt-10 flex flex-wrap items-stretch justify-between gap-4 bg-[#00AEEF] px-8 py-3 text-white">
+    <footer className="mt-10 flex flex-wrap items-stretch justify-between gap-4 bg-[#00AEEF] px-8 py-3 text-white print:mt-6 print:break-inside-avoid">
       <div className="flex flex-wrap items-center gap-6 py-1">
         <div className="flex items-center gap-2">
           <Phone className="size-3.5 shrink-0" />

@@ -46,7 +46,7 @@ export default async function PageImpressionCommandeFournisseur({
         />
 
       <div className="px-14 pb-10 text-[#1A1917] print:px-10 print:pb-10">
-        <section className="mb-8 grid grid-cols-2 gap-4">
+        <section className="mb-8 grid grid-cols-2 gap-4 print:mb-4 print:break-inside-avoid">
           <div className="rounded-[2px] border border-[#D9D6D0] p-4">
             <h3 className="mb-2 text-[11px] font-semibold tracking-wide text-[#6B6862] uppercase">
               Fournisseur
@@ -74,7 +74,7 @@ export default async function PageImpressionCommandeFournisseur({
           </div>
         </section>
 
-        <table className="mb-8 w-full border-collapse rounded-[2px] text-sm">
+        <table className="mb-8 w-full border-collapse rounded-[2px] text-sm print:mb-4">
           <thead>
             <tr className="border-b border-[#1E3A5F] bg-[#F4F3F0] text-left text-[11px] font-semibold tracking-wide text-[#6B6862] uppercase">
               <th className="px-3 py-2">Désignation</th>
@@ -85,7 +85,7 @@ export default async function PageImpressionCommandeFournisseur({
           </thead>
           <tbody>
             {commande.lignes.map((l) => (
-              <tr key={l.id} className="border-b border-[#EFEDE8]">
+              <tr key={l.id} className="border-b border-[#EFEDE8] print:break-inside-avoid">
                 <td className="px-3 py-2">{l.designation}</td>
                 <td className="px-3 py-2 text-right font-mono tabular-nums">{l.quantite}</td>
                 <td className="px-3 py-2 text-right font-mono tabular-nums">
@@ -99,7 +99,7 @@ export default async function PageImpressionCommandeFournisseur({
           </tbody>
         </table>
 
-        <section className="mb-8 flex justify-end">
+        <section className="mb-8 flex justify-end print:mb-4 print:break-inside-avoid">
           <div className="w-72 space-y-2 text-sm">
             <div className="flex items-center justify-between rounded-[2px] bg-[#1E3A5F] px-3 py-2.5 text-white">
               <span className="text-sm font-semibold">Montant total</span>
@@ -110,11 +110,11 @@ export default async function PageImpressionCommandeFournisseur({
           </div>
         </section>
 
-        <p className="mb-16 text-sm italic">
+        <p className="mb-16 text-sm italic print:mb-8">
           Arrêté le présent bon de commande à la somme de : {montantEnLettres(commande.montantTotal)}.
         </p>
 
-        <section className="grid grid-cols-2 gap-8 text-xs">
+        <section className="grid grid-cols-2 gap-8 text-xs print:break-inside-avoid">
           <div>
             <p className="mb-10 font-semibold text-[#4A4844]">Le Fournisseur</p>
             <div className="border-t border-[#D9D6D0] pt-1 text-[#9C9A95]">Signature et cachet</div>

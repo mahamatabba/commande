@@ -138,3 +138,8 @@
     @apply font-sans;
   }
 }
+
+@page {
+  size: A4;
+  margin: 12mm;
+}
