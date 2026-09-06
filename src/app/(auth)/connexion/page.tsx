@@ -78,7 +78,7 @@ export default function PageConnexion() {
             <button
               type="submit"
               disabled={enCours}
-              className="w-full rounded-[2px] bg-primary px-4 py-3.25 text-[15px] font-semibold text-primary-foreground transition-colors hover:bg-[color-mix(in_oklch,var(--primary),black_12%)] disabled:opacity-50"
+              className="w-full cursor-pointer rounded-[2px] bg-primary px-4 py-3.25 text-[16px] font-semibold text-primary-foreground shadow-[0_4px_14px_rgba(23,46,72,0.35)] transition-all hover:bg-[color-mix(in_oklch,var(--primary),black_12%)] hover:shadow-[0_6px_18px_rgba(23,46,72,0.45)] focus-visible:ring-3 focus-visible:ring-ring/30 disabled:opacity-50 disabled:shadow-none"
             >
               {enCours ? "Connexion..." : "Se connecter"}
             </button>

@@ -7,7 +7,11 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { commandesClient, lignesCommandeClient } from "@/db/schema";
 import { requirePermission } from "@/lib/permissions";
-import { commandeClientSchema, annulationSchema } from "@/lib/validations";
+import {
+  commandeClientSchema,
+  annulationSchema,
+  correctionCommandeClientSchema,
+} from "@/lib/validations";
 import { tracerActivite } from "@/lib/journal";
 import { genererNumero } from "@/lib/numerotation";
 import type { EtatFormulaire } from "@/lib/action-state";
@@ -145,6 +149,54 @@ export async function annulerCommandeClient(
     entite: "commande_client",
     entiteId: id,
     details: { motif: parsed.data.motif },
+  });
+
+  revalidatePath("/commandes-client");
+  revalidatePath(`/commandes-client/${id}`);
+  return { error: null, success: true };
+}
+
+export async function corrigerCommandeClient(
+  id: number,
+  _prevState: EtatFormulaire,
+  formData: FormData,
+): Promise<EtatFormulaire> {
+  const session = await auth();
+  requirePermission(session, "commandes_client:corriger");
+
+  const parsed = correctionCommandeClientSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message, success: false };
+  }
+
+  const [commande] = await db
+    .select()
+    .from(commandesClient)
+    .where(eq(commandesClient.id, id))
+    .limit(1);
+  if (!commande) return { error: "Commande introuvable.", success: false };
+  if (commande.statut === "ANNULEE") {
+    return { error: "Impossible de corriger une commande annulée.", success: false };
+  }
+  if (commande.modeReglement === parsed.data.modeReglement) {
+    return { error: null, success: true };
+  }
+
+  await db
+    .update(commandesClient)
+    .set({ modeReglement: parsed.data.modeReglement })
+    .where(eq(commandesClient.id, id));
+
+  await tracerActivite(db, {
+    userId: Number(session.user.id),
+    action: "modification",
+    entite: "commande_client",
+    entiteId: id,
+    details: {
+      champ: "modeReglement",
+      ancienneValeur: commande.modeReglement,
+      nouvelleValeur: parsed.data.modeReglement,
+    },
   });
 
   revalidatePath("/commandes-client");

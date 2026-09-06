@@ -30,6 +30,11 @@ export const PERMISSIONS = [
   // réservée à l'admin (règle métier n°5), même quand le rôle a par ailleurs
   // le droit d'écriture sur la ressource concernée.
   "annulation:effectuer",
+  // Correction d'informations sur une commande déjà créée (ex : mode de
+  // règlement saisi par erreur) — toujours réservée à l'admin, comme
+  // l'annulation, car il s'agit de modifier une donnée déjà validée par un
+  // agent plutôt que de la saisir.
+  "commandes_client:corriger",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];

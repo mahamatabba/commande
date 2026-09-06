@@ -15,6 +15,40 @@ const identifiantsSchema = z.object({
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
+  callbacks: {
+    ...authConfig.callbacks,
+    // Le strategy JWT est sans état : sans ce ré-override (impossible dans
+    // auth.config.ts, qui doit rester dépourvu de dépendances Node/DB pour
+    // le middleware edge), un changement de nom/rôle/statut fait via
+    // `modifierUtilisateur` ne serait visible par l'utilisateur concerné
+    // qu'après une déconnexion/reconnexion.
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id as string;
+        token.role = user.role;
+        token.actif = user.actif;
+        return token;
+      }
+
+      if (token.id) {
+        const [utilisateur] = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, Number(token.id)))
+          .limit(1);
+
+        if (!utilisateur) {
+          token.actif = false;
+        } else {
+          token.name = utilisateur.nomComplet;
+          token.role = utilisateur.role;
+          token.actif = utilisateur.actif;
+        }
+      }
+
+      return token;
+    },
+  },
   providers: [
     Credentials({
       credentials: {

@@ -9,8 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AnnulationDialog } from "@/components/shared/annulation-dialog";
+import { CorrectionModeReglementDialog } from "@/components/commandes/correction-mode-reglement-dialog";
 import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
-import { annulerCommandeClient, validerCommandeClient } from "../actions";
+import { annulerCommandeClient, corrigerCommandeClient, validerCommandeClient } from "../actions";
 
 const STATUT_LABEL: Record<string, string> = {
   BROUILLON: "Brouillon",
@@ -43,6 +44,7 @@ export default async function PageCommandeClient({
   const peutEcrire = can(session, "commandes_client:write");
   const peutAnnuler = can(session, "annulation:effectuer");
   const peutFacturer = can(session, "factures:emettre");
+  const peutCorriger = can(session, "commandes_client:corriger");
 
   const commande = await db.query.commandesClient.findFirst({
     where: (c, { eq }) => eq(c.id, commandeId),
@@ -86,6 +88,12 @@ export default async function PageCommandeClient({
             <Button render={<Link href={`/factures/nouvelle?commandeClientId=${commande.id}`} />}>
               Émettre la facture
             </Button>
+          )}
+          {peutCorriger && commande.statut !== "ANNULEE" && (
+            <CorrectionModeReglementDialog
+              action={corrigerCommandeClient.bind(null, commande.id)}
+              modeReglementActuel={commande.modeReglement}
+            />
           )}
           {peutAnnuler && commande.statut !== "ANNULEE" && commande.statut !== "FACTUREE" && (
             <AnnulationDialog

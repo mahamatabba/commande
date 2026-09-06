@@ -48,8 +48,8 @@ export default async function PageImpressionFacture({
       <div id="feuille-document" className="bg-white">
         <DocumentHeader label="FACTURE" numero={facture.numero} date={formatDate(facture.dateFacture)} />
 
-        <div className="px-14 pb-10 text-[#1A1917] print:px-10 print:pb-10">
-        <section className="mb-8 grid grid-cols-2 gap-4 print:mb-4 print:break-inside-avoid">
+        <div className="px-10 pb-10 text-[#1A1917]">
+        <section className="mb-4 grid grid-cols-2 gap-4 print:break-inside-avoid">
           <div className="rounded-[2px] border border-[#D9D6D0] p-4">
             <h3 className="mb-2 text-[11px] font-semibold tracking-wide text-[#6B6862] uppercase">
               Facturé à
@@ -87,7 +87,7 @@ export default async function PageImpressionFacture({
           </div>
         </section>
 
-        <table className="mb-8 w-full border-collapse rounded-[2px] text-sm print:mb-4">
+        <table className="mb-4 w-full border-collapse rounded-[2px] text-sm">
           <thead>
             <tr className="border-b border-[#1E3A5F] bg-[#F4F3F0] text-left text-[11px] font-semibold tracking-wide text-[#6B6862] uppercase">
               <th className="px-3 py-2">Désignation</th>
@@ -112,7 +112,7 @@ export default async function PageImpressionFacture({
           </tbody>
         </table>
 
-        <section className="mb-8 flex justify-end print:mb-4 print:break-inside-avoid">
+        <section className="mb-4 flex justify-end print:break-inside-avoid">
           <div className="w-72 space-y-2 text-sm">
             <div className="flex justify-between px-1">
               <span className="text-[#6B6862]">Total HT</span>
@@ -143,7 +143,7 @@ export default async function PageImpressionFacture({
           </div>
         </section>
 
-        <p className="mb-16 text-sm italic print:mb-8">
+        <p className="mb-8 text-sm italic">
           Arrêtée la présente facture à la somme de : {montantEnLettres(montantTTC)}.
         </p>
 

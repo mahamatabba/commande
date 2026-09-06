@@ -85,6 +85,11 @@ export const annulationSchema = z.object({
 });
 export type AnnulationInput = z.infer<typeof annulationSchema>;
 
+export const correctionCommandeClientSchema = z.object({
+  modeReglement: z.enum(["ESPECES", "BON_DE_COMMANDE"]),
+});
+export type CorrectionCommandeClientInput = z.infer<typeof correctionCommandeClientSchema>;
+
 export const utilisateurCreationSchema = z.object({
   email: z.string().email("Email invalide"),
   nomComplet: z.string().min(1, "Le nom est requis"),
