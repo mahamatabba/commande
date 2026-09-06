@@ -8,7 +8,7 @@ export const AEI_INFO = {
   tagline: "Partenaire agréé par HP (2BKEI)",
   adresse: "Avenue Charles de Gaulle - B.P. 305 N'Djaména - Tchad",
   telephones: ["+235 66 48 57 00", "66 27 11 69", "99 90 04 42"],
-  emails: ["aabdoulaye@abdeldjelilinfo.com", "zabdramane@abdeldjelilinfo.com"],
+  emails: ["aabdoulaye@abdeldjelilinfo.com", "contact@abdeldjelilinfo.com"],
   nif: "9011065V",
 };
 
