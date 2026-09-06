@@ -3,7 +3,7 @@ import { AEI_INFO } from "@/lib/constants";
 
 /**
  * En-tête officielle AEI, calquée sur le papier à en-tête agréé HP réel :
- * logo HP à gauche, raison sociale centrée, logo AEI à droite, filet orange
+ * logo AEI à gauche, raison sociale centrée, logo HP à droite, filet orange
  * de marque — utilisée sur tous les documents imprimables : factures et
  * bons de commande.
  */
@@ -20,7 +20,13 @@ export function DocumentHeader({
     <header className="mb-5 print:break-inside-avoid">
       <div className="grid grid-cols-[auto_1fr_auto] items-center gap-6 px-10 py-5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/brand/hp-logo.png" alt="HP" width={64} height={42} className="shrink-0" />
+        <img
+          src="/brand/aei-icon.png"
+          alt="ABDELDJELIL ETUDE INFORMATIQUE"
+          width={56}
+          height={40}
+          className="shrink-0"
+        />
         <div className="text-center">
           <p className="text-[15px] leading-tight font-bold tracking-tight text-[#00AEEF]">
             {AEI_INFO.nom}
@@ -29,13 +35,7 @@ export function DocumentHeader({
           <p className="mt-0.5 text-xs text-[#6B6862]">{AEI_INFO.adresse}</p>
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/brand/aei-icon.png"
-          alt="ABDELDJELIL ETUDE INFORMATIQUE"
-          width={56}
-          height={40}
-          className="shrink-0 justify-self-end"
-        />
+        <img src="/brand/hp-logo.png" alt="HP" width={64} height={42} className="shrink-0 justify-self-end" />
       </div>
       <div className="h-[3px] bg-[#FAA755]" />
       <div className="flex items-end justify-between border-t border-[#E6E3DD] px-10 py-4">

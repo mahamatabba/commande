@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { journalActivite } from "@/db/schema";
 import { requirePermission } from "@/lib/permissions";
 import { formatDateHeure } from "@/lib/format";
+import { formaterDetailsJournal } from "@/lib/journal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -111,8 +112,11 @@ export default async function PageJournal({
                 <TableCell>{LABEL_ACTION[e.action] ?? e.action}</TableCell>
                 <TableCell>{e.action === "connexion" ? "—" : (LABEL_ENTITE[e.entite] ?? e.entite)}</TableCell>
                 <TableCell className="font-mono tabular-nums">{e.action === "connexion" ? "—" : (e.entiteId ?? "—")}</TableCell>
-                <TableCell className="max-w-xs truncate text-xs text-muted-foreground">
-                  {e.details ? JSON.stringify(e.details) : "—"}
+                <TableCell
+                  className="max-w-sm truncate text-xs text-muted-foreground"
+                  title={e.details ? formaterDetailsJournal(e.entite, e.details) : undefined}
+                >
+                  {e.details ? formaterDetailsJournal(e.entite, e.details) : "—"}
                 </TableCell>
               </TableRow>
             ))}
