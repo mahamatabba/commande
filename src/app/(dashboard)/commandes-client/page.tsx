@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
-import { Eye } from "lucide-react";
+import { Eye, FileText } from "lucide-react";
 
 const STATUT_LABEL: Record<string, string> = {
   BROUILLON: "Brouillon",
@@ -145,17 +145,28 @@ export default async function PageCommandesClient({
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums">{formatMontant(c.montantTotal)}</TableCell>
                 <TableCell>
-                  <ApercuDocumentDialog
-                    href={`/commandes-client/${c.id}/imprimer`}
-                    titre={`Bon de commande ${c.numero}`}
-                    nomFichier={`bon-commande-${c.numero}`}
-                    trigger={
-                      <Button variant="ghost" size="icon-sm">
-                        <Eye />
-                        <span className="sr-only">Voir</span>
-                      </Button>
-                    }
-                  />
+                  <div className="flex items-center justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      title="Voir le détail"
+                      render={<Link href={`/commandes-client/${c.id}`} />}
+                    >
+                      <Eye />
+                      <span className="sr-only">Voir le détail</span>
+                    </Button>
+                    <ApercuDocumentDialog
+                      href={`/commandes-client/${c.id}/imprimer`}
+                      titre={`Bon de commande ${c.numero}`}
+                      nomFichier={`bon-commande-${c.numero}`}
+                      trigger={
+                        <Button variant="ghost" size="icon-sm" title="Aperçu PDF">
+                          <FileText />
+                          <span className="sr-only">Aperçu PDF</span>
+                        </Button>
+                      }
+                    />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

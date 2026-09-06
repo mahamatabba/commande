@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
-import { Eye } from "lucide-react";
+import { Eye, FileText } from "lucide-react";
 
 const STATUT_LABEL: Record<string, string> = {
   NON_PAYEE: "Non payée",
@@ -142,17 +142,28 @@ export default async function PageFactures({
                   <TableCell className="text-right font-mono tabular-nums">{formatMontant(f.resteAPayer!)}</TableCell>
                 )}
                 <TableCell>
-                  <ApercuDocumentDialog
-                    href={`/factures/${f.id}/imprimer`}
-                    titre={`Facture ${f.numero}`}
-                    nomFichier={`facture-${f.numero}`}
-                    trigger={
-                      <Button variant="ghost" size="icon-sm">
-                        <Eye />
-                        <span className="sr-only">Voir</span>
-                      </Button>
-                    }
-                  />
+                  <div className="flex items-center justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      title="Voir le détail"
+                      render={<Link href={`/factures/${f.id}`} />}
+                    >
+                      <Eye />
+                      <span className="sr-only">Voir le détail</span>
+                    </Button>
+                    <ApercuDocumentDialog
+                      href={`/factures/${f.id}/imprimer`}
+                      titre={`Facture ${f.numero}`}
+                      nomFichier={`facture-${f.numero}`}
+                      trigger={
+                        <Button variant="ghost" size="icon-sm" title="Aperçu PDF">
+                          <FileText />
+                          <span className="sr-only">Aperçu PDF</span>
+                        </Button>
+                      }
+                    />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
