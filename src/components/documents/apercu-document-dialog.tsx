@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Download, Eye, Loader2, Printer } from "lucide-react";
+import { Eye, Loader2, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,7 +30,6 @@ export function ApercuDocumentDialog({
   const pathname = usePathname();
   const [open, setOpen] = useState(defaultOpen);
   const [charge, setCharge] = useState(false);
-  const [telechargement, setTelechargement] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
@@ -46,55 +45,32 @@ export function ApercuDocumentDialog({
     if (!prochain) setCharge(false);
   }
 
+  /**
+   * L'impression passe par le moteur du navigateur plutôt que par une capture
+   * d'image : le PDF obtenu via « Enregistrer au format PDF » reste vectoriel,
+   * son texte est sélectionnable et recherchable, et la police ne bave pas à
+   * l'agrandissement — ce qu'aucune capture ne peut offrir.
+   *
+   * Le nom de fichier proposé par la boîte de dialogue est le titre du
+   * document imprimé : on lui donne le nom métier le temps de l'impression,
+   * puis on le rend, pour que l'aperçu conserve son propre titre.
+   */
   function imprimer() {
-    iframeRef.current?.contentWindow?.print();
-  }
-
-  async function telecharger() {
+    const fenetre = iframeRef.current?.contentWindow;
     const documentIframe = iframeRef.current?.contentDocument;
-    const feuille = documentIframe?.getElementById("feuille-document");
-    if (!feuille) return;
+    if (!fenetre || !documentIframe) return;
 
-    setTelechargement(true);
-    try {
-      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
-        import("html2canvas"),
-        import("jspdf"),
-      ]);
-      const canvas = await html2canvas(feuille, { scale: 2, useCORS: true });
-      const image = canvas.toDataURL("image/png");
+    const titreOrigine = documentIframe.title;
+    documentIframe.title = nomFichier;
+    const restaurer = () => {
+      documentIframe.title = titreOrigine;
+      fenetre.removeEventListener("afterprint", restaurer);
+    };
+    fenetre.addEventListener("afterprint", restaurer);
 
-      const LARGEUR_A4_MM = 210;
-      const HAUTEUR_A4_MM = 297;
-      const hauteurImage = (canvas.height * LARGEUR_A4_MM) / canvas.width;
-
-      // Si le document tient sur une page, on crée une page à la taille exacte
-      // du contenu pour éviter un grand espace blanc sous le pied de page.
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: hauteurImage <= HAUTEUR_A4_MM ? [LARGEUR_A4_MM, hauteurImage] : "a4",
-      });
-      const largeurPage = pdf.internal.pageSize.getWidth();
-      const hauteurPage = pdf.internal.pageSize.getHeight();
-
-      let hauteurRestante = hauteurImage;
-      let position = 0;
-
-      pdf.addImage(image, "PNG", 0, position, largeurPage, hauteurImage);
-      hauteurRestante -= hauteurPage;
-
-      while (hauteurRestante > 0) {
-        position = hauteurRestante - hauteurImage;
-        pdf.addPage();
-        pdf.addImage(image, "PNG", 0, position, largeurPage, hauteurImage);
-        hauteurRestante -= hauteurPage;
-      }
-
-      pdf.save(`${nomFichier}.pdf`);
-    } finally {
-      setTelechargement(false);
-    }
+    // Sans ce focus, Firefox imprime la page porteuse et non l'aperçu.
+    fenetre.focus();
+    fenetre.print();
   }
 
   return (
@@ -129,14 +105,14 @@ export function ApercuDocumentDialog({
             />
           )}
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={imprimer} disabled={!charge}>
+        <DialogFooter className="sm:items-center sm:justify-between">
+          <p className="text-xs text-muted-foreground sm:mr-auto">
+            Pour obtenir un fichier PDF, choisissez «&nbsp;Enregistrer au format PDF&nbsp;» comme
+            destination dans la fenêtre d&apos;impression.
+          </p>
+          <Button onClick={imprimer} disabled={!charge}>
             <Printer />
-            Imprimer
-          </Button>
-          <Button onClick={telecharger} disabled={!charge || telechargement}>
-            {telechargement ? <Loader2 className="animate-spin" /> : <Download />}
-            Télécharger le PDF
+            Imprimer ou enregistrer en PDF
           </Button>
         </DialogFooter>
       </DialogContent>

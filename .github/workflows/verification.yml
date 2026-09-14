@@ -1,0 +1,35 @@
+# Vérification automatique à chaque envoi de code.
+#
+# Volontairement limitée à ce qui ne demande aucun secret : types, règles de
+# style et tests unitaires des calculs (TVA, montants, filtres, messages
+# d'erreur). Le `next build` n'est pas lancé ici : il exige un accès à la base
+# de production, qui n'a pas sa place dans une exécution automatique.
+name: Vérification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Vérifier les types
+        run: npm run typecheck
+
+      - name: Vérifier les règles de style
+        run: npx eslint src
+
+      - name: Lancer les tests
+        run: npm test

@@ -19,6 +19,12 @@ export const STATUT_COMMANDE_CLIENT_CLASS: Record<string, string> = {
   ANNULEE: ANNULEE,
 };
 
+export const STATUT_PROFORMA_CLASS: Record<string, string> = {
+  EMISE: EN_COURS,
+  CONVERTIE: BON,
+  ANNULEE: ANNULEE,
+};
+
 export const STATUT_FACTURE_CLASS: Record<string, string> = {
   NON_PAYEE: URGENT,
   PARTIELLEMENT_PAYEE: ATTENTION,

@@ -24,10 +24,26 @@ export async function calculerSoldeCaisse(executor: Transaction | typeof db): Pr
  * mouvements le temps de la transaction pour sérialiser les écritures
  * concurrentes et garantir que `soldeApres` reste exact même si deux
  * règlements sont saisis en même temps.
+ *
+ * `soldeApres` est le solde au moment de la SAISIE, dans l'ordre des `id`.
+ * Comme un règlement peut être antidaté, cette suite ne coïncide pas avec
+ * l'ordre chronologique : l'écran Caisse recalcule donc son solde progressif
+ * par date, et ne se sert pas de cette colonne pour l'affichage.
  */
 export async function enregistrerMouvementCaisse(
   tx: Transaction,
-  params: { reglementId: number; sens: "ENCAISSEMENT" | "DECAISSEMENT"; montant: number },
+  params: {
+    reglementId: number;
+    sens: "ENCAISSEMENT" | "DECAISSEMENT";
+    montant: number;
+    /**
+     * Date du règlement. Doit toujours être fournie : horodater le mouvement
+     * à l'instant de la saisie faisait tomber un règlement antidaté dans la
+     * caisse du jour de la saisie, si bien qu'une même période ne donnait pas
+     * les mêmes lignes sur l'écran Caisse et sur l'écran Règlements.
+     */
+    dateMouvement: Date;
+  },
 ): Promise<number> {
   await tx.execute(sql`LOCK TABLE mouvements_caisse IN SHARE ROW EXCLUSIVE MODE`);
   const soldeAvant = await calculerSoldeCaisse(tx);
@@ -37,6 +53,7 @@ export async function enregistrerMouvementCaisse(
     reglementId: params.reglementId,
     sens: params.sens,
     montant: params.montant,
+    dateMouvement: params.dateMouvement,
     soldeApres,
   });
 

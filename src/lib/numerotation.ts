@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import type { Transaction } from "@/db";
 import { compteursNumerotation } from "@/db/schema";
 
-export type PrefixeNumero = "CF" | "CC" | "FAC";
+export type PrefixeNumero = "CF" | "CC" | "FAC" | "PRO";
 
 /**
  * Génère le numéro suivant pour un préfixe donné (ex : "FAC-2026-0001"),

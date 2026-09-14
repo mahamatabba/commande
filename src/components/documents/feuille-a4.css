@@ -1,0 +1,82 @@
+/*
+ * Géométrie de la feuille A4, exprimée en millimètres réels et définie une
+ * seule fois. C'est la source unique partagée par les trois rendus du même
+ * document — écran, impression navigateur, export PDF — ce qui garantit
+ * qu'ils produisent exactement la même page.
+ *
+ * Règle à respecter : la marge de page appartient à la feuille
+ * (--feuille-marge), jamais à @page. Une marge @page non nulle s'ajouterait
+ * à celle de la feuille et décalerait tout le document à l'impression.
+ */
+
+.feuille-apercu {
+  display: flex;
+  min-height: 100vh;
+  justify-content: center;
+  padding: 16px;
+  background: #e8e6e1;
+}
+
+.feuille-a4 {
+  --feuille-marge: 12mm;
+  display: flex;
+  width: 210mm;
+  min-height: 297mm;
+  flex-direction: column;
+  background: #fff;
+  box-shadow: 0 1px 8px rgb(0 0 0 / 18%);
+  /* Sans ceci, les navigateurs n'impriment aucun aplat de couleur : filet
+     orange, bloc du total, badges de statut et bandeau NIF sortent blancs. */
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* Occupe la hauteur restante, ce qui pousse le pied de page en bas de la
+   feuille quand le contenu est court, sans le détacher quand il est long. */
+.feuille-a4__corps {
+  flex: 1;
+  padding: 0 var(--feuille-marge) var(--feuille-marge);
+}
+
+/* Bandes pleine largeur de l'en-tête et du pied de page : le fond touche les
+   bords de la feuille, seul le contenu est retrait de la marge. */
+.feuille-a4__bande {
+  padding-inline: var(--feuille-marge);
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  html,
+  body {
+    /* La mise en page flex du gabarit racine fausse la pagination : on
+       revient à un flux de blocs simple, seul cas que les navigateurs
+       découpent correctement en pages. */
+    display: block;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+  }
+
+  .feuille-apercu {
+    display: block;
+    min-height: 0;
+    padding: 0;
+    background: #fff;
+  }
+
+  .feuille-a4 {
+    box-shadow: none;
+    /* Marge de sécurité d'un millimètre : à 297 mm pile, le moindre arrondi
+       du navigateur fait déborder la feuille et génère une page blanche. */
+    min-height: 296mm;
+  }
+
+  .sans-impression {
+    display: none !important;
+  }
+}

@@ -5,6 +5,8 @@ import { db } from "@/db";
 import { clients, commandesClient } from "@/db/schema";
 import { can } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
+import { STATUTS_COMMANDE_CLIENT, bornerDebut, bornerFin, lireStatut } from "@/lib/filtres";
+import { MODE_REGLEMENT_LABEL, STATUT_COMMANDE_CLIENT_LABEL, libelle } from "@/lib/libelles";
 import { STATUT_COMMANDE_CLIENT_CLASS } from "@/lib/statut-style";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,18 +23,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
 import { Eye, FileText } from "lucide-react";
 
-const STATUT_LABEL: Record<string, string> = {
-  BROUILLON: "Brouillon",
-  VALIDEE: "Validée",
-  FACTUREE: "Facturée",
-  ANNULEE: "Annulée",
-};
-
-const MODE_LABEL: Record<string, string> = {
-  ESPECES: "Espèces",
-  BON_DE_COMMANDE: "Bon de commande",
-};
-
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
   if (c.raisonSociale) return c.raisonSociale;
   return c.prenom ? `${c.nom} ${c.prenom}` : c.nom;
@@ -47,10 +37,14 @@ export default async function PageCommandesClient({
   const peutEcrire = can(session, "commandes_client:write");
   const { statut, du, au } = await searchParams;
 
+  const statutFiltre = lireStatut(statut, STATUTS_COMMANDE_CLIENT);
+  const debut = bornerDebut(du);
+  const fin = bornerFin(au);
+
   const conditions = [
-    statut ? eq(commandesClient.statut, statut as "BROUILLON") : undefined,
-    du ? gte(commandesClient.dateCommande, new Date(du)) : undefined,
-    au ? lte(commandesClient.dateCommande, new Date(au)) : undefined,
+    statutFiltre ? eq(commandesClient.statut, statutFiltre) : undefined,
+    debut ? gte(commandesClient.dateCommande, debut) : undefined,
+    fin ? lte(commandesClient.dateCommande, fin) : undefined,
   ].filter(Boolean);
 
   const commandes = await db
@@ -84,15 +78,16 @@ export default async function PageCommandesClient({
       <form className="flex flex-wrap items-end gap-3">
         <div className="space-y-1">
           <Label htmlFor="statut">Statut</Label>
-          <Select name="statut" defaultValue={statut}>
+          <Select name="statut" defaultValue={statutFiltre}>
             <SelectTrigger id="statut" className="w-40">
               <SelectValue placeholder="Tous" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="BROUILLON">Brouillon</SelectItem>
-              <SelectItem value="VALIDEE">Validée</SelectItem>
-              <SelectItem value="FACTUREE">Facturée</SelectItem>
-              <SelectItem value="ANNULEE">Annulée</SelectItem>
+              {STATUTS_COMMANDE_CLIENT.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {libelle(STATUT_COMMANDE_CLIENT_LABEL, s)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -137,10 +132,10 @@ export default async function PageCommandesClient({
                 </TableCell>
                 <TableCell>{nomAffiche({ nom: c.clientNom, prenom: c.clientPrenom, raisonSociale: c.clientRaisonSociale })}</TableCell>
                 <TableCell className="font-mono tabular-nums">{formatDate(c.dateCommande)}</TableCell>
-                <TableCell>{MODE_LABEL[c.modeReglement]}</TableCell>
+                <TableCell>{libelle(MODE_REGLEMENT_LABEL, c.modeReglement)}</TableCell>
                 <TableCell>
                   <Badge variant="outline" className={STATUT_COMMANDE_CLIENT_CLASS[c.statut]}>
-                    {STATUT_LABEL[c.statut]}
+                    {libelle(STATUT_COMMANDE_CLIENT_LABEL, c.statut)}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums">{formatMontant(c.montantTotal)}</TableCell>

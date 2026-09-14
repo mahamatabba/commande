@@ -38,6 +38,20 @@ const LIGNE_VIDE: LigneInput = {
   prixUnitaire: 0,
 };
 
+/**
+ * Un champ numérique vidé renvoie `""`, que `Number("")` transforme en `0`
+ * mais `Number("1,5")` en `NaN`. Ce `NaN` se propageait au total affiché puis
+ * au JSON envoyé au serveur, où il devenait `null` et faisait échouer la
+ * validation avec un message incompréhensible. On retombe donc sur 0.
+ */
+function lireNombre(valeur: string): number {
+  const n = Number(valeur);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/** Quantité minimale : une ligne à 0 serait refusée à l'enregistrement. */
+const QUANTITE_MIN = 1;
+
 export function LignesEditor({
   name,
   articles,
@@ -127,8 +141,8 @@ export function LignesEditor({
               <TableHead className="w-56">Article</TableHead>
               <TableHead>Désignation</TableHead>
               <TableHead className="w-32">Qté</TableHead>
-              <TableHead className="w-32">P.U.</TableHead>
-              <TableHead className="w-32 text-right">Montant</TableHead>
+              <TableHead className="w-32">P.U. HT</TableHead>
+              <TableHead className="w-32 text-right">Montant HT</TableHead>
               <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
@@ -171,19 +185,26 @@ export function LignesEditor({
                         type="button"
                         variant="outline"
                         size="icon-sm"
+                        disabled={ligne.quantite <= QUANTITE_MIN}
                         onClick={() =>
-                          majLigne(index, { quantite: Math.max(0, ligne.quantite - 1) })
+                          majLigne(index, {
+                            quantite: Math.max(QUANTITE_MIN, ligne.quantite - 1),
+                          })
                         }
                       >
                         <Minus className="size-3.5" />
                       </Button>
                       <Input
                         type="number"
-                        min={0}
+                        min={0.01}
                         step="0.01"
                         value={ligne.quantite}
-                        onChange={(e) => majLigne(index, { quantite: Number(e.target.value) })}
+                        onChange={(e) => majLigne(index, { quantite: lireNombre(e.target.value) })}
+                        onBlur={() => {
+                          if (ligne.quantite <= 0) majLigne(index, { quantite: QUANTITE_MIN });
+                        }}
                         required
+                        aria-invalid={ligne.quantite <= 0}
                         className="w-14 px-1 text-center font-mono tabular-nums"
                       />
                       <Button
@@ -202,7 +223,7 @@ export function LignesEditor({
                       min={0}
                       step={1}
                       value={ligne.prixUnitaire}
-                      onChange={(e) => majLigne(index, { prixUnitaire: Number(e.target.value) })}
+                      onChange={(e) => majLigne(index, { prixUnitaire: lireNombre(e.target.value) })}
                       required
                       className="font-mono tabular-nums"
                     />
@@ -245,7 +266,7 @@ export function LignesEditor({
           />
         </div>
         <p className="font-mono text-lg font-semibold tabular-nums">
-          Total : {formatMontant(total)}
+          Total HT : {formatMontant(total)}
         </p>
       </div>
     </div>

@@ -3,19 +3,19 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { requirePermission } from "@/lib/permissions";
 import { formatDate, formatMontant, montantEnLettres } from "@/lib/format";
-import { AEI_INFO, TAUX_TVA_STANDARD } from "@/lib/constants";
+import { AEI_INFO } from "@/lib/constants";
+import { formatTaux } from "@/lib/tva";
+import { MODE_REGLEMENT_LABEL, STATUT_FACTURE_LABEL, libelle } from "@/lib/libelles";
+import { STATUT_FACTURE_CLASS } from "@/lib/statut-style";
+import { Badge } from "@/components/ui/badge";
 import { ImprimerBouton } from "@/components/factures/imprimer-bouton";
 import { DocumentFooter, DocumentHeader } from "@/components/documents/entete-document";
+import { FeuilleA4 } from "@/components/documents/feuille-a4";
 
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
   if (c.raisonSociale) return c.raisonSociale;
   return c.prenom ? `${c.nom} ${c.prenom}` : c.nom;
 }
-
-const MODE_REGLEMENT_LABEL: Record<string, string> = {
-  ESPECES: "Espèces",
-  BON_DE_COMMANDE: "Bon de commande",
-};
 
 export default async function PageImpressionFacture({
   params,
@@ -33,22 +33,20 @@ export default async function PageImpressionFacture({
   });
   if (!facture) notFound();
 
+  // Les montants sont lus tels qu'ils ont été figés à l'émission — ils ne
+  // sont jamais recalculés à l'affichage : une facture déjà remise au client
+  // ne doit plus changer, même si le taux de TVA évolue ensuite.
+  const montantHT = facture.montantHt;
+  const montantTVA = facture.montantTva;
   const montantTTC = facture.montantTotal;
-  const montantHT = Math.round((montantTTC * 100) / (100 + TAUX_TVA_STANDARD));
-  const montantTVA = montantTTC - montantHT;
   const montantRegle = facture.montantRegle;
   const resteAPayer = facture.resteAPayer ?? montantTTC - montantRegle;
 
   return (
-    <div className="mx-auto max-w-[794px] print:max-w-none">
-      <div className="flex justify-end px-10 pt-4 print:hidden">
-        <ImprimerBouton />
-      </div>
+    <FeuilleA4 barreOutils={<ImprimerBouton />}>
+      <DocumentHeader label="FACTURE" numero={facture.numero} date={formatDate(facture.dateFacture)} />
 
-      <div id="feuille-document" className="bg-white">
-        <DocumentHeader label="FACTURE" numero={facture.numero} date={formatDate(facture.dateFacture)} />
-
-        <div className="px-10 pb-10 text-[#1A1917]">
+      <div className="feuille-a4__corps text-[#1A1917]">
         <section className="mb-4 grid grid-cols-2 gap-4 print:break-inside-avoid">
           <div className="rounded-[2px] border border-[#D9D6D0] p-4">
             <h3 className="mb-2 text-[11px] font-semibold tracking-wide text-[#6B6862] uppercase">
@@ -73,15 +71,24 @@ export default async function PageImpressionFacture({
             </h3>
             <dl className="space-y-1 text-xs">
               <div className="flex justify-between">
+                <dt className="text-[#6B6862]">Statut</dt>
+                <dd>
+                  <Badge variant="outline" className={STATUT_FACTURE_CLASS[facture.statut]}>
+                    {libelle(STATUT_FACTURE_LABEL, facture.statut)}
+                  </Badge>
+                </dd>
+              </div>
+              <div className="flex justify-between">
                 <dt className="text-[#6B6862]">Bon de commande</dt>
                 <dd className="font-mono tabular-nums">{facture.commandeClient.numero}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-[#6B6862]">Mode de règlement</dt>
-                <dd>
-                  {MODE_REGLEMENT_LABEL[facture.commandeClient.modeReglement] ??
-                    facture.commandeClient.modeReglement}
-                </dd>
+                <dd>{libelle(MODE_REGLEMENT_LABEL, facture.commandeClient.modeReglement)}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-[#6B6862]">Régime de TVA</dt>
+                <dd>{facture.exonereTva ? "Exonéré" : `Assujetti — ${formatTaux(facture.tauxTva)}`}</dd>
               </div>
             </dl>
           </div>
@@ -92,8 +99,8 @@ export default async function PageImpressionFacture({
             <tr className="border-b border-[#1E3A5F] bg-[#F4F3F0] text-left text-[11px] font-semibold tracking-wide text-[#6B6862] uppercase">
               <th className="px-3 py-2">Désignation</th>
               <th className="px-3 py-2 text-right">Qté</th>
-              <th className="px-3 py-2 text-right">Prix unitaire</th>
-              <th className="px-3 py-2 text-right">Montant</th>
+              <th className="px-3 py-2 text-right">P.U. HT</th>
+              <th className="px-3 py-2 text-right">Montant HT</th>
             </tr>
           </thead>
           <tbody>
@@ -119,7 +126,9 @@ export default async function PageImpressionFacture({
               <span className="font-mono tabular-nums">{formatMontant(montantHT)}</span>
             </div>
             <div className="flex justify-between px-1">
-              <span className="text-[#6B6862]">TVA ({TAUX_TVA_STANDARD}%)</span>
+              <span className="text-[#6B6862]">
+                {facture.exonereTva ? "TVA — exonérée" : `TVA (${formatTaux(facture.tauxTva)})`}
+              </span>
               <span className="font-mono tabular-nums">{formatMontant(montantTVA)}</span>
             </div>
             <div className="flex items-center justify-between rounded-[2px] bg-[#1E3A5F] px-3 py-2.5 text-white">
@@ -160,7 +169,6 @@ export default async function PageImpressionFacture({
       </div>
 
       <DocumentFooter />
-      </div>
-    </div>
+    </FeuilleA4>
   );
 }

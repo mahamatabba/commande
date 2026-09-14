@@ -13,12 +13,15 @@ export const AEI_INFO = {
 };
 
 /**
- * Taux de TVA standard appliqué aux factures. Les lignes de commande client
- * ne conservent pas de taux individuel (seuls les articles référencés en
- * ont un) : ce taux global sert à décomposer le montant total (TTC) en
- * HT + TVA sur le document imprimé.
+ * Taux de TVA en vigueur au Tchad. Les montants saisis sur les commandes sont
+ * des montants HORS TAXE : la TVA s'ajoute par-dessus à l'émission de la
+ * facture, elle n'est jamais déduite d'un total réputé TTC.
+ *
+ * Ce taux n'est qu'une valeur par défaut. Le taux réellement appliqué est
+ * figé sur la facture (`factures.tauxTva`) au moment de l'émission, pour que
+ * les factures déjà émises ne bougent plus si le taux légal change.
  */
-export const TAUX_TVA_STANDARD = 18;
+export const TAUX_TVA_STANDARD = 19.5;
 
 /**
  * Palette catégorielle de référence (voir skill dataviz) : 8 teintes, ordre

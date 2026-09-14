@@ -8,6 +8,7 @@ import { STATUT_COMMANDE_FOURNISSEUR_CLASS } from "@/lib/statut-style";
 import { Badge } from "@/components/ui/badge";
 import { ImprimerBouton } from "@/components/factures/imprimer-bouton";
 import { DocumentFooter, DocumentHeader } from "@/components/documents/entete-document";
+import { FeuilleA4 } from "@/components/documents/feuille-a4";
 
 const STATUT_LABEL: Record<string, string> = {
   BROUILLON: "Brouillon",
@@ -33,19 +34,14 @@ export default async function PageImpressionCommandeFournisseur({
   if (!commande) notFound();
 
   return (
-    <div className="mx-auto max-w-[794px] print:max-w-none">
-      <div className="flex justify-end px-10 pt-4 print:hidden">
-        <ImprimerBouton />
-      </div>
+    <FeuilleA4 barreOutils={<ImprimerBouton />}>
+      <DocumentHeader
+        label="BON DE COMMANDE"
+        numero={commande.numero}
+        date={formatDate(commande.dateCommande)}
+      />
 
-      <div id="feuille-document" className="bg-white">
-        <DocumentHeader
-          label="BON DE COMMANDE"
-          numero={commande.numero}
-          date={formatDate(commande.dateCommande)}
-        />
-
-      <div className="px-10 pb-10 text-[#1A1917]">
+      <div className="feuille-a4__corps text-[#1A1917]">
         <section className="mb-4 grid grid-cols-2 gap-4 print:break-inside-avoid">
           <div className="rounded-[2px] border border-[#D9D6D0] p-4">
             <h3 className="mb-2 text-[11px] font-semibold tracking-wide text-[#6B6862] uppercase">
@@ -127,7 +123,6 @@ export default async function PageImpressionCommandeFournisseur({
       </div>
 
       <DocumentFooter />
-      </div>
-    </div>
+    </FeuilleA4>
   );
 }

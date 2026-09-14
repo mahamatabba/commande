@@ -23,6 +23,7 @@ const LABEL_ACTION: Record<string, string> = {
   validation: "Validation",
   annulation: "Annulation",
   reglement: "Règlement",
+  conversion: "Conversion",
   connexion: "Connexion",
 };
 
@@ -30,6 +31,7 @@ const LABEL_ENTITE: Record<string, string> = {
   commande_fournisseur: "Achat",
   commande_client: "Vente",
   facture: "Facture",
+  proforma: "Proforma",
   reglement: "Règlement",
   fournisseur: "Fournisseur",
   client: "Client",

@@ -5,6 +5,8 @@ import { db } from "@/db";
 import { commandesFournisseur, fournisseurs } from "@/db/schema";
 import { can } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
+import { STATUTS_COMMANDE_FOURNISSEUR, bornerDebut, bornerFin, lireStatut } from "@/lib/filtres";
+import { STATUT_COMMANDE_FOURNISSEUR_LABEL, libelle } from "@/lib/libelles";
 import { STATUT_COMMANDE_FOURNISSEUR_CLASS } from "@/lib/statut-style";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,13 +23,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
 import { Eye, FileText } from "lucide-react";
 
-const STATUT_LABEL: Record<string, string> = {
-  BROUILLON: "Brouillon",
-  VALIDEE: "Validée",
-  RECUE: "Reçue",
-  ANNULEE: "Annulée",
-};
-
 export default async function PageCommandesFournisseur({
   searchParams,
 }: {
@@ -38,10 +33,14 @@ export default async function PageCommandesFournisseur({
   const peutVoirDecaissements = can(session, "decaissements:read");
   const { statut, du, au } = await searchParams;
 
+  const statutFiltre = lireStatut(statut, STATUTS_COMMANDE_FOURNISSEUR);
+  const debut = bornerDebut(du);
+  const fin = bornerFin(au);
+
   const conditions = [
-    statut ? eq(commandesFournisseur.statut, statut as "BROUILLON") : undefined,
-    du ? gte(commandesFournisseur.dateCommande, new Date(du)) : undefined,
-    au ? lte(commandesFournisseur.dateCommande, new Date(au)) : undefined,
+    statutFiltre ? eq(commandesFournisseur.statut, statutFiltre) : undefined,
+    debut ? gte(commandesFournisseur.dateCommande, debut) : undefined,
+    fin ? lte(commandesFournisseur.dateCommande, fin) : undefined,
   ].filter(Boolean);
 
   const commandes = await db
@@ -73,15 +72,16 @@ export default async function PageCommandesFournisseur({
       <form className="flex flex-wrap items-end gap-3">
         <div className="space-y-1">
           <Label htmlFor="statut">Statut</Label>
-          <Select name="statut" defaultValue={statut}>
+          <Select name="statut" defaultValue={statutFiltre}>
             <SelectTrigger id="statut" className="w-40">
               <SelectValue placeholder="Tous" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="BROUILLON">Brouillon</SelectItem>
-              <SelectItem value="VALIDEE">Validée</SelectItem>
-              <SelectItem value="RECUE">Reçue</SelectItem>
-              <SelectItem value="ANNULEE">Annulée</SelectItem>
+              {STATUTS_COMMANDE_FOURNISSEUR.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {libelle(STATUT_COMMANDE_FOURNISSEUR_LABEL, s)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -128,7 +128,7 @@ export default async function PageCommandesFournisseur({
                 <TableCell className="font-mono tabular-nums">{formatDate(c.dateCommande)}</TableCell>
                 <TableCell>
                   <Badge variant="outline" className={STATUT_COMMANDE_FOURNISSEUR_CLASS[c.statut]}>
-                    {STATUT_LABEL[c.statut]}
+                    {libelle(STATUT_COMMANDE_FOURNISSEUR_LABEL, c.statut)}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums">{formatMontant(c.montantTotal)}</TableCell>

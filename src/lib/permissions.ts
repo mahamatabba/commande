@@ -72,7 +72,18 @@ export function hasPermission(role: Role, permission: Permission): boolean {
   return ROLE_PERMISSIONS[role].has(permission);
 }
 
+/**
+ * Marqueur transmis au navigateur via `error.digest`. En production, Next.js
+ * remplace le message d'une erreur serveur par un texte générique ; seul
+ * `digest` traverse. C'est donc lui qui permet à la page d'erreur de
+ * distinguer un accès refusé d'une véritable panne, et d'afficher le bon
+ * message plutôt qu'un « une erreur est survenue » indifférencié.
+ */
+export const DIGEST_ACCES_REFUSE = "AEI_ACCES_REFUSE";
+
 export class PermissionDeniedError extends Error {
+  readonly digest = DIGEST_ACCES_REFUSE;
+
   constructor(permission: Permission) {
     super(`Accès refusé : permission "${permission}" requise.`);
     this.name = "PermissionDeniedError";

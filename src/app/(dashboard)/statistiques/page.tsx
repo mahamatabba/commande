@@ -74,10 +74,13 @@ export default async function PageStatistiques() {
 
   const [ventesMensuelles, topClientsBruts, repartitionModeBrute, margeMensuelle] = peutVoirVentes
     ? await Promise.all([
+        // Chiffre d'affaires HORS TAXE : la TVA est collectée pour l'État, elle
+        // n'est pas un produit de l'entreprise. C'est aussi la seule base
+        // comparable à la marge, calculée sur des prix HT.
         db
           .select({
             mois: sql<string>`date_trunc('month', ${factures.dateFacture})`,
-            total: sql<string>`SUM(${factures.montantTotal})`,
+            total: sql<string>`SUM(${factures.montantHt})`,
           })
           .from(factures)
           .where(and(ne(factures.statut, "ANNULEE"), gte(factures.dateFacture, debut)))
@@ -88,13 +91,13 @@ export default async function PageStatistiques() {
             nom: clients.nom,
             prenom: clients.prenom,
             raisonSociale: clients.raisonSociale,
-            total: sql<string>`SUM(${factures.montantTotal})`,
+            total: sql<string>`SUM(${factures.montantHt})`,
           })
           .from(factures)
           .innerJoin(clients, eq(clients.id, factures.clientId))
           .where(ne(factures.statut, "ANNULEE"))
           .groupBy(clients.id, clients.nom, clients.prenom, clients.raisonSociale)
-          .orderBy(sql`SUM(${factures.montantTotal}) DESC`)
+          .orderBy(sql`SUM(${factures.montantHt}) DESC`)
           .limit(5),
         db
           .select({
@@ -104,14 +107,26 @@ export default async function PageStatistiques() {
           .from(commandesClient)
           .where(ne(commandesClient.statut, "ANNULEE"))
           .groupBy(commandesClient.modeReglement),
+        // Marge brute : on utilise en priorité le prix d'achat FIGÉ sur la
+        // ligne au moment de la vente. Le tarif actuel du catalogue ne sert
+        // que de repli pour les ventes antérieures à cet enregistrement —
+        // sinon une hausse de tarif réécrirait la marge des mois passés.
+        // Jointure gauche sur les articles : une ligne libre (hors catalogue)
+        // ne doit pas faire disparaître la vente du calcul, elle est
+        // simplement comptée pour une marge nulle faute de coût connu.
         db
           .select({
             mois: sql<string>`date_trunc('month', ${factures.dateFacture})`,
-            marge: sql<string>`SUM(${lignesCommandeClient.quantite} * (${lignesCommandeClient.prixUnitaire} - ${articles.prixAchatIndicatif}))`,
+            marge: sql<string>`SUM(
+              CASE WHEN COALESCE(${lignesCommandeClient.prixAchatUnitaire}, ${articles.prixAchatIndicatif}) IS NULL
+                THEN 0
+                ELSE ${lignesCommandeClient.quantite} * (${lignesCommandeClient.prixUnitaire} - COALESCE(${lignesCommandeClient.prixAchatUnitaire}, ${articles.prixAchatIndicatif}))
+              END
+            )`,
           })
           .from(factures)
           .innerJoin(lignesCommandeClient, eq(lignesCommandeClient.commandeId, factures.commandeClientId))
-          .innerJoin(articles, eq(articles.id, lignesCommandeClient.articleId))
+          .leftJoin(articles, eq(articles.id, lignesCommandeClient.articleId))
           .where(and(ne(factures.statut, "ANNULEE"), gte(factures.dateFacture, debut)))
           .groupBy(sql`1`),
       ])
@@ -167,11 +182,15 @@ export default async function PageStatistiques() {
         <section className="space-y-4">
           <h2 className="text-lg font-semibold tracking-tight text-foreground">Ventes &amp; marge</h2>
           <div className="grid gap-4 sm:grid-cols-3">
-            <StatTile label={`Ventes (${NB_MOIS} derniers mois)`} montant={ventes.totalPeriode} />
+            <StatTile
+              label={`Ventes HT (${NB_MOIS} derniers mois)`}
+              montant={ventes.totalPeriode}
+              note="Hors TVA collectée"
+            />
             <StatTile
               label={`Marge brute (${NB_MOIS} derniers mois)`}
               montant={marge.totalPeriode}
-              note="Lignes rattachées à un article catalogue uniquement"
+              note="Lignes dont le prix d'achat est connu"
             />
             <StatTile
               label="Répartition par mode de règlement"
@@ -182,7 +201,7 @@ export default async function PageStatistiques() {
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Évolution des ventes ({NB_MOIS} derniers mois)</CardTitle>
+                <CardTitle>Évolution des ventes HT ({NB_MOIS} derniers mois)</CardTitle>
               </CardHeader>
               <CardContent>
                 <EvolutionChart data={ventes.data} couleur={CHART_COLORS.orange} libelleSerie="Ventes" />
@@ -238,7 +257,7 @@ export default async function PageStatistiques() {
           )}
           {peutVoirVentes && (
             <div>
-              <p className="mb-1 font-medium">Ventes par mois</p>
+              <p className="mb-1 font-medium">Ventes HT par mois</p>
               <ul className="space-y-0.5 text-muted-foreground">
                 {ventes.data.map((p) => (
                   <li key={p.cle}>

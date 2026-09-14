@@ -18,7 +18,7 @@ export function DocumentHeader({
 }) {
   return (
     <header className="mb-5 print:break-inside-avoid">
-      <div className="grid grid-cols-[auto_1fr_auto] items-center gap-6 px-10 py-5">
+      <div className="feuille-a4__bande grid grid-cols-[auto_1fr_auto] items-center gap-6 py-5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/brand/aei-icon.png"
@@ -38,7 +38,7 @@ export function DocumentHeader({
         <img src="/brand/hp-logo.png" alt="HP" width={64} height={42} className="shrink-0 justify-self-end" />
       </div>
       <div className="h-[3px] bg-[#FAA755]" />
-      <div className="flex items-end justify-between border-t border-[#E6E3DD] px-10 py-4">
+      <div className="feuille-a4__bande flex items-end justify-between border-t border-[#E6E3DD] py-4">
         <div className="flex size-9 items-center justify-center rounded-[2px] bg-[#1E3A5F] text-[10px] font-semibold text-white">
           AEI
         </div>
@@ -60,7 +60,7 @@ export function DocumentHeader({
 export function DocumentFooter() {
   return (
     <footer className="mt-6 border-t-[3px] border-[#00AEEF] print:break-inside-avoid">
-      <div className="flex flex-wrap items-stretch justify-between gap-4 px-8 py-3">
+      <div className="feuille-a4__bande flex flex-wrap items-stretch justify-between gap-4 py-3">
         <div className="flex flex-wrap items-center gap-6 py-1">
           <div className="flex items-center gap-2">
             <Phone className="size-3.5 shrink-0 text-[#1A1917]" />
@@ -77,7 +77,7 @@ export function DocumentFooter() {
             </div>
           </div>
         </div>
-        <div className="-my-3 -mr-8 flex shrink-0 items-center bg-[#FAA755] px-5 text-xs font-bold text-white">
+        <div className="-my-3 -mr-[12mm] flex shrink-0 items-center bg-[#FAA755] px-5 text-xs font-bold text-white">
           <span className="font-mono tabular-nums">NIF : {AEI_INFO.nif}</span>
         </div>
       </div>

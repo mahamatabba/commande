@@ -4,20 +4,16 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { can } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
+import { formatTaux } from "@/lib/tva";
+import { MOYEN_REGLEMENT_LABEL, STATUT_FACTURE_LABEL, libelle } from "@/lib/libelles";
 import { STATUT_FACTURE_CLASS } from "@/lib/statut-style";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AnnulationDialog } from "@/components/shared/annulation-dialog";
 import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
-import { annulerFacture } from "../actions";
-
-const STATUT_LABEL: Record<string, string> = {
-  NON_PAYEE: "Non payée",
-  PARTIELLEMENT_PAYEE: "Partiellement payée",
-  SOLDEE: "Soldée",
-  ANNULEE: "Annulée",
-};
+import { MarquerPayeeDialog } from "@/components/factures/marquer-payee-dialog";
+import { annulerFacture, marquerFacturePayee } from "../actions";
 
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
   if (c.raisonSociale) return c.raisonSociale;
@@ -38,6 +34,7 @@ export default async function PageFacture({
   const peutVoirImpayes = can(session, "impayes:read");
   const peutVoirEncaissements = can(session, "encaissements:read");
   const peutAnnuler = can(session, "annulation:effectuer");
+  const peutRegler = can(session, "reglements:saisir");
 
   const facture = await db.query.factures.findFirst({
     where: (f, { eq }) => eq(f.id, factureId),
@@ -50,6 +47,11 @@ export default async function PageFacture({
 
   if (!facture) notFound();
 
+  // `resteAPayer` est une colonne calculée par la base ; la soustraction n'est
+  // qu'un filet de sécurité pour le cas où elle ne serait pas remontée.
+  const resteAPayer = facture.resteAPayer ?? facture.montantTotal - facture.montantRegle;
+  const encaissable = facture.statut !== "ANNULEE" && resteAPayer > 0;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -58,7 +60,7 @@ export default async function PageFacture({
             <h1 className="font-mono text-2xl font-semibold tabular-nums">{facture.numero}</h1>
             {peutVoirImpayes && (
               <Badge variant="outline" className={STATUT_FACTURE_CLASS[facture.statut]}>
-                {STATUT_LABEL[facture.statut]}
+                {libelle(STATUT_FACTURE_LABEL, facture.statut)}
               </Badge>
             )}
           </div>
@@ -77,6 +79,12 @@ export default async function PageFacture({
             trigger={<Button variant="outline">Voir la facture</Button>}
             defaultOpen={nouveau === "1"}
           />
+          {peutRegler && encaissable && (
+            <MarquerPayeeDialog
+              action={marquerFacturePayee.bind(null, facture.id)}
+              resteAPayer={resteAPayer}
+            />
+          )}
           {peutAnnuler && facture.statut !== "ANNULEE" && (
             <AnnulationDialog
               action={annulerFacture.bind(null, facture.id)}
@@ -93,8 +101,8 @@ export default async function PageFacture({
             <TableRow>
               <TableHead>Désignation</TableHead>
               <TableHead className="text-right">Qté</TableHead>
-              <TableHead className="text-right">Prix unitaire</TableHead>
-              <TableHead className="text-right">Montant</TableHead>
+              <TableHead className="text-right">P.U. HT</TableHead>
+              <TableHead className="text-right">Montant HT</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -112,9 +120,16 @@ export default async function PageFacture({
             ))}
           </TableBody>
         </Table>
-        <div className="flex flex-wrap justify-end gap-8 border-t bg-muted/50 p-3 text-sm">
+        <div className="flex flex-wrap justify-end gap-x-8 gap-y-2 border-t bg-muted/50 p-3 text-sm">
           <span className="font-mono tabular-nums">
-            Total : <strong>{formatMontant(facture.montantTotal)}</strong>
+            Total HT : <strong>{formatMontant(facture.montantHt)}</strong>
+          </span>
+          <span className="font-mono tabular-nums">
+            {facture.exonereTva ? "TVA exonérée" : `TVA ${formatTaux(facture.tauxTva)}`} :{" "}
+            <strong>{formatMontant(facture.montantTva)}</strong>
+          </span>
+          <span className="font-mono tabular-nums">
+            Total TTC : <strong>{formatMontant(facture.montantTotal)}</strong>
           </span>
           {peutVoirImpayes && (
             <>
@@ -123,8 +138,8 @@ export default async function PageFacture({
               </span>
               <span className="font-mono tabular-nums">
                 Reste à payer :{" "}
-                <strong className={facture.resteAPayer && facture.resteAPayer > 0 ? "text-[#8A211C]" : undefined}>
-                  {formatMontant(facture.resteAPayer ?? 0)}
+                <strong className={resteAPayer > 0 ? "text-[#8A211C]" : undefined}>
+                  {formatMontant(resteAPayer)}
                 </strong>
               </span>
             </>
@@ -149,7 +164,7 @@ export default async function PageFacture({
                 {facture.reglements.map((r) => (
                   <TableRow key={r.id}>
                     <TableCell className="font-mono tabular-nums">{formatDate(r.dateReglement)}</TableCell>
-                    <TableCell>{r.moyen}</TableCell>
+                    <TableCell>{libelle(MOYEN_REGLEMENT_LABEL, r.moyen)}</TableCell>
                     <TableCell>{r.sens === "ENCAISSEMENT" ? "Encaissement" : "Reprise"}</TableCell>
                     <TableCell className="text-right font-mono tabular-nums">{formatMontant(r.montant)}</TableCell>
                   </TableRow>

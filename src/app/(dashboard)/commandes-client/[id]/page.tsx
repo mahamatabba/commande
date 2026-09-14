@@ -4,6 +4,12 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { can } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
+import {
+  MODE_REGLEMENT_LABEL,
+  STATUT_COMMANDE_CLIENT_LABEL,
+  STATUT_PROFORMA_LABEL,
+  libelle,
+} from "@/lib/libelles";
 import { STATUT_COMMANDE_CLIENT_CLASS } from "@/lib/statut-style";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,18 +18,6 @@ import { AnnulationDialog } from "@/components/shared/annulation-dialog";
 import { CorrectionModeReglementDialog } from "@/components/commandes/correction-mode-reglement-dialog";
 import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
 import { annulerCommandeClient, corrigerCommandeClient, validerCommandeClient } from "../actions";
-
-const STATUT_LABEL: Record<string, string> = {
-  BROUILLON: "Brouillon",
-  VALIDEE: "Validée",
-  FACTUREE: "Facturée",
-  ANNULEE: "Annulée",
-};
-
-const MODE_LABEL: Record<string, string> = {
-  ESPECES: "Espèces",
-  BON_DE_COMMANDE: "Bon de commande",
-};
 
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
   if (c.raisonSociale) return c.raisonSociale;
@@ -48,10 +42,16 @@ export default async function PageCommandeClient({
 
   const commande = await db.query.commandesClient.findFirst({
     where: (c, { eq }) => eq(c.id, commandeId),
-    with: { client: true, lignes: true },
+    with: {
+      client: true,
+      lignes: true,
+      proformas: { orderBy: (p, { desc }) => desc(p.dateProforma) },
+    },
   });
 
   if (!commande) notFound();
+
+  const proformaEnCours = commande.proformas.find((p) => p.statut === "EMISE");
 
   return (
     <div className="space-y-6">
@@ -60,7 +60,7 @@ export default async function PageCommandeClient({
           <div className="flex items-center gap-2">
             <h1 className="font-mono text-2xl font-semibold tabular-nums">{commande.numero}</h1>
             <Badge variant="outline" className={STATUT_COMMANDE_CLIENT_CLASS[commande.statut]}>
-              {STATUT_LABEL[commande.statut]}
+              {libelle(STATUT_COMMANDE_CLIENT_LABEL, commande.statut)}
             </Badge>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -68,7 +68,7 @@ export default async function PageCommandeClient({
               {nomAffiche(commande.client)}
             </Link>{" "}
             · <span className="font-mono tabular-nums">{formatDate(commande.dateCommande)}</span> ·{" "}
-            {MODE_LABEL[commande.modeReglement]}
+            {libelle(MODE_REGLEMENT_LABEL, commande.modeReglement)}
           </p>
         </div>
         <div className="flex gap-2">
@@ -83,6 +83,14 @@ export default async function PageCommandeClient({
             <form action={validerCommandeClient.bind(null, commande.id)}>
               <Button type="submit">Valider</Button>
             </form>
+          )}
+          {peutFacturer && commande.statut === "VALIDEE" && !proformaEnCours && (
+            <Button
+              variant="outline"
+              render={<Link href={`/proformas/nouvelle?commandeClientId=${commande.id}`} />}
+            >
+              Établir une proforma
+            </Button>
           )}
           {peutFacturer && commande.statut === "VALIDEE" && (
             <Button render={<Link href={`/factures/nouvelle?commandeClientId=${commande.id}`} />}>
@@ -103,6 +111,21 @@ export default async function PageCommandeClient({
           )}
         </div>
       </div>
+
+      {commande.proformas.length > 0 && (
+        <div className="rounded-[2px] border border-[#C6D2E0] bg-[#EEF2F7] p-3 text-sm text-[#1E3A5F]">
+          <span className="font-medium">Proformas établies :</span>{" "}
+          {commande.proformas.map((p, i) => (
+            <span key={p.id}>
+              {i > 0 && " · "}
+              <Link href={`/proformas/${p.id}`} className="font-mono tabular-nums underline">
+                {p.numero}
+              </Link>{" "}
+              ({libelle(STATUT_PROFORMA_LABEL, p.statut).toLowerCase()})
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="overflow-x-auto rounded-lg border bg-card">
         <Table>

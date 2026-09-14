@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { articles } from "@/db/schema";
 import { requirePermission } from "@/lib/permissions";
+import { messageErreurBase } from "@/lib/erreurs-base";
 import { articleSchema } from "@/lib/validations";
 import { tracerActivite } from "@/lib/journal";
 
@@ -27,13 +28,22 @@ export async function creerArticle(
     return { error: parsed.error.issues[0].message, success: false };
   }
 
-  const [article] = await db.insert(articles).values(parsed.data).returning({
-    id: articles.id,
-    code: articles.code,
-    designation: articles.designation,
-    prixAchatIndicatif: articles.prixAchatIndicatif,
-    prixVente: articles.prixVente,
-  });
+  // Le code article est unique en base. Sans ce filet, deux saisies du même
+  // code affichaient une page d'erreur au lieu d'expliquer le doublon.
+  let article: NonNullable<EtatFormulaire["article"]>;
+  try {
+    [article] = await db.insert(articles).values(parsed.data).returning({
+      id: articles.id,
+      code: articles.code,
+      designation: articles.designation,
+      prixAchatIndicatif: articles.prixAchatIndicatif,
+      prixVente: articles.prixVente,
+    });
+  } catch (e) {
+    const message = messageErreurBase(e);
+    if (message) return { error: message, success: false };
+    throw e;
+  }
 
   await tracerActivite(db, {
     userId: Number(session.user.id),
@@ -60,7 +70,13 @@ export async function modifierArticle(
     return { error: parsed.error.issues[0].message, success: false };
   }
 
-  await db.update(articles).set(parsed.data).where(eq(articles.id, id));
+  try {
+    await db.update(articles).set(parsed.data).where(eq(articles.id, id));
+  } catch (e) {
+    const message = messageErreurBase(e);
+    if (message) return { error: message, success: false };
+    throw e;
+  }
 
   await tracerActivite(db, {
     userId: Number(session.user.id),

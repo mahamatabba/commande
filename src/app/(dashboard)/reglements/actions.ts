@@ -6,6 +6,8 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { commandesFournisseur, factures, reglements } from "@/db/schema";
 import { requirePermission } from "@/lib/permissions";
+import { ErreurMetier, messageErreurBase } from "@/lib/erreurs-base";
+import { formatMontant } from "@/lib/format";
 import { reglementSchema } from "@/lib/validations";
 import { tracerActivite } from "@/lib/journal";
 import { enregistrerMouvementCaisse } from "@/lib/caisse";
@@ -27,12 +29,22 @@ export async function saisirReglement(
   try {
     await db.transaction(async (tx) => {
       if (cible === "facture") {
-        const [facture] = await tx.select().from(factures).where(eq(factures.id, cibleId)).limit(1);
-        if (!facture) throw new Error("Facture introuvable.");
-        if (facture.statut === "ANNULEE") throw new Error("Cette facture est annulée.");
+        // Verrou sur la ligne : deux règlements saisis en même temps sur la
+        // même facture liraient sinon le même « montant réglé » et la
+        // feraient dépasser son total.
+        const [facture] = await tx
+          .select()
+          .from(factures)
+          .where(eq(factures.id, cibleId))
+          .limit(1)
+          .for("update");
+        if (!facture) throw new ErreurMetier("Facture introuvable.");
+        if (facture.statut === "ANNULEE") throw new ErreurMetier("Cette facture est annulée.");
         const resteAPayer = facture.montantTotal - facture.montantRegle;
         if (montant > resteAPayer) {
-          throw new Error(`Le montant dépasse le reste à payer (${resteAPayer} FCFA).`);
+          throw new ErreurMetier(
+            `Le montant dépasse le reste à payer (${formatMontant(resteAPayer)}).`,
+          );
         }
 
         const nouveauMontantRegle = facture.montantRegle + montant;
@@ -56,7 +68,12 @@ export async function saisirReglement(
           })
           .returning({ id: reglements.id });
 
-        await enregistrerMouvementCaisse(tx, { reglementId: reglement.id, sens: "ENCAISSEMENT", montant });
+        await enregistrerMouvementCaisse(tx, {
+          reglementId: reglement.id,
+          sens: "ENCAISSEMENT",
+          montant,
+          dateMouvement: dateReglement,
+        });
 
         await tracerActivite(tx, {
           userId: Number(session.user.id),
@@ -70,12 +87,18 @@ export async function saisirReglement(
           .select()
           .from(commandesFournisseur)
           .where(eq(commandesFournisseur.id, cibleId))
-          .limit(1);
-        if (!commande) throw new Error("Commande fournisseur introuvable.");
-        if (commande.statut === "ANNULEE") throw new Error("Cette commande est annulée.");
+          .limit(1)
+          .for("update");
+        if (!commande) throw new ErreurMetier("Commande fournisseur introuvable.");
+        if (commande.statut === "ANNULEE") throw new ErreurMetier("Cette commande est annulée.");
+        if (commande.statut === "BROUILLON") {
+          throw new ErreurMetier("Cette commande est encore en brouillon : elle ne peut pas être réglée.");
+        }
         const resteAPayer = commande.montantTotal - commande.montantRegle;
         if (montant > resteAPayer) {
-          throw new Error(`Le montant dépasse le reste à payer (${resteAPayer} FCFA).`);
+          throw new ErreurMetier(
+            `Le montant dépasse le reste à payer (${formatMontant(resteAPayer)}).`,
+          );
         }
 
         await tx
@@ -96,7 +119,12 @@ export async function saisirReglement(
           })
           .returning({ id: reglements.id });
 
-        await enregistrerMouvementCaisse(tx, { reglementId: reglement.id, sens: "DECAISSEMENT", montant });
+        await enregistrerMouvementCaisse(tx, {
+          reglementId: reglement.id,
+          sens: "DECAISSEMENT",
+          montant,
+          dateMouvement: dateReglement,
+        });
 
         await tracerActivite(tx, {
           userId: Number(session.user.id),
@@ -108,7 +136,10 @@ export async function saisirReglement(
       }
     });
   } catch (e) {
-    return { error: e instanceof Error ? e.message : "Erreur lors de l'enregistrement.", success: false };
+    if (e instanceof ErreurMetier) return { error: e.message, success: false };
+    const message = messageErreurBase(e);
+    if (message) return { error: message, success: false };
+    throw e;
   }
 
   revalidatePath("/reglements");

@@ -7,6 +7,7 @@ export type EntiteJournal =
   | "commande_fournisseur"
   | "commande_client"
   | "facture"
+  | "proforma"
   | "reglement"
   | "fournisseur"
   | "client"
@@ -19,6 +20,7 @@ export type ActionJournal =
   | "validation"
   | "annulation"
   | "reglement"
+  | "conversion"
   | "connexion";
 
 /**
@@ -109,6 +111,18 @@ export function formaterDetailsJournal(entite: string, details: unknown): string
       return [numero, montant !== undefined ? formatMontant(montant) : undefined, mode ? `(${MODE_REGLEMENT_LABEL[mode] ?? mode})` : undefined]
         .filter(Boolean)
         .join(" — ");
+    }
+  }
+
+  if (entite === "proforma") {
+    const motif = texte(d.motif);
+    if (motif) return `Motif : ${motif}`;
+    const numeroFacture = texte(d.numeroFacture);
+    if (numeroFacture) return `${texte(d.numero) ?? "Proforma"} convertie en facture ${numeroFacture}`;
+    const numero = texte(d.numero);
+    if (numero) {
+      const montant = nombre(d.montantTotal);
+      return `${numero}${montant !== undefined ? ` — ${formatMontant(montant)}` : ""}`;
     }
   }
 

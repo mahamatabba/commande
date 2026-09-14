@@ -23,6 +23,7 @@ const NAV_ITEMS: NavItem[] = [
     label: "Ventes",
     permissions: ["commandes_client:read"],
   },
+  { href: "/proformas", label: "Proformas", permissions: ["factures:read"] },
   { href: "/factures", label: "Factures", permissions: ["factures:read"] },
   { href: "/reglements", label: "Règlements", permissions: ["reglements:saisir"] },
   { href: "/caisse", label: "Caisse", permissions: ["caisse:solde:read"] },

@@ -78,8 +78,8 @@ export default async function PageNouvelleFacture({
                     <TableRow>
                       <TableHead>Désignation</TableHead>
                       <TableHead className="text-right">Qté</TableHead>
-                      <TableHead className="text-right">Prix unitaire</TableHead>
-                      <TableHead className="text-right">Montant</TableHead>
+                      <TableHead className="text-right">P.U. HT</TableHead>
+                      <TableHead className="text-right">Montant HT</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -108,17 +108,10 @@ export default async function PageNouvelleFacture({
               <CardTitle>Récapitulatif</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-baseline justify-between border-t border-border pt-4">
-                <span className="text-sm text-muted-foreground">Total</span>
-                <span className="font-mono text-2xl font-semibold tabular-nums">
-                  {formatMontant(commande.montantTotal)}
-                </span>
-              </div>
-
               {commande.modeReglement === "ESPECES" ? (
                 <p className="rounded-[2px] border border-[#BEDACD] bg-[#E7F0EB] p-3 text-sm text-[#14563E]">
                   Vente au comptant : la facture sera immédiatement marquée &laquo;&nbsp;Soldée&nbsp;&raquo; et un
-                  encaissement de {formatMontant(commande.montantTotal)} sera automatiquement enregistré en caisse.
+                  encaissement du montant TTC sera automatiquement enregistré en caisse.
                 </p>
               ) : (
                 <p className="rounded-[2px] border border-[#EBD3A8] bg-[#FBF1E0] p-3 text-sm text-[#8A5300]">
@@ -127,7 +120,18 @@ export default async function PageNouvelleFacture({
                 </p>
               )}
 
-              <EmettreFactureForm commandeClientId={commande.id} />
+              {commande.client.exonereTva && (
+                <p className="rounded-[2px] border border-[#C6D2E0] bg-[#EEF2F7] p-3 text-sm text-[#1E3A5F]">
+                  Ce client est enregistré comme exonéré de TVA. Le choix reste
+                  modifiable ci-dessous pour cette facture.
+                </p>
+              )}
+
+              <EmettreFactureForm
+                commandeClientId={commande.id}
+                montantHt={commande.montantTotal}
+                exonerePartDefaut={commande.client.exonereTva}
+              />
             </CardContent>
           </Card>
         </div>

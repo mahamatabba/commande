@@ -5,6 +5,8 @@ import { db } from "@/db";
 import { clients, factures } from "@/db/schema";
 import { can } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
+import { STATUT_FACTURE_LABEL, libelle } from "@/lib/libelles";
+import { STATUTS_FACTURE, bornerDebut, bornerFin, lireStatut } from "@/lib/filtres";
 import { STATUT_FACTURE_CLASS } from "@/lib/statut-style";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -20,13 +22,6 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
 import { Eye, FileText } from "lucide-react";
-
-const STATUT_LABEL: Record<string, string> = {
-  NON_PAYEE: "Non payée",
-  PARTIELLEMENT_PAYEE: "Partiellement payée",
-  SOLDEE: "Soldée",
-  ANNULEE: "Annulée",
-};
 
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
   if (c.raisonSociale) return c.raisonSociale;
@@ -45,10 +40,16 @@ export default async function PageFactures({
   const peutVoirImpayes = can(session, "impayes:read");
   const { statut, du, au } = await searchParams;
 
+  // Les filtres viennent de l'URL : un statut inconnu ou une date mal formée
+  // sont écartés au lieu d'être transmis tels quels à PostgreSQL.
+  const statutFiltre = lireStatut(statut, STATUTS_FACTURE);
+  const debut = bornerDebut(du);
+  const fin = bornerFin(au);
+
   const conditions = [
-    statut ? eq(factures.statut, statut as "NON_PAYEE") : undefined,
-    du ? gte(factures.dateFacture, new Date(du)) : undefined,
-    au ? lte(factures.dateFacture, new Date(au)) : undefined,
+    statutFiltre ? eq(factures.statut, statutFiltre) : undefined,
+    debut ? gte(factures.dateFacture, debut) : undefined,
+    fin ? lte(factures.dateFacture, fin) : undefined,
   ].filter(Boolean);
 
   const liste = await db
@@ -76,15 +77,16 @@ export default async function PageFactures({
         {peutVoirImpayes && (
           <div className="space-y-1">
             <Label htmlFor="statut">Statut</Label>
-            <Select name="statut" defaultValue={statut}>
+            <Select name="statut" defaultValue={statutFiltre}>
               <SelectTrigger id="statut" className="w-48">
                 <SelectValue placeholder="Tous" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="NON_PAYEE">Non payée</SelectItem>
-                <SelectItem value="PARTIELLEMENT_PAYEE">Partiellement payée</SelectItem>
-                <SelectItem value="SOLDEE">Soldée</SelectItem>
-                <SelectItem value="ANNULEE">Annulée</SelectItem>
+                {STATUTS_FACTURE.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {libelle(STATUT_FACTURE_LABEL, s)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -133,7 +135,7 @@ export default async function PageFactures({
                 {peutVoirImpayes && (
                   <TableCell>
                     <Badge variant="outline" className={STATUT_FACTURE_CLASS[f.statut!]}>
-                      {STATUT_LABEL[f.statut!]}
+                      {libelle(STATUT_FACTURE_LABEL, f.statut)}
                     </Badge>
                   </TableCell>
                 )}
