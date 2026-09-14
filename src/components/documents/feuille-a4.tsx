@@ -18,7 +18,7 @@ export function FeuilleA4({
 }) {
   return (
     <div className="feuille-apercu">
-      <div>
+      <div className="feuille-apercu__colonne">
         {barreOutils && (
           <div className="sans-impression mb-4 flex justify-end">{barreOutils}</div>
         )}

@@ -7,6 +7,10 @@
  * Règle à respecter : la marge de page appartient à la feuille
  * (--feuille-marge), jamais à @page. Une marge @page non nulle s'ajouterait
  * à celle de la feuille et décalerait tout le document à l'impression.
+ *
+ * À l'écran la feuille est dessinée à ses dimensions réelles (210 × 297 mm) ;
+ * à l'impression elle épouse la zone imprimable du navigateur, qui n'est pas
+ * toujours la feuille entière.
  */
 
 .feuille-apercu {
@@ -54,16 +58,20 @@
   body {
     /* La mise en page flex du gabarit racine fausse la pagination : on
        revient à un flux de blocs simple, seul cas que les navigateurs
-       découpent correctement en pages. */
+       découpent correctement en pages. La hauteur à 100 % sert de référence
+       aux pourcentages ci-dessous : en média paginé, elle vaut la zone
+       réellement imprimable, marges du navigateur déduites. */
     display: block;
-    height: auto;
+    height: 100%;
     margin: 0;
     padding: 0;
     background: #fff;
   }
 
-  .feuille-apercu {
+  .feuille-apercu,
+  .feuille-apercu__colonne {
     display: block;
+    height: 100%;
     min-height: 0;
     padding: 0;
     background: #fff;
@@ -71,9 +79,15 @@
 
   .feuille-a4 {
     box-shadow: none;
-    /* Marge de sécurité d'un millimètre : à 297 mm pile, le moindre arrondi
-       du navigateur fait déborder la feuille et génère une page blanche. */
-    min-height: 296mm;
+    /* La feuille épouse la zone imprimable au lieu d'imposer 210 × 297 mm.
+       Une géométrie figée en millimètres suppose que le navigateur imprime
+       sans marge, ce qui n'est vrai que si l'utilisateur choisit « aucune
+       marge » : partout ailleurs la feuille dépassait de quelques
+       millimètres et le pied de page, poussé hors de la zone, basculait
+       seul sur une deuxième feuille. En pourcentage, le pied se pose au bas
+       de la page quelle que soit la marge appliquée. */
+    width: 100%;
+    min-height: 100%;
   }
 
   .sans-impression {

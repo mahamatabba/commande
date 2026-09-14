@@ -42,6 +42,15 @@ export default async function PageImpressionFacture({
   const montantRegle = facture.montantRegle;
   const resteAPayer = facture.resteAPayer ?? montantTTC - montantRegle;
 
+  // Les factures émises avant le passage aux montants hors taxe portent des
+  // lignes déjà toutes taxes comprises : leur total HT a été obtenu en
+  // retranchant la TVA du total, si bien que la somme des lignes vaut le TTC.
+  // Intituler leurs colonnes « HT » ferait dire au document que 80 000 FCFA
+  // de lignes donnent 67 797 FCFA hors taxe. On ne qualifie donc les colonnes
+  // que lorsque les lignes sont réellement hors taxe.
+  const totalLignes = facture.commandeClient.lignes.reduce((t, l) => t + l.montantLigne, 0);
+  const suffixeHt = Math.round(totalLignes) === Math.round(montantHT) ? " HT" : "";
+
   return (
     <FeuilleA4 barreOutils={<ImprimerBouton />}>
       <DocumentHeader label="FACTURE" numero={facture.numero} date={formatDate(facture.dateFacture)} />
@@ -99,8 +108,8 @@ export default async function PageImpressionFacture({
             <tr className="border-b border-[#1E3A5F] bg-[#F4F3F0] text-left text-[11px] font-semibold tracking-wide text-[#6B6862] uppercase">
               <th className="px-3 py-2">Désignation</th>
               <th className="px-3 py-2 text-right">Qté</th>
-              <th className="px-3 py-2 text-right">P.U. HT</th>
-              <th className="px-3 py-2 text-right">Montant HT</th>
+              <th className="px-3 py-2 text-right">P.U.{suffixeHt}</th>
+              <th className="px-3 py-2 text-right">Montant{suffixeHt}</th>
             </tr>
           </thead>
           <tbody>
