@@ -42,6 +42,10 @@ export default async function PageFacture({
       client: true,
       commandeClient: { with: { lignes: true } },
       reglements: true,
+      // Chiffrage dont cette facture est issue, quand elle vient d'une
+      // conversion : sans ce lien, retrouver l'offre acceptée par le client
+      // obligerait à fouiller le journal d'activité.
+      proformaOrigine: true,
     },
   });
 
@@ -94,6 +98,19 @@ export default async function PageFacture({
           )}
         </div>
       </div>
+
+      {facture.proformaOrigine && (
+        <p className="rounded-[2px] border border-[#C6D2E0] bg-[#EEF2F7] p-3 text-sm text-[#1E3A5F]">
+          Établie à partir de la proforma{" "}
+          <Link
+            href={`/proformas/${facture.proformaOrigine.id}`}
+            className="font-mono tabular-nums underline"
+          >
+            {facture.proformaOrigine.numero}
+          </Link>{" "}
+          du {formatDate(facture.proformaOrigine.dateProforma)}.
+        </p>
+      )}
 
       <div className="overflow-x-auto rounded-lg border bg-card">
         <Table>
