@@ -3,11 +3,14 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { requirePermission } from "@/lib/permissions";
 import { formatDate, formatMontant, montantEnLettres } from "@/lib/format";
-import { AEI_INFO } from "@/lib/constants";
 import { STATUT_COMMANDE_FOURNISSEUR_CLASS } from "@/lib/statut-style";
 import { Badge } from "@/components/ui/badge";
 import { ImprimerBouton } from "@/components/factures/imprimer-bouton";
-import { DocumentFooter, DocumentHeader } from "@/components/documents/entete-document";
+import {
+  BlocSignatures,
+  DocumentFooter,
+  DocumentHeader,
+} from "@/components/documents/entete-document";
 import { FeuilleA4 } from "@/components/documents/feuille-a4";
 
 const STATUT_LABEL: Record<string, string> = {
@@ -43,7 +46,7 @@ export default async function PageImpressionCommandeFournisseur({
 
       <div className="feuille-a4__corps text-[#1A1917]">
         <section className="mb-4 grid grid-cols-2 gap-4 print:break-inside-avoid">
-          <div className="rounded-[2px] border border-[#D9D6D0] p-4">
+          <div className="rounded-[2px] border border-[#D9D6D0] p-4 print:p-3">
             <h3 className="mb-2 text-[11px] font-semibold tracking-wide text-[#6B6862] uppercase">
               Fournisseur
             </h3>
@@ -60,7 +63,7 @@ export default async function PageImpressionCommandeFournisseur({
               </p>
             )}
           </div>
-          <div className="rounded-[2px] border border-[#D9D6D0] p-4">
+          <div className="rounded-[2px] border border-[#D9D6D0] p-4 print:p-3">
             <h3 className="mb-2 text-[11px] font-semibold tracking-wide text-[#6B6862] uppercase">
               Statut
             </h3>
@@ -96,8 +99,8 @@ export default async function PageImpressionCommandeFournisseur({
         </table>
 
         <section className="mb-4 flex justify-end print:break-inside-avoid">
-          <div className="w-72 space-y-2 text-sm">
-            <div className="flex items-center justify-between rounded-[2px] bg-[#1E3A5F] px-3 py-2.5 text-white">
+          <div className="w-72 space-y-2 text-sm print:space-y-1">
+            <div className="flex items-center justify-between rounded-[2px] bg-[#1E3A5F] px-3 py-2.5 text-white print:py-2">
               <span className="text-sm font-semibold">Montant total</span>
               <span className="font-mono text-base font-semibold tabular-nums">
                 {formatMontant(commande.montantTotal)}
@@ -106,20 +109,11 @@ export default async function PageImpressionCommandeFournisseur({
           </div>
         </section>
 
-        <p className="mb-8 text-sm italic">
+        <p className="mb-8 text-sm italic print:mb-5">
           Arrêté le présent bon de commande à la somme de : {montantEnLettres(commande.montantTotal)}.
         </p>
 
-        <section className="grid grid-cols-2 gap-8 text-xs print:break-inside-avoid">
-          <div>
-            <p className="mb-10 font-semibold text-[#4A4844]">Le Fournisseur</p>
-            <div className="border-t border-[#D9D6D0] pt-1 text-[#9C9A95]">Signature et cachet</div>
-          </div>
-          <div>
-            <p className="mb-10 font-semibold text-[#4A4844]">Pour {AEI_INFO.nom}</p>
-            <div className="border-t border-[#D9D6D0] pt-1 text-[#9C9A95]">Signature et cachet</div>
-          </div>
-        </section>
+        <BlocSignatures titre="Le Fournisseur" mention="Signature et cachet" />
       </div>
 
       <DocumentFooter />

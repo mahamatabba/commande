@@ -1,16 +1,23 @@
 /*
- * Géométrie de la feuille A4, exprimée en millimètres réels et définie une
- * seule fois. C'est la source unique partagée par les trois rendus du même
- * document — écran, impression navigateur, export PDF — ce qui garantit
- * qu'ils produisent exactement la même page.
+ * Géométrie de la feuille A4, partagée par les quatre documents imprimables :
+ * facture, facture proforma, bon de commande client, bon de commande
+ * fournisseur.
  *
- * Règle à respecter : la marge de page appartient à la feuille
- * (--feuille-marge), jamais à @page. Une marge @page non nulle s'ajouterait
- * à celle de la feuille et décalerait tout le document à l'impression.
+ * Deux modèles volontairement différents, et c'est le cœur du fichier :
  *
- * À l'écran la feuille est dessinée à ses dimensions réelles (210 × 297 mm) ;
- * à l'impression elle épouse la zone imprimable du navigateur, qui n'est pas
- * toujours la feuille entière.
+ * — À L'ÉCRAN, la feuille est un objet dessiné. Elle mesure 210 × 297 mm,
+ *   repose sur un fond gris, et le pied de page est collé en bas par le flex.
+ *   C'est un aperçu : il doit ressembler à du papier.
+ *
+ * — À L'IMPRESSION, la feuille n'existe pas. La page du navigateur EST la
+ *   feuille. On ne redécrit donc AUCUNE hauteur, AUCUN flex, AUCUNE
+ *   dimension : le document redevient un simple flux de blocs qui s'arrête
+ *   avec son contenu. C'est la seule mise en page qu'aucun réglage de marge
+ *   ne peut faire déborder, parce qu'il n'existe plus rien qui puisse rendre
+ *   la boîte plus haute que ce qu'elle contient. Toute géométrie imposée —
+ *   297 mm, 100 %, peu importe l'unité — déborde dès qu'elle dépasse d'un
+ *   millimètre la zone imprimable réelle, et le pied de page part seul sur
+ *   une deuxième feuille.
  */
 
 .feuille-apercu {
@@ -36,14 +43,15 @@
 }
 
 /* Occupe la hauteur restante, ce qui pousse le pied de page en bas de la
-   feuille quand le contenu est court, sans le détacher quand il est long. */
+   feuille quand le contenu est court. Comportement d'aperçu uniquement :
+   à l'impression le pied suit simplement le contenu. */
 .feuille-a4__corps {
   flex: 1;
   padding: 0 var(--feuille-marge) var(--feuille-marge);
 }
 
 /* Bandes pleine largeur de l'en-tête et du pied de page : le fond touche les
-   bords de la feuille, seul le contenu est retrait de la marge. */
+   bords de la feuille, seul le contenu est en retrait de la marge. */
 .feuille-a4__bande {
   padding-inline: var(--feuille-marge);
 }
@@ -51,46 +59,85 @@
 @media print {
   @page {
     size: A4;
+    /* Marge nulle : la marge appartient à la feuille (--feuille-marge), ce
+       qui permet aux bandes de l'en-tête et du pied de page de toucher le
+       bord du papier. Une marge @page non nulle s'y ajouterait. */
     margin: 0;
   }
 
+  /*
+   * Remise à plat du gabarit d'écran.
+   *
+   * Le !important n'est pas une facilité : le gabarit racine pose ses
+   * utilitaires Tailwind directement sur <html> et <body> (h-full, flex,
+   * flex-col, min-h-full). Ce sont des sélecteurs de CLASSE. Une règle
+   * d'élément — `body { display: block }` — leur est inférieure en
+   * spécificité et ne s'applique jamais : le corps de page restait une
+   * colonne flex haute d'une page entière pendant l'impression, et toute la
+   * chaîne de hauteurs en dessous avec lui. Seul !important remet le flux
+   * d'impression hors de portée du gabarit d'écran.
+   *
+   * Aucune hauteur n'est fixée ici, et c'est délibéré : la boîte vaut
+   * exactement son contenu.
+   */
   html,
-  body {
-    /* La mise en page flex du gabarit racine fausse la pagination : on
-       revient à un flux de blocs simple, seul cas que les navigateurs
-       découpent correctement en pages. La hauteur à 100 % sert de référence
-       aux pourcentages ci-dessous : en média paginé, elle vaut la zone
-       réellement imprimable, marges du navigateur déduites. */
-    display: block;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    background: #fff;
-  }
-
+  body,
   .feuille-apercu,
-  .feuille-apercu__colonne {
-    display: block;
-    height: 100%;
-    min-height: 0;
-    padding: 0;
-    background: #fff;
+  .feuille-apercu__colonne,
+  .feuille-a4 {
+    display: block !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    box-shadow: none !important;
   }
 
   .feuille-a4 {
-    box-shadow: none;
-    /* La feuille épouse la zone imprimable au lieu d'imposer 210 × 297 mm.
-       Une géométrie figée en millimètres suppose que le navigateur imprime
-       sans marge, ce qui n'est vrai que si l'utilisateur choisit « aucune
-       marge » : partout ailleurs la feuille dépassait de quelques
-       millimètres et le pied de page, poussé hors de la zone, basculait
-       seul sur une deuxième feuille. En pourcentage, le pied se pose au bas
-       de la page quelle que soit la marge appliquée. */
-    width: 100%;
-    min-height: 100%;
+    /* Marge un peu plus serrée sur papier qu'à l'écran : deux millimètres de
+       moins de chaque côté, gagnés sur du blanc, repoussent d'autant le
+       moment où le document déborde. */
+    --feuille-marge: 10mm;
   }
 
-  .sans-impression {
+  .feuille-a4__corps {
+    flex: none !important;
+    /* Le bas du corps n'a pas besoin de la marge complète : le pied de page
+       apporte déjà son propre espacement juste en dessous, et cumuler les
+       deux revenait à perdre un centimètre de papier en pure séparation. */
+    padding: 0 var(--feuille-marge) 4mm !important;
+  }
+
+  /*
+   * Densité papier.
+   *
+   * Le tableau des lignes est le seul bloc du document dont la hauteur croît
+   * avec le contenu : c'est donc lui, et lui seul, qui décide du nombre
+   * d'articles qu'une facture peut porter avant de réclamer une deuxième
+   * feuille. Chaque millimètre repris sur une ligne se multiplie par leur
+   * nombre. L'aération reste celle de l'écran, où elle ne coûte rien.
+   *
+   * Les marges de section sont resserrées dans le même esprit. La règle est
+   * posée ici plutôt que sur chaque page : la densité d'impression est une
+   * propriété de la feuille, et les quatre documents ont la même charpente.
+   */
+  .feuille-a4__corps th,
+  .feuille-a4__corps td {
+    padding-block: 0.25rem;
+  }
+
+  .feuille-a4__corps > section,
+  .feuille-a4__corps > table {
+    margin-bottom: 0.75rem;
+  }
+
+  /* Barres d'outils de l'aperçu, et notifications rendues par le gabarit
+     racine en marge du document : rien de tout cela n'appartient au papier. */
+  .sans-impression,
+  [data-sonner-toaster] {
     display: none !important;
   }
 }
