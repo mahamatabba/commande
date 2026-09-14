@@ -3,7 +3,7 @@ import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { commandesFournisseur, fournisseurs } from "@/db/schema";
-import { can } from "@/lib/permissions";
+import { can, requirePermission } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
 import { STATUTS_COMMANDE_FOURNISSEUR, bornerDebut, bornerFin, lireStatut } from "@/lib/filtres";
 import { STATUT_COMMANDE_FOURNISSEUR_LABEL, libelle } from "@/lib/libelles";
@@ -29,6 +29,7 @@ export default async function PageCommandesFournisseur({
   searchParams: Promise<{ statut?: string; du?: string; au?: string }>;
 }) {
   const session = await auth();
+  requirePermission(session, "commandes_fournisseur:read");
   const peutEcrire = can(session, "commandes_fournisseur:write");
   const peutVoirDecaissements = can(session, "decaissements:read");
   const { statut, du, au } = await searchParams;

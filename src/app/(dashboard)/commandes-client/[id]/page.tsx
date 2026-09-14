@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { can } from "@/lib/permissions";
+import { can, requirePermission } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
 import {
   MODE_REGLEMENT_LABEL,
@@ -35,6 +35,7 @@ export default async function PageCommandeClient({
   const { nouveau } = await searchParams;
   const commandeId = Number(id);
   const session = await auth();
+  requirePermission(session, "commandes_client:read");
   const peutEcrire = can(session, "commandes_client:write");
   const peutAnnuler = can(session, "annulation:effectuer");
   const peutFacturer = can(session, "factures:emettre");

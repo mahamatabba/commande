@@ -3,7 +3,7 @@ import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { clients, commandesClient } from "@/db/schema";
-import { can } from "@/lib/permissions";
+import { can, requirePermission } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
 import { STATUTS_COMMANDE_CLIENT, bornerDebut, bornerFin, lireStatut } from "@/lib/filtres";
 import { MODE_REGLEMENT_LABEL, STATUT_COMMANDE_CLIENT_LABEL, libelle } from "@/lib/libelles";
@@ -34,6 +34,7 @@ export default async function PageCommandesClient({
   searchParams: Promise<{ statut?: string; du?: string; au?: string }>;
 }) {
   const session = await auth();
+  requirePermission(session, "commandes_client:read");
   const peutEcrire = can(session, "commandes_client:write");
   const { statut, du, au } = await searchParams;
 

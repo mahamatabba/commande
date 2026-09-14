@@ -2,7 +2,13 @@ import Link from "next/link";
 import { eq, inArray, ne, gte, and, sql } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { commandesFournisseur, commandesClient, factures, mouvementsCaisse } from "@/db/schema";
+import {
+  commandesFournisseur,
+  commandesClient,
+  factures,
+  mouvementsCaisse,
+  proformas,
+} from "@/db/schema";
 import { can } from "@/lib/permissions";
 import { calculerSoldeCaisse } from "@/lib/caisse";
 import { CHART_COLORS } from "@/lib/constants";
@@ -17,6 +23,9 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 }
 
 const NB_MOIS_GRAPHIQUE = 6;
+
+/** Fenêtre sur laquelle le taux de transformation des proformas est calculé. */
+const NB_MOIS_CONVERSION = 6;
 
 function serieMensuelle(lignes: { mois: string; total: string }[]): { cle: string; label: string; valeur: number }[] {
   const parCle = new Map(lignes.map((l) => [cleMois(l.mois), Number(l.total)]));
@@ -41,6 +50,7 @@ export default async function PageTableauDeBord() {
   const session = await auth();
   const debutMois = debutPeriode(1);
   const debutGraphique = debutPeriode(NB_MOIS_GRAPHIQUE);
+  const debutConversion = debutPeriode(NB_MOIS_CONVERSION);
 
   const peutCommandesFournisseur = can(session, "commandes_fournisseur:read");
   const peutCommandesClient = can(session, "commandes_client:read");
@@ -71,6 +81,8 @@ export default async function PageTableauDeBord() {
     decaissementsMoisRows,
     achatsParMois,
     ventesParMois,
+    proformasEnCoursRows,
+    conversionRows,
   ] = await Promise.all([
     peutCommandesFournisseur
       ? db
@@ -141,10 +153,55 @@ export default async function PageTableauDeBord() {
           .where(and(ne(factures.statut, "ANNULEE"), gte(factures.dateFacture, debutGraphique)))
           .groupBy(sql`1`)
       : Promise.resolve([]),
+    // Offres encore en circulation, et parmi elles celles dont la date de
+    // validité est passée : une proforma expirée annonce un prix qui n'engage
+    // plus AEI, c'est elle qu'il faut relancer ou ré-émettre.
+    peutFactures
+      ? db
+          .select({
+            n: sql<string>`count(*)`,
+            expirees: sql<string>`count(*) FILTER (WHERE ${proformas.dateValidite} < now())`,
+          })
+          .from(proformas)
+          .where(eq(proformas.statut, "EMISE"))
+      : Promise.resolve([{ n: "0", expirees: "0" }]),
+    // Taux de transformation : on ne compte au dénominateur que les offres
+    // dont le sort est joué — converties, annulées, ou expirées sans réponse.
+    // Une proforma remise hier et encore valable n'a pas eu sa chance : la
+    // faire entrer dans le calcul ferait chuter le taux sans rien signifier.
+    peutFactures
+      ? db
+          .select({
+            decidees: sql<string>`count(*) FILTER (WHERE ${proformas.statut} <> 'EMISE' OR ${proformas.dateValidite} < now())`,
+            converties: sql<string>`count(*) FILTER (WHERE ${proformas.statut} = 'CONVERTIE')`,
+          })
+          .from(proformas)
+          .where(gte(proformas.dateProforma, debutConversion))
+      : Promise.resolve([{ decidees: "0", converties: "0" }]),
   ]);
 
   const achatsSerie = serieMensuelle(achatsParMois);
   const ventesSerie = serieMensuelle(ventesParMois);
+
+  const proformasExpirees = Number(proformasEnCoursRows[0]?.expirees ?? 0);
+  const proformasDecidees = Number(conversionRows[0]?.decidees ?? 0);
+  const proformasConverties = Number(conversionRows[0]?.converties ?? 0);
+  const tauxConversion =
+    proformasDecidees > 0 ? Math.round((proformasConverties / proformasDecidees) * 100) : null;
+
+  // Le taux reste masqué tant qu'aucune offre n'a été tranchée : afficher
+  // « 0 % » faute de données laisserait croire qu'aucun devis n'aboutit.
+  const noteProformas =
+    [
+      proformasExpirees > 0
+        ? `${proformasExpirees} expirée${proformasExpirees > 1 ? "s" : ""}`
+        : null,
+      tauxConversion !== null
+        ? `${tauxConversion} % converties sur ${NB_MOIS_CONVERSION} mois`
+        : null,
+    ]
+      .filter((part): part is string => part !== null)
+      .join(" · ") || "Offres remises, en attente de réponse";
 
   return (
     <div className="space-y-8">
@@ -159,7 +216,7 @@ export default async function PageTableauDeBord() {
       {afficheActivite && (
         <section className="space-y-4">
           <SectionTitle>Activité en cours</SectionTitle>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {peutCommandesFournisseur && (
               <CountTile
                 label="Achats validés"
@@ -174,6 +231,14 @@ export default async function PageTableauDeBord() {
                 valeur={Number(commandesClientEnCours[0]?.n ?? 0)}
                 href="/commandes-client"
                 note="En attente de facturation"
+              />
+            )}
+            {peutFactures && (
+              <CountTile
+                label="Proformas en cours"
+                valeur={Number(proformasEnCoursRows[0]?.n ?? 0)}
+                href="/proformas"
+                note={noteProformas}
               />
             )}
             {peutFactures && (

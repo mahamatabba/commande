@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { can } from "@/lib/permissions";
+import { can, requirePermission } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
 import { STATUT_COMMANDE_FOURNISSEUR_CLASS } from "@/lib/statut-style";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +34,7 @@ export default async function PageCommandeFournisseur({
   const { nouveau } = await searchParams;
   const commandeId = Number(id);
   const session = await auth();
+  requirePermission(session, "commandes_fournisseur:read");
   const peutEcrire = can(session, "commandes_fournisseur:write");
   const peutAnnuler = can(session, "annulation:effectuer");
   const peutVoirDecaissements = can(session, "decaissements:read");

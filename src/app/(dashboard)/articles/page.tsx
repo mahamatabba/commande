@@ -2,7 +2,7 @@ import { ilike } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { articles } from "@/db/schema";
-import { can } from "@/lib/permissions";
+import { can, requirePermission } from "@/lib/permissions";
 import { formatMontant } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ export default async function PageArticles({
   searchParams: Promise<{ q?: string }>;
 }) {
   const session = await auth();
+  requirePermission(session, "referentiels:read");
   const { q } = await searchParams;
   const peutEcrire = can(session, "referentiels:write");
 

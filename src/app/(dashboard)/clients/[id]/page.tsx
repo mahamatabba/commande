@@ -3,10 +3,15 @@ import { notFound } from "next/navigation";
 import { and, desc, eq, ne, sql } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { clients, commandesClient, factures } from "@/db/schema";
-import { can } from "@/lib/permissions";
+import { clients, commandesClient, factures, proformas } from "@/db/schema";
+import { can, requirePermission } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
-import { STATUT_COMMANDE_CLIENT_CLASS, STATUT_FACTURE_CLASS } from "@/lib/statut-style";
+import { STATUT_PROFORMA_LABEL, libelle } from "@/lib/libelles";
+import {
+  STATUT_COMMANDE_CLIENT_CLASS,
+  STATUT_FACTURE_CLASS,
+  STATUT_PROFORMA_CLASS,
+} from "@/lib/statut-style";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ClientFormDialog } from "@/components/clients/client-form-dialog";
@@ -35,8 +40,10 @@ export default async function PageClient({
   const { id } = await params;
   const clientId = Number(id);
   const session = await auth();
+  requirePermission(session, "referentiels:read");
   const peutEcrire = can(session, "referentiels:write");
   const peutVoirSolde = can(session, "impayes:read");
+  const peutVoirProformas = can(session, "factures:read");
 
   const [client] = await db.select().from(clients).where(eq(clients.id, clientId)).limit(1);
   if (!client) notFound();
@@ -52,6 +59,17 @@ export default async function PageClient({
     .from(factures)
     .where(eq(factures.clientId, clientId))
     .orderBy(desc(factures.dateFacture));
+
+  // Les chiffrages remis à ce client : sans cette liste, retrouver l'offre
+  // qu'on lui a laissée il y a trois semaines obligeait à passer par la vente
+  // correspondante, encore fallait-il se souvenir de son numéro.
+  const proformasClient = peutVoirProformas
+    ? await db
+        .select()
+        .from(proformas)
+        .where(eq(proformas.clientId, clientId))
+        .orderBy(desc(proformas.dateProforma))
+    : [];
 
   let soldeDu = 0;
   if (peutVoirSolde) {
@@ -152,6 +170,62 @@ export default async function PageClient({
           </Table>
         </div>
       </div>
+
+      {/* Section affichée seulement si le client a reçu au moins un chiffrage :
+          la proforma est une étape facultative, un tableau vide sur chaque
+          fiche n'apprendrait rien. */}
+      {peutVoirProformas && proformasClient.length > 0 && (
+        <div>
+          <h2 className="mb-2 text-lg font-medium">Proformas</h2>
+          <div className="overflow-x-auto rounded-lg border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Numéro</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Valable jusqu&apos;au</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead className="text-right">Montant</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {proformasClient.map((p) => {
+                  const expiree = p.statut === "EMISE" && p.dateValidite < new Date();
+                  return (
+                    <TableRow key={p.id}>
+                      <TableCell>
+                        <Link
+                          href={`/proformas/${p.id}`}
+                          className="font-mono font-medium tabular-nums hover:underline"
+                        >
+                          {p.numero}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="font-mono tabular-nums">
+                        {formatDate(p.dateProforma)}
+                      </TableCell>
+                      <TableCell
+                        className={`font-mono tabular-nums${expiree ? " text-[#8A5300]" : ""}`}
+                        title={expiree ? "Offre expirée : le prix annoncé n'engage plus AEI." : undefined}
+                      >
+                        {formatDate(p.dateValidite)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={STATUT_PROFORMA_CLASS[p.statut]}>
+                          {libelle(STATUT_PROFORMA_LABEL, p.statut)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right font-mono tabular-nums">
+                        {formatMontant(p.montantTotal)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      )}
 
       <div>
         <h2 className="mb-2 text-lg font-medium">Factures</h2>

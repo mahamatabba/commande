@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { can } from "@/lib/permissions";
+import { can, requirePermission } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
 import { formatTaux } from "@/lib/tva";
 import { MOYEN_REGLEMENT_LABEL, STATUT_FACTURE_LABEL, libelle } from "@/lib/libelles";
@@ -31,6 +31,7 @@ export default async function PageFacture({
   const { nouveau } = await searchParams;
   const factureId = Number(id);
   const session = await auth();
+  requirePermission(session, "factures:read");
   const peutVoirImpayes = can(session, "impayes:read");
   const peutVoirEncaissements = can(session, "encaissements:read");
   const peutAnnuler = can(session, "annulation:effectuer");

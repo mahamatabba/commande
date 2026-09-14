@@ -3,7 +3,7 @@ import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { clients, factures } from "@/db/schema";
-import { can } from "@/lib/permissions";
+import { can, requirePermission } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
 import { STATUT_FACTURE_LABEL, libelle } from "@/lib/libelles";
 import { STATUTS_FACTURE, bornerDebut, bornerFin, lireStatut } from "@/lib/filtres";
@@ -34,6 +34,7 @@ export default async function PageFactures({
   searchParams: Promise<{ statut?: string; du?: string; au?: string }>;
 }) {
   const session = await auth();
+  requirePermission(session, "factures:read");
   // Le superviseur voit le chiffre d'affaires (montants) mais jamais le détail
   // des impayés/créances : cette colonne n'est donc même pas sélectionnée en
   // base pour lui, conformément à la règle "filtrer à la source".

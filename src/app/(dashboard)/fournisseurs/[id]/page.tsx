@@ -4,7 +4,7 @@ import { desc, eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { commandesFournisseur, fournisseurs } from "@/db/schema";
-import { can } from "@/lib/permissions";
+import { can, requirePermission } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
 import { STATUT_COMMANDE_FOURNISSEUR_CLASS } from "@/lib/statut-style";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +28,7 @@ export default async function PageFournisseur({
   const { id } = await params;
   const fournisseurId = Number(id);
   const session = await auth();
+  requirePermission(session, "referentiels:read");
   const peutEcrire = can(session, "referentiels:write");
   const peutVoirDecaissements = can(session, "decaissements:read");
 
