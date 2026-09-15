@@ -2,23 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Minus, Plus, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { ActionIcon, Button, NumberInput, Select, Table, TextInput } from "@mantine/core";
 import { formatMontant } from "@/lib/format";
 import type { LigneInput } from "@/lib/validations";
 import { ArticleFormDialog } from "@/components/articles/article-form-dialog";
@@ -44,7 +28,7 @@ const LIGNE_VIDE: LigneInput = {
  * au JSON envoyé au serveur, où il devenait `null` et faisait échouer la
  * validation avec un message incompréhensible. On retombe donc sur 0.
  */
-function lireNombre(valeur: string): number {
+function lireNombre(valeur: number | string): number {
   const n = Number(valeur);
   return Number.isFinite(n) ? n : 0;
 }
@@ -133,58 +117,54 @@ export function LignesEditor({
     <div className="space-y-3">
       <input type="hidden" name={name} value={JSON.stringify(lignes)} />
 
-      <div className="overflow-x-auto rounded-[2px] border border-border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-20">Code</TableHead>
-              <TableHead className="w-56">Article</TableHead>
-              <TableHead>Désignation</TableHead>
-              <TableHead className="w-32">Qté</TableHead>
-              <TableHead className="w-32">P.U. HT</TableHead>
-              <TableHead className="w-32 text-right">Montant HT</TableHead>
-              <TableHead className="w-10" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+      <div className="overflow-x-auto rounded-md border border-[var(--mantine-color-dark-4)] bg-[var(--mantine-color-dark-6)]">
+        <Table verticalSpacing="xs">
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th w={80}>Code</Table.Th>
+              <Table.Th w={224}>Article</Table.Th>
+              <Table.Th>Désignation</Table.Th>
+              <Table.Th w={128}>Qté</Table.Th>
+              <Table.Th w={128}>P.U. HT</Table.Th>
+              <Table.Th w={128} ta="right">Montant HT</Table.Th>
+              <Table.Th w={40} />
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
             {lignes.map((ligne, index) => {
               const article = catalogue.find((a) => a.id === ligne.articleId);
               return (
-                <TableRow key={index}>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
+                <Table.Tr key={index}>
+                  <Table.Td className="font-mono text-xs text-[var(--mantine-color-dimmed)]">
                     {article?.code ?? "—"}
-                  </TableCell>
-                  <TableCell>
+                  </Table.Td>
+                  <Table.Td>
                     <Select
-                      value={ligne.articleId ? String(ligne.articleId) : undefined}
-                      onValueChange={(v) => choisirArticle(index, Number(v))}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Article libre..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {catalogue.map((a) => (
-                          <SelectItem key={a.id} value={String(a.id)}>
-                            {a.code} — {a.designation}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    <Input
+                      value={ligne.articleId ? String(ligne.articleId) : null}
+                      onChange={(v) => v && choisirArticle(index, Number(v))}
+                      data={catalogue.map((a) => ({
+                        value: String(a.id),
+                        label: `${a.code} — ${a.designation}`,
+                      }))}
+                      placeholder="Article libre..."
+                      searchable
+                      nothingFoundMessage="Aucun article"
+                    />
+                  </Table.Td>
+                  <Table.Td>
+                    <TextInput
                       value={ligne.designation}
                       onChange={(e) => majLigne(index, { designation: e.target.value })}
                       placeholder="Désignation"
                       required
                     />
-                  </TableCell>
-                  <TableCell>
+                  </Table.Td>
+                  <Table.Td>
                     <div className="flex items-center gap-1">
-                      <Button
+                      <ActionIcon
                         type="button"
-                        variant="outline"
-                        size="icon-sm"
+                        variant="default"
+                        size="lg"
                         disabled={ligne.quantite <= QUANTITE_MIN}
                         onClick={() =>
                           majLigne(index, {
@@ -192,75 +172,76 @@ export function LignesEditor({
                           })
                         }
                       >
-                        <Minus className="size-3.5" />
-                      </Button>
-                      <Input
-                        type="number"
+                        <Minus size={14} />
+                      </ActionIcon>
+                      <NumberInput
                         min={0.01}
-                        step="0.01"
+                        step={0.01}
                         value={ligne.quantite}
-                        onChange={(e) => majLigne(index, { quantite: lireNombre(e.target.value) })}
+                        onChange={(v) => majLigne(index, { quantite: lireNombre(v) })}
                         onBlur={() => {
                           if (ligne.quantite <= 0) majLigne(index, { quantite: QUANTITE_MIN });
                         }}
                         required
-                        aria-invalid={ligne.quantite <= 0}
-                        className="w-14 px-1 text-center font-mono tabular-nums"
+                        hideControls
+                        error={ligne.quantite <= 0}
+                        classNames={{ input: "text-center font-mono tabular-nums" }}
+                        w={64}
                       />
-                      <Button
+                      <ActionIcon
                         type="button"
-                        variant="outline"
-                        size="icon-sm"
+                        variant="default"
+                        size="lg"
                         onClick={() => majLigne(index, { quantite: ligne.quantite + 1 })}
                       >
-                        <Plus className="size-3.5" />
-                      </Button>
+                        <Plus size={14} />
+                      </ActionIcon>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
+                  </Table.Td>
+                  <Table.Td>
+                    <NumberInput
                       min={0}
                       step={1}
                       value={ligne.prixUnitaire}
-                      onChange={(e) => majLigne(index, { prixUnitaire: lireNombre(e.target.value) })}
+                      onChange={(v) => majLigne(index, { prixUnitaire: lireNombre(v) })}
                       required
-                      className="font-mono tabular-nums"
+                      hideControls
+                      classNames={{ input: "font-mono tabular-nums" }}
                     />
-                  </TableCell>
-                  <TableCell className="text-right font-mono font-medium tabular-nums">
+                  </Table.Td>
+                  <Table.Td className="text-right font-mono font-medium tabular-nums">
                     {formatMontant(ligne.quantite * ligne.prixUnitaire)}
-                  </TableCell>
-                  <TableCell>
-                    <Button
+                  </Table.Td>
+                  <Table.Td>
+                    <ActionIcon
                       type="button"
-                      variant="ghost"
-                      size="icon-sm"
+                      variant="subtle"
+                      color="red"
+                      size="lg"
                       disabled={lignes.length === 1}
                       onClick={() => supprimerLigne(index)}
-                      className="text-[#8A211C] hover:bg-[#F8E8E6] hover:text-[#8A211C]"
                     >
-                      <X className="size-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
+                      <X size={16} />
+                    </ActionIcon>
+                  </Table.Td>
+                </Table.Tr>
               );
             })}
-          </TableBody>
+          </Table.Tbody>
         </Table>
       </div>
 
       <div className="flex items-center justify-between">
         <div className="flex gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={ajouterLigne}>
+          <Button type="button" variant="default" size="sm" onClick={ajouterLigne}>
             + Ajouter une ligne
           </Button>
           <ArticleFormDialog
             action={creerArticle}
             onCreated={articleCree}
             trigger={
-              <Button type="button" variant="outline" size="sm">
-                <Plus className="size-4" /> Nouvel article
+              <Button type="button" variant="default" size="sm" leftSection={<Plus size={16} />}>
+                Nouvel article
               </Button>
             }
           />

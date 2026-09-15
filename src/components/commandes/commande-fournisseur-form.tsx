@@ -2,17 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ActionIcon, Button, Card, Group, SimpleGrid, Stack, Select, Text, TextInput } from "@mantine/core";
 import { LignesEditor, type ArticleCatalogue } from "@/components/commandes/lignes-editor";
 import { FournisseurFormDialog } from "@/components/fournisseurs/fournisseur-form-dialog";
 import { creerFournisseur } from "@/app/(dashboard)/fournisseurs/actions";
@@ -39,85 +29,65 @@ export function CommandeFournisseurForm({
   return (
     <form action={formAction} className="grid gap-6 lg:grid-cols-3 lg:items-start">
       <div className="space-y-6 lg:col-span-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Informations de l&apos;achat</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1">
-              <Label htmlFor="fournisseurId">Fournisseur *</Label>
-              <div className="flex gap-2">
-                <Select
-                  name="fournisseurId"
-                  value={fournisseurId}
-                  onValueChange={(v) => setFournisseurId(v ?? "")}
-                  required
-                >
-                  <SelectTrigger id="fournisseurId" className="w-full">
-                    <SelectValue placeholder="Choisir un fournisseur..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {listeFournisseurs.map((f) => (
-                      <SelectItem key={f.id} value={String(f.id)}>
-                        {f.nom}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FournisseurFormDialog
-                  action={creerFournisseur}
-                  onCreated={(f) => {
-                    setListeFournisseurs((prev) => [...prev, f]);
-                    setFournisseurId(String(f.id));
-                  }}
-                  trigger={
-                    <Button type="button" variant="outline" size="icon" aria-label="Nouveau fournisseur">
-                      <Plus className="size-4" />
-                    </Button>
-                  }
-                />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="dateCommande">Date de commande *</Label>
-              <Input
-                id="dateCommande"
-                name="dateCommande"
-                type="date"
+        <Card withBorder radius="md" padding="lg">
+          <Text fw={600} mb="md">Informations de l&apos;achat</Text>
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+            <Group gap="xs" align="flex-end">
+              <Select
+                label="Fournisseur"
+                name="fournisseurId"
+                value={fournisseurId}
+                onChange={(v) => setFournisseurId(v ?? "")}
                 required
-                defaultValue={new Date().toISOString().slice(0, 10)}
+                searchable
+                placeholder="Choisir un fournisseur..."
+                data={listeFournisseurs.map((f) => ({ value: String(f.id), label: f.nom }))}
+                className="flex-1"
               />
-            </div>
-          </CardContent>
+              <FournisseurFormDialog
+                action={creerFournisseur}
+                onCreated={(f) => {
+                  setListeFournisseurs((prev) => [...prev, f]);
+                  setFournisseurId(String(f.id));
+                }}
+                trigger={
+                  <ActionIcon type="button" variant="default" size="lg" aria-label="Nouveau fournisseur">
+                    <Plus size={16} />
+                  </ActionIcon>
+                }
+              />
+            </Group>
+            <TextInput
+              label="Date de commande"
+              name="dateCommande"
+              type="date"
+              required
+              defaultValue={new Date().toISOString().slice(0, 10)}
+            />
+          </SimpleGrid>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Articles</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <LignesEditor name="lignes" articles={articles} champPrix="achat" onTotalChange={setTotal} />
-          </CardContent>
+        <Card withBorder radius="md" padding="lg">
+          <Text fw={600} mb="md">Articles</Text>
+          <LignesEditor name="lignes" articles={articles} champPrix="achat" onTotalChange={setTotal} />
         </Card>
       </div>
 
       <div className="lg:sticky lg:top-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Récapitulatif</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-baseline justify-between border-t border-border pt-4">
-              <span className="text-sm text-muted-foreground">Total de l&apos;achat</span>
-              <span className="font-mono text-2xl font-semibold tabular-nums">{formatMontant(total)}</span>
-            </div>
+        <Card withBorder radius="md" padding="lg">
+          <Text fw={600} mb="md">Récapitulatif</Text>
+          <Stack gap="md">
+            <Group justify="space-between" align="baseline" style={{ borderTop: "1px solid var(--mantine-color-dark-4)" }} pt="md">
+              <Text size="sm" c="dimmed">Total de l&apos;achat</Text>
+              <Text className="font-mono" size="xl" fw={600}>{formatMontant(total)}</Text>
+            </Group>
 
-            {state.error && <p className="text-sm text-[#8A211C]">{state.error}</p>}
+            {state.error && <Text size="sm" c="red">{state.error}</Text>}
 
-            <Button type="submit" disabled={pending} className="w-full">
-              {pending ? "Enregistrement..." : "Créer l'achat"}
+            <Button type="submit" loading={pending} fullWidth>
+              Créer l&apos;achat
             </Button>
-          </CardContent>
+          </Stack>
         </Card>
       </div>
     </form>
