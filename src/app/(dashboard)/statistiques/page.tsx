@@ -46,8 +46,10 @@ export default async function PageStatistiques() {
   }
   const debut = debutPeriode(NB_MOIS);
 
-  const [achatsMensuels, topFournisseurs] = peutVoirAchats
-    ? await Promise.all([
+  // Les deux blocs ne dépendent pas l'un de l'autre. Déclarés sans `await`,
+  // ils partent ensemble : la page attend une fois au lieu de deux.
+  const promesseAchats = peutVoirAchats
+    ? Promise.all([
         db
           .select({
             mois: sql<string>`date_trunc('month', ${commandesFournisseur.dateCommande})`,
@@ -70,10 +72,10 @@ export default async function PageStatistiques() {
           .orderBy(sql`SUM(${commandesFournisseur.montantTotal}) DESC`)
           .limit(5),
       ])
-    : [[], []];
+    : Promise.resolve([[], []]);
 
-  const [ventesMensuelles, topClientsBruts, repartitionModeBrute, margeMensuelle] = peutVoirVentes
-    ? await Promise.all([
+  const promesseVentes = peutVoirVentes
+    ? Promise.all([
         // Chiffre d'affaires HORS TAXE : la TVA est collectée pour l'État, elle
         // n'est pas un produit de l'entreprise. C'est aussi la seule base
         // comparable à la marge, calculée sur des prix HT.
@@ -130,7 +132,11 @@ export default async function PageStatistiques() {
           .where(and(ne(factures.statut, "ANNULEE"), gte(factures.dateFacture, debut)))
           .groupBy(sql`1`),
       ])
-    : [[], [], [], []];
+    : Promise.resolve([[], [], [], []]);
+
+  const [achatsMensuels, topFournisseurs] = await promesseAchats;
+  const [ventesMensuelles, topClientsBruts, repartitionModeBrute, margeMensuelle] =
+    await promesseVentes;
 
   const achats = serieMensuelle(achatsMensuels);
   const ventes = serieMensuelle(ventesMensuelles);

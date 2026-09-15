@@ -74,7 +74,7 @@ export default async function PageProforma({
         </div>
         <div className="flex gap-2">
           <ApercuDocumentDialog
-            href={`/proformas/${proforma.id}/imprimer`}
+            href={`/proformas/${proforma.id}/pdf`}
             titre={`Proforma ${proforma.numero}`}
             nomFichier={`proforma-${proforma.numero}`}
             trigger={<Button variant="outline">Voir la proforma</Button>}

@@ -32,19 +32,24 @@ export default async function PageFournisseur({
   const peutEcrire = can(session, "referentiels:write");
   const peutVoirDecaissements = can(session, "decaissements:read");
 
-  const [fournisseur] = await db
-    .select()
-    .from(fournisseurs)
-    .where(eq(fournisseurs.id, fournisseurId))
-    .limit(1);
+  // La fiche et ses achats ne dépendent pas l'un de l'autre : on les lit
+  // ensemble plutôt qu'à la suite. Les règlements, eux, ont besoin des
+  // identifiants de commande — cette lecture-là reste séquentielle.
+  const [fournisseur, commandes] = await Promise.all([
+    db
+      .select()
+      .from(fournisseurs)
+      .where(eq(fournisseurs.id, fournisseurId))
+      .limit(1)
+      .then((r) => r[0]),
+    db
+      .select()
+      .from(commandesFournisseur)
+      .where(eq(commandesFournisseur.fournisseurId, fournisseurId))
+      .orderBy(desc(commandesFournisseur.dateCommande)),
+  ]);
 
   if (!fournisseur) notFound();
-
-  const commandes = await db
-    .select()
-    .from(commandesFournisseur)
-    .where(eq(commandesFournisseur.fournisseurId, fournisseurId))
-    .orderBy(desc(commandesFournisseur.dateCommande));
 
   // Règlements liés aux commandes de ce fournisseur (jointure applicative,
   // le nombre de commandes par fournisseur reste faible).

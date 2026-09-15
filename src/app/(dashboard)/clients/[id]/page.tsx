@@ -45,40 +45,47 @@ export default async function PageClient({
   const peutVoirSolde = can(session, "impayes:read");
   const peutVoirProformas = can(session, "factures:read");
 
-  const [client] = await db.select().from(clients).where(eq(clients.id, clientId)).limit(1);
+  // Les cinq lectures sont indépendantes : enchaînées, elles coûtaient cinq
+  // allers-retours successifs jusqu'à la base. Lancées ensemble, elles n'en
+  // coûtent plus qu'un seul — la fiche s'ouvre en une fraction du temps.
+  const [client, commandes, facturesClient, proformasClient, soldeRows] = await Promise.all([
+    db
+      .select()
+      .from(clients)
+      .where(eq(clients.id, clientId))
+      .limit(1)
+      .then((r) => r[0]),
+    db
+      .select()
+      .from(commandesClient)
+      .where(eq(commandesClient.clientId, clientId))
+      .orderBy(desc(commandesClient.dateCommande)),
+    db
+      .select()
+      .from(factures)
+      .where(eq(factures.clientId, clientId))
+      .orderBy(desc(factures.dateFacture)),
+    // Les chiffrages remis à ce client : sans cette liste, retrouver l'offre
+    // qu'on lui a laissée il y a trois semaines obligeait à passer par la
+    // vente correspondante, encore fallait-il se souvenir de son numéro.
+    peutVoirProformas
+      ? db
+          .select()
+          .from(proformas)
+          .where(eq(proformas.clientId, clientId))
+          .orderBy(desc(proformas.dateProforma))
+      : Promise.resolve([]),
+    peutVoirSolde
+      ? db
+          .select({ total: sql<number>`coalesce(sum(${factures.resteAPayer}), 0)` })
+          .from(factures)
+          .where(and(eq(factures.clientId, clientId), ne(factures.statut, "ANNULEE")))
+      : Promise.resolve([{ total: 0 }]),
+  ]);
+
   if (!client) notFound();
 
-  const commandes = await db
-    .select()
-    .from(commandesClient)
-    .where(eq(commandesClient.clientId, clientId))
-    .orderBy(desc(commandesClient.dateCommande));
-
-  const facturesClient = await db
-    .select()
-    .from(factures)
-    .where(eq(factures.clientId, clientId))
-    .orderBy(desc(factures.dateFacture));
-
-  // Les chiffrages remis à ce client : sans cette liste, retrouver l'offre
-  // qu'on lui a laissée il y a trois semaines obligeait à passer par la vente
-  // correspondante, encore fallait-il se souvenir de son numéro.
-  const proformasClient = peutVoirProformas
-    ? await db
-        .select()
-        .from(proformas)
-        .where(eq(proformas.clientId, clientId))
-        .orderBy(desc(proformas.dateProforma))
-    : [];
-
-  let soldeDu = 0;
-  if (peutVoirSolde) {
-    const [{ total }] = await db
-      .select({ total: sql<number>`coalesce(sum(${factures.resteAPayer}), 0)` })
-      .from(factures)
-      .where(and(eq(factures.clientId, clientId), ne(factures.statut, "ANNULEE")));
-    soldeDu = Number(total);
-  }
+  const soldeDu = peutVoirSolde ? Number(soldeRows[0]?.total ?? 0) : 0;
 
   return (
     <div className="space-y-6">

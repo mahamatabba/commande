@@ -1,15 +1,15 @@
-import Link from "next/link";
+import { redirect } from "next/navigation";
 import { eq, inArray, sql } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { commandesFournisseur, factures, clients, fournisseurs, reglements } from "@/db/schema";
 import { requirePermission } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
-import { lirePage } from "@/lib/filtres";
+import { bornerPagination, lienPagination, lirePage } from "@/lib/filtres";
 import { MOYEN_REGLEMENT_LABEL, SENS_REGLEMENT_LABEL, libelle } from "@/lib/libelles";
-import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ReglementForm } from "@/components/reglements/reglement-form";
+import { PaginationListe } from "@/components/shared/pagination-liste";
 
 /** Nombre de règlements affichés par page dans l'historique. */
 const PAR_PAGE = 50;
@@ -27,55 +27,65 @@ export default async function PageReglements({
   const session = await auth();
   requirePermission(session, "reglements:saisir");
 
-  const page = lirePage((await searchParams).page);
+  const params = await searchParams;
+  const pageDemandee = lirePage(params.page);
 
-  const facturesEligibles = await db
-    .select({
-      id: factures.id,
-      numero: factures.numero,
-      resteAPayer: factures.resteAPayer,
-      clientNom: clients.nom,
-      clientPrenom: clients.prenom,
-      clientRaisonSociale: clients.raisonSociale,
-    })
-    .from(factures)
-    .innerJoin(clients, eq(clients.id, factures.clientId))
-    .where(inArray(factures.statut, ["NON_PAYEE", "PARTIELLEMENT_PAYEE"]));
-
-  const commandesEligibles = await db
-    .select({
-      id: commandesFournisseur.id,
-      numero: commandesFournisseur.numero,
-      montantTotal: commandesFournisseur.montantTotal,
-      montantRegle: commandesFournisseur.montantRegle,
-      fournisseurNom: fournisseurs.nom,
-    })
-    .from(commandesFournisseur)
-    .innerJoin(fournisseurs, eq(fournisseurs.id, commandesFournisseur.fournisseurId))
-    // Un achat encore en brouillon n'engage rien : il ne doit pas apparaître
-    // dans les cibles de règlement, sinon on décaisse pour une commande qui
-    // peut encore changer de montant ou ne jamais être passée.
-    .where(inArray(commandesFournisseur.statut, ["VALIDEE", "RECUE"]));
+  // Les trois lectures sont indépendantes : on les lance ensemble. Seul
+  // l'historique doit attendre, puisqu'il lui faut le nombre de pages.
+  const [facturesEligibles, commandesEligibles, comptes] = await Promise.all([
+    db
+      .select({
+        id: factures.id,
+        numero: factures.numero,
+        resteAPayer: factures.resteAPayer,
+        clientNom: clients.nom,
+        clientPrenom: clients.prenom,
+        clientRaisonSociale: clients.raisonSociale,
+      })
+      .from(factures)
+      .innerJoin(clients, eq(clients.id, factures.clientId))
+      .where(inArray(factures.statut, ["NON_PAYEE", "PARTIELLEMENT_PAYEE"])),
+    db
+      .select({
+        id: commandesFournisseur.id,
+        numero: commandesFournisseur.numero,
+        montantTotal: commandesFournisseur.montantTotal,
+        montantRegle: commandesFournisseur.montantRegle,
+        fournisseurNom: fournisseurs.nom,
+      })
+      .from(commandesFournisseur)
+      .innerJoin(fournisseurs, eq(fournisseurs.id, commandesFournisseur.fournisseurId))
+      // Un achat encore en brouillon n'engage rien : il ne doit pas apparaître
+      // dans les cibles de règlement, sinon on décaisse pour une commande qui
+      // peut encore changer de montant ou ne jamais être passée.
+      .where(inArray(commandesFournisseur.statut, ["VALIDEE", "RECUE"])),
+    db.select({ total: sql<number>`count(*)::int` }).from(reglements),
+  ]);
 
   const commandesAvecReste = commandesEligibles
     .map((c) => ({ ...c, resteAPayer: c.montantTotal - c.montantRegle }))
     .filter((c) => c.resteAPayer > 0);
 
-  const [compte] = await db
-    .select({ total: sql<number>`count(*)::int` })
-    .from(reglements);
-  const totalReglements = compte?.total ?? 0;
-  const nbPages = Math.max(1, Math.ceil(totalReglements / PAR_PAGE));
-  const pageCourante = Math.min(page, nbPages);
+  const totalReglements = comptes[0]?.total ?? 0;
+  const { nbPages, pageCourante, decalage } = bornerPagination(
+    pageDemandee,
+    totalReglements,
+    PAR_PAGE,
+  );
+  if (pageCourante !== pageDemandee) {
+    redirect(lienPagination("/reglements", params, pageCourante));
+  }
 
   const historique = await db.query.reglements.findMany({
     with: {
       facture: { with: { client: true } },
       commandeFournisseur: { with: { fournisseur: true } },
     },
-    orderBy: (r, { desc }) => [desc(r.createdAt)],
+    // L'`id` départage deux règlements enregistrés dans la même milliseconde ;
+    // sans lui, l'ordre peut changer d'une page à l'autre.
+    orderBy: (r, { desc }) => [desc(r.createdAt), desc(r.id)],
     limit: PAR_PAGE,
-    offset: (pageCourante - 1) * PAR_PAGE,
+    offset: decalage,
   });
 
   return (
@@ -140,32 +150,14 @@ export default async function PageReglements({
         </Table>
       </div>
 
-      {nbPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>
-            Page {pageCourante} sur {nbPages} · {totalReglements} règlement
-            {totalReglements > 1 ? "s" : ""}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={pageCourante <= 1}
-              render={<Link href={`/reglements?page=${pageCourante - 1}`} />}
-            >
-              Précédent
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={pageCourante >= nbPages}
-              render={<Link href={`/reglements?page=${pageCourante + 1}`} />}
-            >
-              Suivant
-            </Button>
-          </div>
-        </div>
-      )}
+      <PaginationListe
+        base="/reglements"
+        params={params}
+        page={pageCourante}
+        nbPages={nbPages}
+        total={totalReglements}
+        nom="règlement"
+      />
     </div>
   );
 }

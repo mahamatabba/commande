@@ -21,6 +21,8 @@ declare module "next-auth/jwt" {
     id: string;
     role: Role;
     actif: boolean;
+    /** Horodatage (ms) de la dernière relecture du compte en base. */
+    verifieLe?: number;
   }
 }
 
@@ -32,5 +34,7 @@ declare module "@auth/core/jwt" {
     id: string;
     role: Role;
     actif: boolean;
+    /** Horodatage (ms) de la dernière relecture du compte en base. */
+    verifieLe?: number;
   }
 }

@@ -1,11 +1,21 @@
 import Link from "next/link";
-import { and, desc, eq, gte, lte } from "drizzle-orm";
+import { redirect } from "next/navigation";
+import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { clients, commandesClient } from "@/db/schema";
 import { can, requirePermission } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
-import { STATUTS_COMMANDE_CLIENT, bornerDebut, bornerFin, lireStatut } from "@/lib/filtres";
+import {
+  STATUTS_COMMANDE_CLIENT,
+  bornerDebut,
+  bornerFin,
+  bornerPagination,
+  lienPagination,
+  lirePage,
+  lireStatut,
+} from "@/lib/filtres";
+import { PaginationListe } from "@/components/shared/pagination-liste";
 import { MODE_REGLEMENT_LABEL, STATUT_COMMANDE_CLIENT_LABEL, libelle } from "@/lib/libelles";
 import { STATUT_COMMANDE_CLIENT_CLASS } from "@/lib/statut-style";
 import { Badge } from "@/components/ui/badge";
@@ -28,15 +38,20 @@ function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: stri
   return c.prenom ? `${c.nom} ${c.prenom}` : c.nom;
 }
 
+/** Nombre de ventes affichées par page. */
+const PAR_PAGE = 50;
+
 export default async function PageCommandesClient({
   searchParams,
 }: {
-  searchParams: Promise<{ statut?: string; du?: string; au?: string }>;
+  searchParams: Promise<{ statut?: string; du?: string; au?: string; page?: string }>;
 }) {
   const session = await auth();
   requirePermission(session, "commandes_client:read");
   const peutEcrire = can(session, "commandes_client:write");
-  const { statut, du, au } = await searchParams;
+  const params = await searchParams;
+  const { statut, du, au } = params;
+  const pageDemandee = lirePage(params.page);
 
   const statutFiltre = lireStatut(statut, STATUTS_COMMANDE_CLIENT);
   const debut = bornerDebut(du);
@@ -47,23 +62,41 @@ export default async function PageCommandesClient({
     debut ? gte(commandesClient.dateCommande, debut) : undefined,
     fin ? lte(commandesClient.dateCommande, fin) : undefined,
   ].filter(Boolean);
+  const filtre = conditions.length > 0 ? and(...conditions) : undefined;
 
-  const commandes = await db
-    .select({
-      id: commandesClient.id,
-      numero: commandesClient.numero,
-      dateCommande: commandesClient.dateCommande,
-      statut: commandesClient.statut,
-      modeReglement: commandesClient.modeReglement,
-      montantTotal: commandesClient.montantTotal,
-      clientNom: clients.nom,
-      clientPrenom: clients.prenom,
-      clientRaisonSociale: clients.raisonSociale,
-    })
-    .from(commandesClient)
-    .innerJoin(clients, eq(commandesClient.clientId, clients.id))
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .orderBy(desc(commandesClient.dateCommande));
+  const [comptes, commandes] = await Promise.all([
+    db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(commandesClient)
+      .innerJoin(clients, eq(commandesClient.clientId, clients.id))
+      .where(filtre),
+    db
+      .select({
+        id: commandesClient.id,
+        numero: commandesClient.numero,
+        dateCommande: commandesClient.dateCommande,
+        statut: commandesClient.statut,
+        modeReglement: commandesClient.modeReglement,
+        montantTotal: commandesClient.montantTotal,
+        clientNom: clients.nom,
+        clientPrenom: clients.prenom,
+        clientRaisonSociale: clients.raisonSociale,
+      })
+      .from(commandesClient)
+      .innerJoin(clients, eq(commandesClient.clientId, clients.id))
+      .where(filtre)
+      // L'`id` départage deux ventes du même jour : sans lui, l'ordre peut
+      // varier d'une page à l'autre et une ligne se répéter.
+      .orderBy(desc(commandesClient.dateCommande), desc(commandesClient.id))
+      .limit(PAR_PAGE)
+      .offset((pageDemandee - 1) * PAR_PAGE),
+  ]);
+
+  const total = comptes[0]?.total ?? 0;
+  const { nbPages, pageCourante } = bornerPagination(pageDemandee, total, PAR_PAGE);
+  if (pageCourante !== pageDemandee) {
+    redirect(lienPagination("/commandes-client", params, pageCourante));
+  }
 
   return (
     <div className="space-y-4">
@@ -152,7 +185,7 @@ export default async function PageCommandesClient({
                       <span className="sr-only">Voir le détail</span>
                     </Button>
                     <ApercuDocumentDialog
-                      href={`/commandes-client/${c.id}/imprimer`}
+                      href={`/commandes-client/${c.id}/pdf`}
                       titre={`Bon de commande ${c.numero}`}
                       nomFichier={`bon-commande-${c.numero}`}
                       trigger={
@@ -176,6 +209,15 @@ export default async function PageCommandesClient({
           </TableBody>
         </Table>
       </div>
+
+      <PaginationListe
+        base="/commandes-client"
+        params={params}
+        page={pageCourante}
+        nbPages={nbPages}
+        total={total}
+        nom="vente"
+      />
     </div>
   );
 }

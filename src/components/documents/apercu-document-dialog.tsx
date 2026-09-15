@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Eye, Loader2, Printer } from "lucide-react";
+import { Download, ExternalLink, Eye, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,6 +13,19 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+/**
+ * Aperçu d'un document officiel — facture, proforma, bon de commande.
+ *
+ * Le document affiché est le PDF définitif, celui-là même que le client
+ * recevra : il est composé par le serveur, pas reconstitué par le navigateur.
+ * Auparavant l'aperçu montrait une page web et laissait l'utilisateur
+ * l'imprimer lui-même ; le fichier obtenu dépendait alors de son navigateur,
+ * de ses marges par défaut et de la case « imprimer les fonds ». Deux postes
+ * ne produisaient pas le même document.
+ *
+ * `href` pointe la route PDF (`/factures/12/pdf`). La même route, avec
+ * `?telecharger`, renvoie le même fichier en pièce jointe.
+ */
 export function ApercuDocumentDialog({
   href,
   titre,
@@ -29,8 +42,6 @@ export function ApercuDocumentDialog({
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(defaultOpen);
-  const [charge, setCharge] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     if (defaultOpen) {
@@ -40,41 +51,10 @@ export function ApercuDocumentDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function surChangementOuverture(prochain: boolean) {
-    setOpen(prochain);
-    if (!prochain) setCharge(false);
-  }
-
-  /**
-   * L'impression passe par le moteur du navigateur plutôt que par une capture
-   * d'image : le PDF obtenu via « Enregistrer au format PDF » reste vectoriel,
-   * son texte est sélectionnable et recherchable, et la police ne bave pas à
-   * l'agrandissement — ce qu'aucune capture ne peut offrir.
-   *
-   * Le nom de fichier proposé par la boîte de dialogue est le titre du
-   * document imprimé : on lui donne le nom métier le temps de l'impression,
-   * puis on le rend, pour que l'aperçu conserve son propre titre.
-   */
-  function imprimer() {
-    const fenetre = iframeRef.current?.contentWindow;
-    const documentIframe = iframeRef.current?.contentDocument;
-    if (!fenetre || !documentIframe) return;
-
-    const titreOrigine = documentIframe.title;
-    documentIframe.title = nomFichier;
-    const restaurer = () => {
-      documentIframe.title = titreOrigine;
-      fenetre.removeEventListener("afterprint", restaurer);
-    };
-    fenetre.addEventListener("afterprint", restaurer);
-
-    // Sans ce focus, Firefox imprime la page porteuse et non l'aperçu.
-    fenetre.focus();
-    fenetre.print();
-  }
+  const lienTelechargement = `${href}${href.includes("?") ? "&" : "?"}telecharger`;
 
   return (
-    <Dialog open={open} onOpenChange={surChangementOuverture}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
           trigger ?? (
@@ -90,29 +70,39 @@ export function ApercuDocumentDialog({
           <DialogTitle>{titre}</DialogTitle>
         </DialogHeader>
         <div className="relative flex-1 overflow-hidden rounded-[2px] border border-border bg-muted/30">
-          {!charge && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Loader2 className="size-6 animate-spin text-muted-foreground" />
-            </div>
-          )}
+          {/* L'indicateur reste dessous en permanence : la visionneuse PDF du
+              navigateur ne prévient pas toujours de sa fin de chargement, et
+              un état « chargé » qui n'arrive jamais laisserait un voile sur
+              l'aperçu. Le PDF, opaque, le recouvre dès qu'il s'affiche. */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
+            <Loader2 className="size-6 animate-spin text-muted-foreground" />
+            <p className="max-w-xs text-xs text-muted-foreground">
+              Si le document ne s&apos;affiche pas ici, votre navigateur ne sait pas lire les PDF
+              dans une fenêtre. Utilisez « Ouvrir dans un onglet ».
+            </p>
+          </div>
           {open && (
             <iframe
-              ref={iframeRef}
               src={href}
               title={titre}
-              onLoad={() => setCharge(true)}
               className="absolute inset-0 size-full border-0 bg-white"
             />
           )}
         </div>
         <DialogFooter className="sm:items-center sm:justify-between">
           <p className="text-xs text-muted-foreground sm:mr-auto">
-            Pour obtenir un fichier PDF, choisissez «&nbsp;Enregistrer au format PDF&nbsp;» comme
-            destination dans la fenêtre d&apos;impression.
+            Document définitif, prêt à imprimer ou à envoyer au client.
           </p>
-          <Button onClick={imprimer} disabled={!charge}>
-            <Printer />
-            Imprimer ou enregistrer en PDF
+          <Button
+            variant="outline"
+            render={<a href={href} target="_blank" rel="noopener noreferrer" />}
+          >
+            <ExternalLink />
+            Ouvrir dans un onglet
+          </Button>
+          <Button render={<a href={lienTelechargement} download={`${nomFichier}.pdf`} />}>
+            <Download />
+            Télécharger le PDF
           </Button>
         </DialogFooter>
       </DialogContent>

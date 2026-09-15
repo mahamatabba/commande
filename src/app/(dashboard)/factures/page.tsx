@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -6,8 +7,17 @@ import { clients, factures } from "@/db/schema";
 import { can, requirePermission } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
 import { STATUT_FACTURE_LABEL, libelle } from "@/lib/libelles";
-import { STATUTS_FACTURE, bornerDebut, bornerFin, lireStatut } from "@/lib/filtres";
+import {
+  STATUTS_FACTURE,
+  bornerDebut,
+  bornerFin,
+  bornerPagination,
+  lienPagination,
+  lirePage,
+  lireStatut,
+} from "@/lib/filtres";
 import { STATUT_FACTURE_CLASS } from "@/lib/statut-style";
+import { PaginationListe } from "@/components/shared/pagination-liste";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,10 +38,13 @@ function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: stri
   return c.prenom ? `${c.nom} ${c.prenom}` : c.nom;
 }
 
+/** Nombre de factures affichées par page. */
+const PAR_PAGE = 50;
+
 export default async function PageFactures({
   searchParams,
 }: {
-  searchParams: Promise<{ statut?: string; du?: string; au?: string }>;
+  searchParams: Promise<{ statut?: string; du?: string; au?: string; page?: string }>;
 }) {
   const session = await auth();
   requirePermission(session, "factures:read");
@@ -39,7 +52,9 @@ export default async function PageFactures({
   // des impayés/créances : cette colonne n'est donc même pas sélectionnée en
   // base pour lui, conformément à la règle "filtrer à la source".
   const peutVoirImpayes = can(session, "impayes:read");
-  const { statut, du, au } = await searchParams;
+  const params = await searchParams;
+  const { statut, du, au } = params;
+  const pageDemandee = lirePage(params.page);
 
   // Les filtres viennent de l'URL : un statut inconnu ou une date mal formée
   // sont écartés au lieu d'être transmis tels quels à PostgreSQL.
@@ -52,23 +67,49 @@ export default async function PageFactures({
     debut ? gte(factures.dateFacture, debut) : undefined,
     fin ? lte(factures.dateFacture, fin) : undefined,
   ].filter(Boolean);
+  const filtre = conditions.length > 0 ? and(...conditions) : undefined;
 
-  const liste = await db
-    .select({
-      id: factures.id,
-      numero: factures.numero,
-      dateFacture: factures.dateFacture,
-      montantTotal: factures.montantTotal,
-      statut: peutVoirImpayes ? factures.statut : sql<string | null>`NULL`,
-      resteAPayer: peutVoirImpayes ? factures.resteAPayer : sql<number | null>`NULL`,
-      clientNom: clients.nom,
-      clientPrenom: clients.prenom,
-      clientRaisonSociale: clients.raisonSociale,
-    })
-    .from(factures)
-    .innerJoin(clients, eq(factures.clientId, clients.id))
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .orderBy(desc(factures.dateFacture));
+  // Comptage et page de résultats sont indépendants : lancés ensemble, ils ne
+  // coûtent qu'un aller-retour au lieu de deux. Compter en base plutôt que
+  // `liste.length` est la raison d'être de la pagination : on ne rapatrie plus
+  // l'intégralité du fichier des ventes pour afficher vingt lignes.
+  const [comptes, liste] = await Promise.all([
+    db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(factures)
+      .innerJoin(clients, eq(factures.clientId, clients.id))
+      .where(filtre),
+    db
+      .select({
+        id: factures.id,
+        numero: factures.numero,
+        dateFacture: factures.dateFacture,
+        montantTotal: factures.montantTotal,
+        statut: peutVoirImpayes ? factures.statut : sql<string | null>`NULL`,
+        resteAPayer: peutVoirImpayes ? factures.resteAPayer : sql<number | null>`NULL`,
+        clientNom: clients.nom,
+        clientPrenom: clients.prenom,
+        clientRaisonSociale: clients.raisonSociale,
+      })
+      .from(factures)
+      .innerJoin(clients, eq(factures.clientId, clients.id))
+      .where(filtre)
+      // L'`id` départage deux factures du même jour : sans lui, PostgreSQL est
+      // libre de renvoyer les lignes dans un ordre différent d'une page à
+      // l'autre, et la même facture apparaît deux fois ou disparaît.
+      .orderBy(desc(factures.dateFacture), desc(factures.id))
+      .limit(PAR_PAGE)
+      .offset((pageDemandee - 1) * PAR_PAGE),
+  ]);
+
+  const total = comptes[0]?.total ?? 0;
+  const { nbPages, pageCourante } = bornerPagination(pageDemandee, total, PAR_PAGE);
+  // Page au-delà de la dernière (filtre resserré depuis la page 4, favori
+  // périmé) : on renvoie sur la dernière page réelle plutôt que d'afficher un
+  // « aucune facture » trompeur alors que la liste en contient.
+  if (pageCourante !== pageDemandee) {
+    redirect(lienPagination("/factures", params, pageCourante));
+  }
 
   return (
     <div className="space-y-4">
@@ -156,7 +197,7 @@ export default async function PageFactures({
                       <span className="sr-only">Voir le détail</span>
                     </Button>
                     <ApercuDocumentDialog
-                      href={`/factures/${f.id}/imprimer`}
+                      href={`/factures/${f.id}/pdf`}
                       titre={`Facture ${f.numero}`}
                       nomFichier={`facture-${f.numero}`}
                       trigger={
@@ -180,6 +221,15 @@ export default async function PageFactures({
           </TableBody>
         </Table>
       </div>
+
+      <PaginationListe
+        base="/factures"
+        params={params}
+        page={pageCourante}
+        nbPages={nbPages}
+        total={total}
+        nom="facture"
+      />
     </div>
   );
 }

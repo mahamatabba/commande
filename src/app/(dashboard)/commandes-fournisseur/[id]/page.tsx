@@ -65,7 +65,7 @@ export default async function PageCommandeFournisseur({
         </div>
         <div className="flex gap-2">
           <ApercuDocumentDialog
-            href={`/commandes-fournisseur/${commande.id}/imprimer`}
+            href={`/commandes-fournisseur/${commande.id}/pdf`}
             titre={`Bon de commande ${commande.numero}`}
             nomFichier={`bon-commande-${commande.numero}`}
             trigger={<Button variant="outline">Voir le bon de commande</Button>}

@@ -78,7 +78,7 @@ export default async function PageFacture({
         </div>
         <div className="flex gap-2">
           <ApercuDocumentDialog
-            href={`/factures/${facture.id}/imprimer`}
+            href={`/factures/${facture.id}/pdf`}
             titre={`Facture ${facture.numero}`}
             nomFichier={`facture-${facture.numero}`}
             trigger={<Button variant="outline">Voir la facture</Button>}

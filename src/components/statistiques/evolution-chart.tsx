@@ -1,10 +1,24 @@
 "use client";
 
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
-import { formatMontant } from "@/lib/format";
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export type PointEvolution = { cle: string; label: string; valeur: number };
+
+/**
+ * Recharts pèse quelques centaines de kilo-octets, et le tableau de bord est
+ * la première page ouverte après la connexion : chargée d'emblée, la
+ * bibliothèque retardait l'affichage de tout le reste — chiffres, tableaux,
+ * navigation — alors que le graphique n'est qu'un complément.
+ *
+ * On la charge donc à part, une fois la page utilisable. `ssr: false` évite
+ * en plus de la rendre côté serveur pour rien : le graphique est
+ * intrinsèquement client, ses dimensions étant mesurées dans le navigateur.
+ */
+const EvolutionChartInner = dynamic(() => import("./evolution-chart-inner"), {
+  ssr: false,
+  loading: () => <Skeleton className="h-56 w-full" />,
+});
 
 export function EvolutionChart({
   data,
@@ -15,45 +29,5 @@ export function EvolutionChart({
   couleur: string;
   libelleSerie: string;
 }) {
-  const config: ChartConfig = {
-    valeur: { label: libelleSerie, color: couleur },
-  };
-
-  return (
-    <ChartContainer config={config} className="aspect-auto h-56 w-full">
-      <AreaChart data={data} margin={{ left: 8, right: 8, top: 8, bottom: 0 }}>
-        <CartesianGrid vertical={false} stroke="var(--border)" strokeOpacity={0.5} />
-        <XAxis
-          dataKey="label"
-          tickLine={false}
-          axisLine={false}
-          tickMargin={8}
-          className="text-xs"
-        />
-        <YAxis
-          tickLine={false}
-          axisLine={false}
-          tickMargin={8}
-          width={70}
-          tickFormatter={(v: number) => formatMontant(v)}
-          className="text-xs"
-        />
-        <ChartTooltip
-          content={
-            <ChartTooltipContent
-              formatter={(value) => formatMontant(Number(value))}
-            />
-          }
-        />
-        <Area
-          dataKey="valeur"
-          type="monotone"
-          fill={couleur}
-          fillOpacity={0.1}
-          stroke={couleur}
-          strokeWidth={2}
-        />
-      </AreaChart>
-    </ChartContainer>
-  );
+  return <EvolutionChartInner data={data} couleur={couleur} libelleSerie={libelleSerie} />;
 }

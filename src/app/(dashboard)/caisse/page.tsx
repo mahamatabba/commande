@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { redirect } from "next/navigation";
 import { and, gte, lte, sql } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -6,7 +6,7 @@ import { mouvementsCaisse } from "@/db/schema";
 import { requirePermission } from "@/lib/permissions";
 import { calculerSoldeCaisse } from "@/lib/caisse";
 import { formatDate, formatMontant } from "@/lib/format";
-import { bornerDebut, bornerFin, lirePage } from "@/lib/filtres";
+import { bornerDebut, bornerFin, bornerPagination, lienPagination, lirePage } from "@/lib/filtres";
 import { SENS_REGLEMENT_LABEL, libelle } from "@/lib/libelles";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatTile } from "@/components/statistiques/stat-tile";
+import { PaginationListe } from "@/components/shared/pagination-liste";
 
 /** Nombre de mouvements affichés par page. */
 const PAR_PAGE = 100;
@@ -35,9 +36,8 @@ export default async function PageCaisse({
 }) {
   const session = await auth();
   requirePermission(session, "caisse:solde:read");
-  const { du, au, page } = await searchParams;
-
-  const solde = await calculerSoldeCaisse(db);
+  const params = await searchParams;
+  const { du, au } = params;
 
   const debut = bornerDebut(du);
   const fin = bornerFin(au);
@@ -46,23 +46,37 @@ export default async function PageCaisse({
   if (fin) conditions.push(lte(mouvementsCaisse.dateMouvement, fin));
   const filtre = conditions.length > 0 ? and(...conditions) : undefined;
 
-  // Totaux et comptage calculés en base sur TOUTE la période demandée : les
-  // additionner à partir des seules lignes chargées donnait un « total » qui
-  // changeait au fil de la pagination.
-  const [agregats] = await db
-    .select({
-      encaissements: sql<string>`COALESCE(SUM(CASE WHEN ${mouvementsCaisse.sens} = 'ENCAISSEMENT' THEN ${mouvementsCaisse.montant} ELSE 0 END), 0)`,
-      decaissements: sql<string>`COALESCE(SUM(CASE WHEN ${mouvementsCaisse.sens} = 'DECAISSEMENT' THEN ${mouvementsCaisse.montant} ELSE 0 END), 0)`,
-      nombre: sql<number>`count(*)::int`,
-    })
-    .from(mouvementsCaisse)
-    .where(filtre);
+  // Le solde global et les totaux de la période sont indépendants : lancés
+  // ensemble, ils ne coûtent qu'un aller-retour au lieu de deux.
+  //
+  // Totaux et comptage sont calculés en base sur TOUTE la période demandée :
+  // les additionner à partir des seules lignes chargées donnait un « total »
+  // qui changeait au fil de la pagination.
+  const [solde, agregatsRows] = await Promise.all([
+    calculerSoldeCaisse(db),
+    db
+      .select({
+        encaissements: sql<string>`COALESCE(SUM(CASE WHEN ${mouvementsCaisse.sens} = 'ENCAISSEMENT' THEN ${mouvementsCaisse.montant} ELSE 0 END), 0)`,
+        decaissements: sql<string>`COALESCE(SUM(CASE WHEN ${mouvementsCaisse.sens} = 'DECAISSEMENT' THEN ${mouvementsCaisse.montant} ELSE 0 END), 0)`,
+        nombre: sql<number>`count(*)::int`,
+      })
+      .from(mouvementsCaisse)
+      .where(filtre),
+  ]);
 
+  const agregats = agregatsRows[0];
   const totalEncaissements = Number(agregats?.encaissements ?? 0);
   const totalDecaissements = Number(agregats?.decaissements ?? 0);
   const nombreMouvements = agregats?.nombre ?? 0;
-  const nbPages = Math.max(1, Math.ceil(nombreMouvements / PAR_PAGE));
-  const pageCourante = Math.min(lirePage(page), nbPages);
+  const pageDemandee = lirePage(params.page);
+  const { nbPages, pageCourante, decalage } = bornerPagination(
+    pageDemandee,
+    nombreMouvements,
+    PAR_PAGE,
+  );
+  if (pageCourante !== pageDemandee) {
+    redirect(lienPagination("/caisse", params, pageCourante));
+  }
 
   const mouvements = await db.query.mouvementsCaisse.findMany({
     where: filtre,
@@ -78,7 +92,7 @@ export default async function PageCaisse({
     // d'une requête à l'autre et le solde progressif devient incohérent.
     orderBy: (m, { desc }) => [desc(m.dateMouvement), desc(m.id)],
     limit: PAR_PAGE,
-    offset: (pageCourante - 1) * PAR_PAGE,
+    offset: decalage,
   });
 
   // Solde progressif recalculé chronologiquement. La colonne `soldeApres`
@@ -103,15 +117,6 @@ export default async function PageCaisse({
   for (const m of [...mouvements].reverse()) {
     cumul += m.sens === "ENCAISSEMENT" ? m.montant : -m.montant;
     soldeParMouvement.set(m.id, cumul);
-  }
-
-  /** Conserve la période filtrée quand on change de page. */
-  function lienPage(n: number): string {
-    const params = new URLSearchParams();
-    if (du) params.set("du", du);
-    if (au) params.set("au", au);
-    params.set("page", String(n));
-    return `/caisse?${params.toString()}`;
   }
 
   return (
@@ -182,32 +187,14 @@ export default async function PageCaisse({
         </Table>
       </div>
 
-      {nbPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>
-            Page {pageCourante} sur {nbPages} · {nombreMouvements} mouvement
-            {nombreMouvements > 1 ? "s" : ""}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={pageCourante <= 1}
-              render={<Link href={lienPage(pageCourante - 1)} />}
-            >
-              Précédent
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={pageCourante >= nbPages}
-              render={<Link href={lienPage(pageCourante + 1)} />}
-            >
-              Suivant
-            </Button>
-          </div>
-        </div>
-      )}
+      <PaginationListe
+        base="/caisse"
+        params={params}
+        page={pageCourante}
+        nbPages={nbPages}
+        total={nombreMouvements}
+        nom="mouvement"
+      />
     </div>
   );
 }

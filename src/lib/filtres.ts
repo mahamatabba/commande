@@ -88,3 +88,45 @@ export function lirePage(valeur: string | undefined): number {
   const page = Number(valeur);
   return Number.isInteger(page) && page >= 1 ? page : 1;
 }
+
+/**
+ * Ramène une demande de page dans les limites réelles de la liste.
+ *
+ * Sans ce cadrage, `?page=999` renvoie un tableau vide sans explication : la
+ * requête part avec un décalage supérieur au nombre de lignes. On affiche
+ * plutôt la dernière page existante. Le cas arrive tout seul — il suffit de
+ * resserrer un filtre en restant sur la page 4.
+ */
+export function bornerPagination(
+  page: number,
+  total: number,
+  parPage: number,
+): { nbPages: number; pageCourante: number; decalage: number } {
+  const nbPages = Math.max(1, Math.ceil(total / parPage));
+  const pageCourante = Math.min(Math.max(page, 1), nbPages);
+  return { nbPages, pageCourante, decalage: (pageCourante - 1) * parPage };
+}
+
+/** Paramètres d'URL d'une liste, tels que `searchParams` les livre. */
+export type ParamsListe = Record<string, string | string[] | undefined>;
+
+/**
+ * Lien vers une autre page de la MÊME liste : tous les paramètres courants
+ * sont réécrits, seul `page` change.
+ *
+ * C'est la raison d'être de cette fonction. Un lien construit à la main
+ * (`?page=2`) efface le statut et les dates que l'utilisateur venait de
+ * saisir : il arrive sur la page 2 d'une autre liste, avec des lignes qui
+ * n'ont plus de rapport, sans avoir rien fait de mal.
+ */
+export function lienPagination(base: string, params: ParamsListe, page: number): string {
+  const recherche = new URLSearchParams();
+  for (const [cle, valeur] of Object.entries(params)) {
+    if (cle === "page" || valeur === undefined) continue;
+    for (const v of Array.isArray(valeur) ? valeur : [valeur]) {
+      if (v !== "") recherche.append(cle, v);
+    }
+  }
+  recherche.set("page", String(page));
+  return `${base}?${recherche.toString()}`;
+}
