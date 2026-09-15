@@ -1,27 +1,8 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { notifications } from "@mantine/notifications";
+import { Button, Group, Modal, SimpleGrid, Stack, Select, Text, Textarea, TextInput } from "@mantine/core";
 import { formatMontant } from "@/lib/format";
 import type { EtatFormulaire } from "@/lib/action-state";
 
@@ -49,62 +30,56 @@ export function MarquerPayeeDialog({
   useEffect(() => {
     if (state.success) {
       setOpen(false);
-      toast.success("Facture soldée");
+      notifications.show({ message: "Facture soldée", color: "green" });
     }
   }, [state]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button>Marquer payée</Button>} />
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Marquer la facture payée</DialogTitle>
-          <DialogDescription>
-            Un encaissement de {formatMontant(resteAPayer)} sera enregistré et entrera en caisse.
-            La facture passera au statut « Soldée ».
-          </DialogDescription>
-        </DialogHeader>
-        <form action={formAction} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label htmlFor="dateReglement">Date du règlement *</Label>
-              <Input
-                id="dateReglement"
-                name="dateReglement"
-                type="date"
-                required
-                defaultValue={new Date().toISOString().slice(0, 10)}
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="moyen">Moyen *</Label>
-              <Select name="moyen" defaultValue="ESPECES" required>
-                <SelectTrigger id="moyen" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ESPECES">Espèces</SelectItem>
-                  <SelectItem value="VIREMENT">Virement</SelectItem>
-                  <SelectItem value="MOBILE_MONEY">Mobile Money</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <Label htmlFor="commentaire">Commentaire</Label>
-            <Textarea id="commentaire" name="commentaire" rows={2} />
-          </div>
-
-          {state.error && <p className="text-sm text-[#8A211C]">{state.error}</p>}
-
-          <DialogFooter>
-            <Button type="submit" disabled={pending}>
-              {pending ? "Enregistrement..." : `Encaisser ${formatMontant(resteAPayer)}`}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <>
+      <Button onClick={() => setOpen(true)}>Marquer payée</Button>
+      <Modal opened={open} onClose={() => setOpen(false)} title="Marquer la facture payée">
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
+            Un encaissement de {formatMontant(resteAPayer)} sera enregistré et entrera en caisse. La
+            facture passera au statut « Soldée ».
+          </Text>
+          <form action={formAction}>
+            <Stack gap="md">
+              <SimpleGrid cols={2}>
+                <TextInput
+                  label="Date du règlement"
+                  name="dateReglement"
+                  type="date"
+                  required
+                  defaultValue={new Date().toISOString().slice(0, 10)}
+                />
+                <Select
+                  label="Moyen"
+                  name="moyen"
+                  defaultValue="ESPECES"
+                  required
+                  data={[
+                    { value: "ESPECES", label: "Espèces" },
+                    { value: "VIREMENT", label: "Virement" },
+                    { value: "MOBILE_MONEY", label: "Mobile Money" },
+                  ]}
+                />
+              </SimpleGrid>
+              <Textarea label="Commentaire" name="commentaire" rows={2} />
+              {state.error && (
+                <Text c="red" size="sm">
+                  {state.error}
+                </Text>
+              )}
+              <Group justify="flex-end">
+                <Button type="submit" loading={pending}>
+                  Encaisser {formatMontant(resteAPayer)}
+                </Button>
+              </Group>
+            </Stack>
+          </form>
+        </Stack>
+      </Modal>
+    </>
   );
 }

@@ -6,8 +6,8 @@ import { can, requirePermission } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
 import { formatTaux } from "@/lib/tva";
 import { STATUT_PROFORMA_LABEL, libelle } from "@/lib/libelles";
-import { STATUT_PROFORMA_CLASS } from "@/lib/statut-style";
-import { Badge } from "@/components/ui/badge";
+import { STATUT_PROFORMA_BADGE } from "@/lib/statut-style";
+import { Badge } from "@mantine/core";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AnnulationDialog } from "@/components/shared/annulation-dialog";
@@ -54,7 +54,7 @@ export default async function PageProforma({
         <div>
           <div className="flex items-center gap-2">
             <h1 className="font-mono text-2xl font-semibold tabular-nums">{proforma.numero}</h1>
-            <Badge variant="outline" className={STATUT_PROFORMA_CLASS[proforma.statut]}>
+            <Badge {...STATUT_PROFORMA_BADGE[proforma.statut]}>
               {libelle(STATUT_PROFORMA_LABEL, proforma.statut)}
             </Badge>
           </div>

@@ -1,26 +1,18 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { notifications } from "@mantine/notifications";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
+  Button,
+  Group,
+  Modal,
   Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  SimpleGrid,
+  Stack,
+  Text,
+  Textarea,
+  TextInput,
+} from "@mantine/core";
 import { formatMontant } from "@/lib/format";
 import { saisirReglement } from "@/app/(dashboard)/reglements/actions";
 
@@ -51,7 +43,7 @@ export function ReglementForm({
     if (state.success) {
       setOpen(false);
       setCibleId("");
-      toast.success("Règlement enregistré");
+      notifications.show({ message: "Règlement enregistré", color: "green" });
     }
   }, [state]);
 
@@ -62,127 +54,106 @@ export function ReglementForm({
   }, [cibleActuelle, cibleId]);
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(o) => {
-        setOpen(o);
-        if (!o) setCibleId("");
-      }}
-    >
-      <DialogTrigger render={<Button>Nouveau règlement</Button>} />
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Nouveau règlement</DialogTitle>
-        </DialogHeader>
-        <form action={formAction} className="space-y-4">
-          <div className="space-y-1">
-            <Label htmlFor="cible">Type *</Label>
+    <>
+      <Button onClick={() => setOpen(true)}>Nouveau règlement</Button>
+      <Modal
+        opened={open}
+        onClose={() => {
+          setOpen(false);
+          setCibleId("");
+        }}
+        title="Nouveau règlement"
+      >
+        <form action={formAction}>
+          <Stack gap="md">
             <Select
+              label="Type"
               name="cible"
               value={cible}
-              onValueChange={(v) => {
+              onChange={(v) => {
                 setCible(v as "facture" | "commande_fournisseur");
                 setCibleId("");
               }}
               required
-            >
-              <SelectTrigger id="cible" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="facture">Encaissement — Facture client</SelectItem>
-                <SelectItem value="commande_fournisseur">Décaissement — Achat fournisseur</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              data={[
+                { value: "facture", label: "Encaissement — Facture client" },
+                { value: "commande_fournisseur", label: "Décaissement — Achat fournisseur" },
+              ]}
+            />
 
-          <div className="space-y-1">
-            <Label htmlFor="cibleId">
-              {cible === "facture" ? "Facture *" : "Achat fournisseur *"}
-            </Label>
             <Select
+              label={cible === "facture" ? "Facture" : "Achat fournisseur"}
               name="cibleId"
               value={cibleId}
-              onValueChange={(v) => setCibleId(v ?? "")}
+              onChange={(v) => setCibleId(v ?? "")}
               required
-            >
-              <SelectTrigger id="cibleId" className="w-full">
-                <SelectValue placeholder="Choisir..." />
-              </SelectTrigger>
-              <SelectContent>
-                {cible === "facture"
-                  ? factures.map((f) => (
-                      <SelectItem key={f.id} value={String(f.id)}>
-                        {f.numero} — {f.nomAffiche} (reste {formatMontant(f.resteAPayer)})
-                      </SelectItem>
-                    ))
-                  : commandes.map((c) => (
-                      <SelectItem key={c.id} value={String(c.id)}>
-                        {c.numero} — {c.fournisseurNom} (reste {formatMontant(c.resteAPayer)})
-                      </SelectItem>
-                    ))}
-              </SelectContent>
-            </Select>
-          </div>
+              placeholder="Choisir..."
+              data={
+                cible === "facture"
+                  ? factures.map((f) => ({
+                      value: String(f.id),
+                      label: `${f.numero} — ${f.nomAffiche} (reste ${formatMontant(f.resteAPayer)})`,
+                    }))
+                  : commandes.map((c) => ({
+                      value: String(c.id),
+                      label: `${c.numero} — ${c.fournisseurNom} (reste ${formatMontant(c.resteAPayer)})`,
+                    }))
+              }
+            />
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label htmlFor="montant">Montant (FCFA) *</Label>
-              <Input
-                id="montant"
-                name="montant"
-                type="number"
-                min={1}
-                max={resteAPayer ?? undefined}
-                required
-                className="font-mono tabular-nums"
-              />
-              {resteAPayer !== null && (
-                <p className="font-mono text-xs tabular-nums text-muted-foreground">
-                  Reste à payer : {formatMontant(resteAPayer)}
-                </p>
-              )}
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="dateReglement">Date *</Label>
-              <Input
-                id="dateReglement"
+            <SimpleGrid cols={2}>
+              <Stack gap={4}>
+                <TextInput
+                  label="Montant (FCFA)"
+                  name="montant"
+                  type="number"
+                  min={1}
+                  max={resteAPayer ?? undefined}
+                  required
+                />
+                {resteAPayer !== null && (
+                  <Text size="xs" c="dimmed">
+                    Reste à payer : {formatMontant(resteAPayer)}
+                  </Text>
+                )}
+              </Stack>
+              <TextInput
+                label="Date"
                 name="dateReglement"
                 type="date"
                 required
                 defaultValue={new Date().toISOString().slice(0, 10)}
               />
-            </div>
-          </div>
+            </SimpleGrid>
 
-          <div className="space-y-1">
-            <Label htmlFor="moyen">Moyen *</Label>
-            <Select name="moyen" defaultValue="ESPECES" required>
-              <SelectTrigger id="moyen" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ESPECES">Espèces</SelectItem>
-                <SelectItem value="VIREMENT">Virement</SelectItem>
-                <SelectItem value="MOBILE_MONEY">Mobile Money</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            <Select
+              label="Moyen"
+              name="moyen"
+              defaultValue="ESPECES"
+              required
+              data={[
+                { value: "ESPECES", label: "Espèces" },
+                { value: "VIREMENT", label: "Virement" },
+                { value: "MOBILE_MONEY", label: "Mobile Money" },
+              ]}
+            />
 
-          <div className="space-y-1">
-            <Label htmlFor="commentaire">Commentaire</Label>
-            <Textarea id="commentaire" name="commentaire" rows={2} />
-          </div>
+            <Textarea label="Commentaire" name="commentaire" rows={2} />
 
-          {state.error && <p className="text-sm text-[#8A211C]">{state.error}</p>}
+            {state.error && (
+              <Text c="red" size="sm">
+                {state.error}
+              </Text>
+            )}
 
-          <DialogFooter>
-            <Button type="submit" disabled={pending || !cibleId}>
-              {pending ? "Enregistrement..." : "Enregistrer"}
-            </Button>
-          </DialogFooter>
+            <Group justify="flex-end">
+              <Button type="submit" loading={pending} disabled={!cibleId}>
+                Enregistrer
+              </Button>
+            </Group>
+          </Stack>
         </form>
-      </DialogContent>
-    </Dialog>
+      </Modal>
+    </>
   );
 }

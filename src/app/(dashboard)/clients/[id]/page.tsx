@@ -8,11 +8,11 @@ import { can, requirePermission } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
 import { STATUT_PROFORMA_LABEL, libelle } from "@/lib/libelles";
 import {
-  STATUT_COMMANDE_CLIENT_CLASS,
-  STATUT_FACTURE_CLASS,
-  STATUT_PROFORMA_CLASS,
+  STATUT_COMMANDE_CLIENT_BADGE,
+  STATUT_FACTURE_BADGE,
+  STATUT_PROFORMA_BADGE,
 } from "@/lib/statut-style";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@mantine/core";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ClientFormDialog } from "@/components/clients/client-form-dialog";
 import { Button } from "@/components/ui/button";
@@ -157,7 +157,7 @@ export default async function PageClient({
                   <TableCell className="font-mono tabular-nums">{formatDate(c.dateCommande)}</TableCell>
                   <TableCell>{c.modeReglement === "ESPECES" ? "Espèces" : "Bon de commande"}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={STATUT_COMMANDE_CLIENT_CLASS[c.statut]}>
+                    <Badge {...STATUT_COMMANDE_CLIENT_BADGE[c.statut]}>
                       {STATUT_COMMANDE_LABEL[c.statut]}
                     </Badge>
                   </TableCell>
@@ -218,7 +218,7 @@ export default async function PageClient({
                         {formatDate(p.dateValidite)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={STATUT_PROFORMA_CLASS[p.statut]}>
+                        <Badge {...STATUT_PROFORMA_BADGE[p.statut]}>
                           {libelle(STATUT_PROFORMA_LABEL, p.statut)}
                         </Badge>
                       </TableCell>
@@ -258,7 +258,7 @@ export default async function PageClient({
                   <TableCell className="font-mono tabular-nums">{formatDate(f.dateFacture)}</TableCell>
                   {peutVoirSolde && (
                     <TableCell>
-                      <Badge variant="outline" className={STATUT_FACTURE_CLASS[f.statut]}>
+                      <Badge {...STATUT_FACTURE_BADGE[f.statut]}>
                         {STATUT_FACTURE_LABEL[f.statut]}
                       </Badge>
                     </TableCell>

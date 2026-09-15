@@ -1,25 +1,8 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { notifications } from "@mantine/notifications";
+import { Button, Group, Modal, PasswordInput, Select, Stack, Text, TextInput } from "@mantine/core";
 import { creerUtilisateur } from "@/app/(dashboard)/utilisateurs/actions";
 
 export function UtilisateurCreationDialog() {
@@ -33,51 +16,44 @@ export function UtilisateurCreationDialog() {
   useEffect(() => {
     if (state.success) {
       setOpen(false);
-      toast.success("Utilisateur créé");
+      notifications.show({ message: "Utilisateur créé", color: "green" });
     }
   }, [state]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button>Nouvel utilisateur</Button>} />
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Nouvel utilisateur</DialogTitle>
-        </DialogHeader>
-        <form action={formAction} className="space-y-4">
-          <div className="space-y-1">
-            <Label htmlFor="nomComplet">Nom complet *</Label>
-            <Input id="nomComplet" name="nomComplet" required />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="email">Email *</Label>
-            <Input id="email" name="email" type="email" required />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="role">Rôle *</Label>
-            <Select name="role" value={role} onValueChange={(v) => setRole(v ?? "AGENT")} required>
-              <SelectTrigger id="role" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="AGENT">Agent</SelectItem>
-                <SelectItem value="SUPERVISEUR">Superviseur</SelectItem>
-                <SelectItem value="ADMIN">Administrateur</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="motDePasse">Mot de passe *</Label>
-            <Input id="motDePasse" name="motDePasse" type="password" required minLength={8} />
-          </div>
-          {state.error && <p className="text-sm text-[#8A211C]">{state.error}</p>}
-          <DialogFooter>
-            <Button type="submit" disabled={pending}>
-              {pending ? "Enregistrement..." : "Créer"}
-            </Button>
-          </DialogFooter>
+    <>
+      <Button onClick={() => setOpen(true)}>Nouvel utilisateur</Button>
+      <Modal opened={open} onClose={() => setOpen(false)} title="Nouvel utilisateur">
+        <form action={formAction}>
+          <Stack gap="md">
+            <TextInput label="Nom complet" name="nomComplet" required />
+            <TextInput label="Email" name="email" type="email" required />
+            <Select
+              label="Rôle"
+              name="role"
+              value={role}
+              onChange={(v) => setRole(v ?? "AGENT")}
+              required
+              data={[
+                { value: "AGENT", label: "Agent" },
+                { value: "SUPERVISEUR", label: "Superviseur" },
+                { value: "ADMIN", label: "Administrateur" },
+              ]}
+            />
+            <PasswordInput label="Mot de passe" name="motDePasse" required minLength={8} />
+            {state.error && (
+              <Text c="red" size="sm">
+                {state.error}
+              </Text>
+            )}
+            <Group justify="flex-end">
+              <Button type="submit" loading={pending}>
+                Créer
+              </Button>
+            </Group>
+          </Stack>
         </form>
-      </DialogContent>
-    </Dialog>
+      </Modal>
+    </>
   );
 }

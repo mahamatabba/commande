@@ -17,8 +17,8 @@ import {
 } from "@/lib/filtres";
 import { PaginationListe } from "@/components/shared/pagination-liste";
 import { STATUT_COMMANDE_FOURNISSEUR_LABEL, libelle } from "@/lib/libelles";
-import { STATUT_COMMANDE_FOURNISSEUR_CLASS } from "@/lib/statut-style";
-import { Badge } from "@/components/ui/badge";
+import { STATUT_COMMANDE_FOURNISSEUR_BADGE } from "@/lib/statut-style";
+import { Badge } from "@mantine/core";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -161,7 +161,7 @@ export default async function PageCommandesFournisseur({
                 <TableCell>{c.fournisseurNom}</TableCell>
                 <TableCell className="font-mono tabular-nums">{formatDate(c.dateCommande)}</TableCell>
                 <TableCell>
-                  <Badge variant="outline" className={STATUT_COMMANDE_FOURNISSEUR_CLASS[c.statut]}>
+                  <Badge {...STATUT_COMMANDE_FOURNISSEUR_BADGE[c.statut]}>
                     {libelle(STATUT_COMMANDE_FOURNISSEUR_LABEL, c.statut)}
                   </Badge>
                 </TableCell>

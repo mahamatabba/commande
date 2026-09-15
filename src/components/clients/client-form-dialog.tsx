@@ -1,18 +1,8 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { cloneElement, useActionState, useEffect, useState } from "react";
+import { notifications } from "@mantine/notifications";
+import { Button, Group, Modal, SimpleGrid, Stack, Text, TextInput } from "@mantine/core";
 import type { EtatFormulaire } from "@/app/(dashboard)/clients/actions";
 
 type Client = {
@@ -46,59 +36,46 @@ export function ClientFormDialog({
   useEffect(() => {
     if (state.success) {
       setOpen(false);
-      toast.success(client ? "Client modifié" : "Client créé");
+      notifications.show({
+        message: client ? "Client modifié" : "Client créé",
+        color: "green",
+      });
       if (!client && state.client) {
         onCreated?.(state.client);
       }
     }
   }, [state, client, onCreated]);
 
+  const triggerNode = trigger ?? <Button>Nouveau client</Button>;
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={trigger ?? <Button>Nouveau client</Button>} />
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{client ? "Modifier le client" : "Nouveau client"}</DialogTitle>
-        </DialogHeader>
-        <form action={formAction} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label htmlFor="nom">Nom *</Label>
-              <Input id="nom" name="nom" required defaultValue={client?.nom} />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="prenom">Prénom</Label>
-              <Input id="prenom" name="prenom" defaultValue={client?.prenom ?? ""} />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="raisonSociale">Raison sociale</Label>
-            <Input id="raisonSociale" name="raisonSociale" defaultValue={client?.raisonSociale ?? ""} />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="telephone">Téléphone *</Label>
-            <Input id="telephone" name="telephone" required defaultValue={client?.telephone} />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" defaultValue={client?.email ?? ""} />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="adresse">Adresse</Label>
-            <Input id="adresse" name="adresse" defaultValue={client?.adresse ?? ""} />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="nif">NIF</Label>
-            <Input id="nif" name="nif" defaultValue={client?.nif ?? ""} />
-          </div>
-          {state.error && <p className="text-sm text-[#8A211C]">{state.error}</p>}
-          <DialogFooter>
-            <Button type="submit" disabled={pending}>
-              {pending ? "Enregistrement..." : "Enregistrer"}
-            </Button>
-          </DialogFooter>
+    <>
+      {cloneElement(triggerNode, { onClick: () => setOpen(true) })}
+      <Modal opened={open} onClose={() => setOpen(false)} title={client ? "Modifier le client" : "Nouveau client"}>
+        <form action={formAction}>
+          <Stack gap="md">
+            <SimpleGrid cols={2}>
+              <TextInput label="Nom" name="nom" required defaultValue={client?.nom} />
+              <TextInput label="Prénom" name="prenom" defaultValue={client?.prenom ?? ""} />
+            </SimpleGrid>
+            <TextInput label="Raison sociale" name="raisonSociale" defaultValue={client?.raisonSociale ?? ""} />
+            <TextInput label="Téléphone" name="telephone" required defaultValue={client?.telephone} />
+            <TextInput label="Email" name="email" type="email" defaultValue={client?.email ?? ""} />
+            <TextInput label="Adresse" name="adresse" defaultValue={client?.adresse ?? ""} />
+            <TextInput label="NIF" name="nif" defaultValue={client?.nif ?? ""} />
+            {state.error && (
+              <Text c="red" size="sm">
+                {state.error}
+              </Text>
+            )}
+            <Group justify="flex-end">
+              <Button type="submit" loading={pending}>
+                Enregistrer
+              </Button>
+            </Group>
+          </Stack>
         </form>
-      </DialogContent>
-    </Dialog>
+      </Modal>
+    </>
   );
 }

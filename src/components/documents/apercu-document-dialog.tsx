@@ -1,17 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { cloneElement, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Download, ExternalLink, Eye, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Button, Group, Modal, Text } from "@mantine/core";
 
 /**
  * Aperçu d'un document officiel — facture, proforma, bon de commande.
@@ -52,34 +44,27 @@ export function ApercuDocumentDialog({
   }, []);
 
   const lienTelechargement = `${href}${href.includes("?") ? "&" : "?"}telecharger`;
+  const triggerNode = trigger ?? (
+    <Button variant="outline" size="xs" leftSection={<Eye size={14} />}>
+      Voir
+    </Button>
+  );
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
-        render={
-          trigger ?? (
-            <Button variant="outline" size="sm">
-              <Eye />
-              Voir
-            </Button>
-          )
-        }
-      />
-      <DialogContent className="flex h-[85vh] w-full max-w-4xl flex-col sm:max-w-4xl">
-        <DialogHeader>
-          <DialogTitle>{titre}</DialogTitle>
-        </DialogHeader>
-        <div className="relative flex-1 overflow-hidden rounded-[2px] border border-border bg-muted/30">
+    <>
+      {cloneElement(triggerNode, { onClick: () => setOpen(true) })}
+      <Modal opened={open} onClose={() => setOpen(false)} title={titre} size="xl">
+        <div className="relative flex h-[75vh] flex-col overflow-hidden rounded-md border border-[var(--mantine-color-dark-4)] bg-[var(--mantine-color-dark-6)]">
           {/* L'indicateur reste dessous en permanence : la visionneuse PDF du
               navigateur ne prévient pas toujours de sa fin de chargement, et
               un état « chargé » qui n'arrive jamais laisserait un voile sur
               l'aperçu. Le PDF, opaque, le recouvre dès qu'il s'affiche. */}
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
-            <Loader2 className="size-6 animate-spin text-muted-foreground" />
-            <p className="max-w-xs text-xs text-muted-foreground">
+            <Loader2 className="size-6 animate-spin text-[var(--mantine-color-dimmed)]" />
+            <Text size="xs" c="dimmed" maw={280}>
               Si le document ne s&apos;affiche pas ici, votre navigateur ne sait pas lire les PDF
               dans une fenêtre. Utilisez « Ouvrir dans un onglet ».
-            </p>
+            </Text>
           </div>
           {open && (
             <iframe
@@ -89,23 +74,32 @@ export function ApercuDocumentDialog({
             />
           )}
         </div>
-        <DialogFooter className="sm:items-center sm:justify-between">
-          <p className="text-xs text-muted-foreground sm:mr-auto">
+        <Group justify="space-between" mt="md" wrap="wrap">
+          <Text size="xs" c="dimmed">
             Document définitif, prêt à imprimer ou à envoyer au client.
-          </p>
-          <Button
-            variant="outline"
-            render={<a href={href} target="_blank" rel="noopener noreferrer" />}
-          >
-            <ExternalLink />
-            Ouvrir dans un onglet
-          </Button>
-          <Button render={<a href={lienTelechargement} download={`${nomFichier}.pdf`} />}>
-            <Download />
-            Télécharger le PDF
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </Text>
+          <Group gap="xs">
+            <Button
+              variant="outline"
+              component="a"
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              leftSection={<ExternalLink size={14} />}
+            >
+              Ouvrir dans un onglet
+            </Button>
+            <Button
+              component="a"
+              href={lienTelechargement}
+              download={`${nomFichier}.pdf`}
+              leftSection={<Download size={14} />}
+            >
+              Télécharger le PDF
+            </Button>
+          </Group>
+        </Group>
+      </Modal>
+    </>
   );
 }

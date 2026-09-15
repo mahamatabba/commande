@@ -1,25 +1,8 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { notifications } from "@mantine/notifications";
+import { Button, Group, Modal, Select, Stack, Text } from "@mantine/core";
 import type { EtatFormulaire } from "@/lib/action-state";
 
 /**
@@ -44,41 +27,46 @@ export function CorrectionModeReglementDialog({
   useEffect(() => {
     if (state.success) {
       setOpen(false);
-      toast.success("Mode de règlement corrigé");
+      notifications.show({ message: "Mode de règlement corrigé", color: "green" });
     }
   }, [state]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline">Corriger</Button>} />
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Corriger le mode de règlement</DialogTitle>
-          <DialogDescription>
+    <>
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        Corriger
+      </Button>
+      <Modal opened={open} onClose={() => setOpen(false)} title="Corriger le mode de règlement">
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
             À utiliser uniquement pour corriger une erreur de saisie. Cette action est tracée.
-          </DialogDescription>
-        </DialogHeader>
-        <form action={formAction} className="space-y-4">
-          <div className="space-y-1">
-            <Label htmlFor="modeReglement">Mode de règlement *</Label>
-            <Select name="modeReglement" defaultValue={modeReglementActuel} required>
-              <SelectTrigger id="modeReglement" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ESPECES">Espèces (comptant)</SelectItem>
-                <SelectItem value="BON_DE_COMMANDE">Bon de commande (à crédit)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {state.error && <p className="text-sm text-[#8A211C]">{state.error}</p>}
-          <DialogFooter>
-            <Button type="submit" disabled={pending}>
-              {pending ? "Enregistrement..." : "Enregistrer la correction"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </Text>
+          <form action={formAction}>
+            <Stack gap="md">
+              <Select
+                label="Mode de règlement"
+                name="modeReglement"
+                defaultValue={modeReglementActuel}
+                required
+                data={[
+                  { value: "ESPECES", label: "Espèces (comptant)" },
+                  { value: "BON_DE_COMMANDE", label: "Bon de commande (à crédit)" },
+                ]}
+              />
+              {state.error && (
+                <Text c="red" size="sm">
+                  {state.error}
+                </Text>
+              )}
+              <Group justify="flex-end">
+                <Button type="submit" loading={pending}>
+                  Enregistrer la correction
+                </Button>
+              </Group>
+            </Stack>
+          </form>
+        </Stack>
+      </Modal>
+    </>
   );
 }

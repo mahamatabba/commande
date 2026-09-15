@@ -1,18 +1,8 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { notifications } from "@mantine/notifications";
+import { Button, Group, Modal, PasswordInput, Stack, Text } from "@mantine/core";
 import { reinitialiserMotDePasse } from "@/app/(dashboard)/utilisateurs/actions";
 
 export function ReinitialiserMotDePasseDialog({ id, nom }: { id: number; nom: string }) {
@@ -26,30 +16,32 @@ export function ReinitialiserMotDePasseDialog({ id, nom }: { id: number; nom: st
   useEffect(() => {
     if (state.success) {
       setOpen(false);
-      toast.success("Mot de passe réinitialisé");
+      notifications.show({ message: "Mot de passe réinitialisé", color: "green" });
     }
   }, [state]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="ghost" size="sm">Mot de passe</Button>} />
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Réinitialiser le mot de passe de {nom}</DialogTitle>
-        </DialogHeader>
-        <form action={formAction} className="space-y-4">
-          <div className="space-y-1">
-            <Label htmlFor="motDePasse">Nouveau mot de passe *</Label>
-            <Input id="motDePasse" name="motDePasse" type="password" required minLength={8} />
-          </div>
-          {state.error && <p className="text-sm text-[#8A211C]">{state.error}</p>}
-          <DialogFooter>
-            <Button type="submit" disabled={pending}>
-              {pending ? "Enregistrement..." : "Réinitialiser"}
-            </Button>
-          </DialogFooter>
+    <>
+      <Button variant="subtle" size="sm" onClick={() => setOpen(true)}>
+        Mot de passe
+      </Button>
+      <Modal opened={open} onClose={() => setOpen(false)} title={`Réinitialiser le mot de passe de ${nom}`}>
+        <form action={formAction}>
+          <Stack gap="md">
+            <PasswordInput label="Nouveau mot de passe" name="motDePasse" required minLength={8} />
+            {state.error && (
+              <Text c="red" size="sm">
+                {state.error}
+              </Text>
+            )}
+            <Group justify="flex-end">
+              <Button type="submit" loading={pending}>
+                Réinitialiser
+              </Button>
+            </Group>
+          </Stack>
         </form>
-      </DialogContent>
-    </Dialog>
+      </Modal>
+    </>
   );
 }

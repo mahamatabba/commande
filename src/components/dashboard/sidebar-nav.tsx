@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { NavLink } from "@mantine/core";
 import type { NavItem } from "@/lib/nav";
 
 export function SidebarNav({
@@ -15,27 +15,22 @@ export function SidebarNav({
   const pathname = usePathname();
 
   return (
-    <nav className="flex flex-col gap-0.5">
+    <>
       {items.map((item) => {
         const actif =
           pathname === item.href ||
           (item.href !== "/dashboard" && pathname.startsWith(item.href));
         return (
-          <Link
+          <NavLink
             key={item.href}
+            component={Link}
             href={item.href}
+            label={item.label}
+            active={actif}
             onClick={onNavigate}
-            className={cn(
-              "rounded-[2px] border-l-2 px-2.5 py-2.25 text-sm font-medium transition-colors",
-              actif
-                ? "border-l-[#8FB2DD] bg-[#22405F] text-white"
-                : "border-l-transparent text-[#A9BBD1] hover:bg-[#1B3450] hover:text-[#E8EDF4]",
-            )}
-          >
-            {item.label}
-          </Link>
+          />
         );
       })}
-    </nav>
+    </>
   );
 }

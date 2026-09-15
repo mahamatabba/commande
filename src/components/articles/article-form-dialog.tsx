@@ -1,18 +1,8 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { cloneElement, useActionState, useEffect, useState } from "react";
+import { notifications } from "@mantine/notifications";
+import { Button, Group, Modal, NumberInput, SimpleGrid, Stack, Text, TextInput } from "@mantine/core";
 import type { EtatFormulaire } from "@/app/(dashboard)/articles/actions";
 
 type Article = {
@@ -50,78 +40,65 @@ export function ArticleFormDialog({
   useEffect(() => {
     if (state.success) {
       setOpen(false);
-      toast.success(article ? "Article modifié" : "Article créé");
+      notifications.show({
+        message: article ? "Article modifié" : "Article créé",
+        color: "green",
+      });
       if (!article && state.article) {
         onCreated?.(state.article);
       }
     }
   }, [state, article, onCreated]);
 
+  const triggerNode = trigger ?? <Button>Nouvel article</Button>;
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={trigger ?? <Button>Nouvel article</Button>} />
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{article ? "Modifier l'article" : "Nouvel article"}</DialogTitle>
-        </DialogHeader>
-        <form action={formAction} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label htmlFor="code">Code *</Label>
-              <Input id="code" name="code" required defaultValue={article?.code} />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="tauxTva">Taux TVA (%)</Label>
-              <Input
-                id="tauxTva"
+    <>
+      {cloneElement(triggerNode, { onClick: () => setOpen(true) })}
+      <Modal opened={open} onClose={() => setOpen(false)} title={article ? "Modifier l'article" : "Nouvel article"}>
+        <form action={formAction}>
+          <Stack gap="md">
+            <SimpleGrid cols={2}>
+              <TextInput label="Code" name="code" required defaultValue={article?.code} />
+              <NumberInput
+                label="Taux TVA (%)"
                 name="tauxTva"
-                type="number"
-                step="0.01"
-                className="font-mono tabular-nums"
+                decimalScale={2}
                 defaultValue={article?.tauxTva ?? 18}
               />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="designation">Désignation *</Label>
-            <Input id="designation" name="designation" required defaultValue={article?.designation} />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label htmlFor="prixAchatIndicatif">Prix d&apos;achat indicatif (FCFA)</Label>
-              <Input
-                id="prixAchatIndicatif"
+            </SimpleGrid>
+            <TextInput label="Désignation" name="designation" required defaultValue={article?.designation} />
+            <SimpleGrid cols={2}>
+              <NumberInput
+                label="Prix d'achat indicatif (FCFA)"
                 name="prixAchatIndicatif"
-                type="number"
                 min={0}
                 step={1}
                 required
-                className="font-mono tabular-nums"
                 defaultValue={article?.prixAchatIndicatif}
               />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="prixVente">Prix de vente (FCFA) *</Label>
-              <Input
-                id="prixVente"
+              <NumberInput
+                label="Prix de vente (FCFA)"
                 name="prixVente"
-                type="number"
                 min={0}
                 step={1}
                 required
-                className="font-mono tabular-nums"
                 defaultValue={article?.prixVente}
               />
-            </div>
-          </div>
-          {state.error && <p className="text-sm text-[#8A211C]">{state.error}</p>}
-          <DialogFooter>
-            <Button type="submit" disabled={pending}>
-              {pending ? "Enregistrement..." : "Enregistrer"}
-            </Button>
-          </DialogFooter>
+            </SimpleGrid>
+            {state.error && (
+              <Text c="red" size="sm">
+                {state.error}
+              </Text>
+            )}
+            <Group justify="flex-end">
+              <Button type="submit" loading={pending}>
+                Enregistrer
+              </Button>
+            </Group>
+          </Stack>
         </form>
-      </DialogContent>
-    </Dialog>
+      </Modal>
+    </>
   );
 }

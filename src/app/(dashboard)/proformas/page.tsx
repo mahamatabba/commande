@@ -16,9 +16,9 @@ import {
   lirePage,
   lireStatut,
 } from "@/lib/filtres";
-import { STATUT_PROFORMA_CLASS } from "@/lib/statut-style";
+import { STATUT_PROFORMA_BADGE } from "@/lib/statut-style";
 import { PaginationListe } from "@/components/shared/pagination-liste";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@mantine/core";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -187,7 +187,7 @@ export default async function PageProformas({
                     {expiree && <span className="ml-2 text-xs text-[#8A211C]">expirée</span>}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={STATUT_PROFORMA_CLASS[p.statut]}>
+                    <Badge {...STATUT_PROFORMA_BADGE[p.statut]}>
                       {libelle(STATUT_PROFORMA_LABEL, p.statut)}
                     </Badge>
                   </TableCell>

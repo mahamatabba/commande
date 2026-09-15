@@ -4,8 +4,8 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { can, requirePermission } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
-import { STATUT_COMMANDE_FOURNISSEUR_CLASS } from "@/lib/statut-style";
-import { Badge } from "@/components/ui/badge";
+import { STATUT_COMMANDE_FOURNISSEUR_BADGE } from "@/lib/statut-style";
+import { Badge } from "@mantine/core";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AnnulationDialog } from "@/components/shared/annulation-dialog";
@@ -52,7 +52,7 @@ export default async function PageCommandeFournisseur({
         <div>
           <div className="flex items-center gap-2">
             <h1 className="font-mono text-2xl font-semibold tabular-nums">{commande.numero}</h1>
-            <Badge variant="outline" className={STATUT_COMMANDE_FOURNISSEUR_CLASS[commande.statut]}>
+            <Badge {...STATUT_COMMANDE_FOURNISSEUR_BADGE[commande.statut]}>
               {STATUT_LABEL[commande.statut]}
             </Badge>
           </div>

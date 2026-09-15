@@ -6,8 +6,8 @@ import { db } from "@/db";
 import { commandesFournisseur, fournisseurs } from "@/db/schema";
 import { can, requirePermission } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
-import { STATUT_COMMANDE_FOURNISSEUR_CLASS } from "@/lib/statut-style";
-import { Badge } from "@/components/ui/badge";
+import { STATUT_COMMANDE_FOURNISSEUR_BADGE } from "@/lib/statut-style";
+import { Badge } from "@mantine/core";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FournisseurFormDialog } from "@/components/fournisseurs/fournisseur-form-dialog";
 import { Button } from "@/components/ui/button";
@@ -116,7 +116,7 @@ export default async function PageFournisseur({
                   </TableCell>
                   <TableCell className="font-mono tabular-nums">{formatDate(c.dateCommande)}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={STATUT_COMMANDE_FOURNISSEUR_CLASS[c.statut]}>
+                    <Badge {...STATUT_COMMANDE_FOURNISSEUR_BADGE[c.statut]}>
                       {STATUT_LABEL[c.statut]}
                     </Badge>
                   </TableCell>

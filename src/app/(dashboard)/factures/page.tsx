@@ -16,9 +16,9 @@ import {
   lirePage,
   lireStatut,
 } from "@/lib/filtres";
-import { STATUT_FACTURE_CLASS } from "@/lib/statut-style";
+import { STATUT_FACTURE_BADGE } from "@/lib/statut-style";
 import { PaginationListe } from "@/components/shared/pagination-liste";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@mantine/core";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -176,7 +176,7 @@ export default async function PageFactures({
                 <TableCell className="font-mono tabular-nums">{formatDate(f.dateFacture)}</TableCell>
                 {peutVoirImpayes && (
                   <TableCell>
-                    <Badge variant="outline" className={STATUT_FACTURE_CLASS[f.statut!]}>
+                    <Badge {...STATUT_FACTURE_BADGE[f.statut!]}>
                       {libelle(STATUT_FACTURE_LABEL, f.statut)}
                     </Badge>
                   </TableCell>

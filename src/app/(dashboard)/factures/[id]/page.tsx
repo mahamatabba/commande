@@ -6,8 +6,8 @@ import { can, requirePermission } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
 import { formatTaux } from "@/lib/tva";
 import { MOYEN_REGLEMENT_LABEL, STATUT_FACTURE_LABEL, libelle } from "@/lib/libelles";
-import { STATUT_FACTURE_CLASS } from "@/lib/statut-style";
-import { Badge } from "@/components/ui/badge";
+import { STATUT_FACTURE_BADGE } from "@/lib/statut-style";
+import { Badge } from "@mantine/core";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AnnulationDialog } from "@/components/shared/annulation-dialog";
@@ -64,7 +64,7 @@ export default async function PageFacture({
           <div className="flex items-center gap-2">
             <h1 className="font-mono text-2xl font-semibold tabular-nums">{facture.numero}</h1>
             {peutVoirImpayes && (
-              <Badge variant="outline" className={STATUT_FACTURE_CLASS[facture.statut]}>
+              <Badge {...STATUT_FACTURE_BADGE[facture.statut]}>
                 {libelle(STATUT_FACTURE_LABEL, facture.statut)}
               </Badge>
             )}

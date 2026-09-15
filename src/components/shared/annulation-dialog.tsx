@@ -1,19 +1,8 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { notifications } from "@mantine/notifications";
+import { Button, Group, Modal, Stack, Text, Textarea } from "@mantine/core";
 import type { EtatFormulaire } from "@/lib/action-state";
 
 /**
@@ -40,31 +29,37 @@ export function AnnulationDialog({
   useEffect(() => {
     if (state.success) {
       setOpen(false);
-      toast.success("Annulation effectuée");
+      notifications.show({ message: "Annulation effectuée", color: "green" });
     }
   }, [state]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="destructive">{titre}</Button>} />
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{titre}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
-        <form action={formAction} className="space-y-4">
-          <div className="space-y-1">
-            <Label htmlFor="motif">Motif *</Label>
-            <Textarea id="motif" name="motif" required minLength={3} rows={3} />
-          </div>
-          {state.error && <p className="text-sm text-[#8A211C]">{state.error}</p>}
-          <DialogFooter>
-            <Button type="submit" variant="destructive" disabled={pending}>
-              {pending ? "Annulation..." : "Confirmer l'annulation"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <>
+      <Button color="red" onClick={() => setOpen(true)}>
+        {titre}
+      </Button>
+      <Modal opened={open} onClose={() => setOpen(false)} title={titre}>
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
+            {description}
+          </Text>
+          <form action={formAction}>
+            <Stack gap="md">
+              <Textarea label="Motif" name="motif" required minLength={3} rows={3} />
+              {state.error && (
+                <Text c="red" size="sm">
+                  {state.error}
+                </Text>
+              )}
+              <Group justify="flex-end">
+                <Button type="submit" color="red" loading={pending}>
+                  Confirmer l&apos;annulation
+                </Button>
+              </Group>
+            </Stack>
+          </form>
+        </Stack>
+      </Modal>
+    </>
   );
 }

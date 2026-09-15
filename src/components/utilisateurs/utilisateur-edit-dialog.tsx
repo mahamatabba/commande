@@ -1,25 +1,8 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { notifications } from "@mantine/notifications";
+import { Button, Checkbox, Group, Modal, Select, Stack, Text, TextInput } from "@mantine/core";
 import { modifierUtilisateur } from "@/app/(dashboard)/utilisateurs/actions";
 
 type Utilisateur = {
@@ -31,7 +14,7 @@ type Utilisateur = {
 
 export function UtilisateurEditDialog({ utilisateur }: { utilisateur: Utilisateur }) {
   const [open, setOpen] = useState(false);
-  const [role, setRole] = useState(utilisateur.role);
+  const [role, setRole] = useState<Utilisateur["role"]>(utilisateur.role);
   const action = modifierUtilisateur.bind(null, utilisateur.id);
   const [state, formAction, pending] = useActionState(action, {
     error: null,
@@ -41,53 +24,45 @@ export function UtilisateurEditDialog({ utilisateur }: { utilisateur: Utilisateu
   useEffect(() => {
     if (state.success) {
       setOpen(false);
-      toast.success("Utilisateur modifié");
+      notifications.show({ message: "Utilisateur modifié", color: "green" });
     }
   }, [state]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="ghost" size="sm">Modifier</Button>} />
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Modifier l&apos;utilisateur</DialogTitle>
-        </DialogHeader>
-        <form action={formAction} className="space-y-4">
-          <div className="space-y-1">
-            <Label htmlFor="nomComplet">Nom complet *</Label>
-            <Input id="nomComplet" name="nomComplet" required defaultValue={utilisateur.nomComplet} />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="role">Rôle *</Label>
-            <Select name="role" value={role} onValueChange={(v) => setRole((v ?? "AGENT") as Utilisateur["role"])} required>
-              <SelectTrigger id="role" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="AGENT">Agent</SelectItem>
-                <SelectItem value="SUPERVISEUR">Superviseur</SelectItem>
-                <SelectItem value="ADMIN">Administrateur</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              id="actif"
-              name="actif"
-              type="checkbox"
-              defaultChecked={utilisateur.actif}
-              className="size-4 rounded-[2px] border-input accent-primary"
+    <>
+      <Button variant="subtle" size="sm" onClick={() => setOpen(true)}>
+        Modifier
+      </Button>
+      <Modal opened={open} onClose={() => setOpen(false)} title="Modifier l'utilisateur">
+        <form action={formAction}>
+          <Stack gap="md">
+            <TextInput label="Nom complet" name="nomComplet" required defaultValue={utilisateur.nomComplet} />
+            <Select
+              label="Rôle"
+              name="role"
+              value={role}
+              onChange={(v) => setRole((v ?? "AGENT") as Utilisateur["role"])}
+              required
+              data={[
+                { value: "AGENT", label: "Agent" },
+                { value: "SUPERVISEUR", label: "Superviseur" },
+                { value: "ADMIN", label: "Administrateur" },
+              ]}
             />
-            <Label htmlFor="actif">Compte actif</Label>
-          </div>
-          {state.error && <p className="text-sm text-[#8A211C]">{state.error}</p>}
-          <DialogFooter>
-            <Button type="submit" disabled={pending}>
-              {pending ? "Enregistrement..." : "Enregistrer"}
-            </Button>
-          </DialogFooter>
+            <Checkbox name="actif" label="Compte actif" defaultChecked={utilisateur.actif} />
+            {state.error && (
+              <Text c="red" size="sm">
+                {state.error}
+              </Text>
+            )}
+            <Group justify="flex-end">
+              <Button type="submit" loading={pending}>
+                Enregistrer
+              </Button>
+            </Group>
+          </Stack>
         </form>
-      </DialogContent>
-    </Dialog>
+      </Modal>
+    </>
   );
 }

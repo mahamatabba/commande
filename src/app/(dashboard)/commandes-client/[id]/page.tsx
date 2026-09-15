@@ -10,8 +10,8 @@ import {
   STATUT_PROFORMA_LABEL,
   libelle,
 } from "@/lib/libelles";
-import { STATUT_COMMANDE_CLIENT_CLASS } from "@/lib/statut-style";
-import { Badge } from "@/components/ui/badge";
+import { STATUT_COMMANDE_CLIENT_BADGE } from "@/lib/statut-style";
+import { Badge } from "@mantine/core";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AnnulationDialog } from "@/components/shared/annulation-dialog";
@@ -60,7 +60,7 @@ export default async function PageCommandeClient({
         <div>
           <div className="flex items-center gap-2">
             <h1 className="font-mono text-2xl font-semibold tabular-nums">{commande.numero}</h1>
-            <Badge variant="outline" className={STATUT_COMMANDE_CLIENT_CLASS[commande.statut]}>
+            <Badge {...STATUT_COMMANDE_CLIENT_BADGE[commande.statut]}>
               {libelle(STATUT_COMMANDE_CLIENT_LABEL, commande.statut)}
             </Badge>
           </div>
