@@ -81,7 +81,26 @@ export async function reponsePdf(
   document: React.ReactElement<DocumentProps>,
   { nomFichier, telecharger }: { nomFichier: string; telecharger: boolean },
 ): Promise<Response> {
-  const octets = new Uint8Array(await renderToBuffer(document));
+  let buffer: Buffer;
+  try {
+    buffer = await renderToBuffer(document);
+  } catch (erreur) {
+    // Le rendu s'appuie sur des dépendances natives (WebAssembly, métriques
+    // de polices) dont le comportement en environnement serverless peut
+    // différer du poste de développement. Sans ce filet, l'exception remonte
+    // telle quelle et Next.js répond par un 500 générique sans aucun détail
+    // exploitable — impossible à diagnostiquer depuis l'extérieur.
+    console.error("Échec du rendu PDF :", erreur);
+    const detail =
+      erreur instanceof Error
+        ? `${erreur.name}: ${erreur.message}${erreur.stack ? `\n\n${erreur.stack}` : ""}`
+        : String(erreur);
+    return new Response(`Échec de la génération du PDF.\n\n${detail}`, {
+      status: 500,
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    });
+  }
+  const octets = new Uint8Array(buffer);
   const fichier = `${nomFichierSur(nomFichier)}.pdf`;
 
   return new Response(octets, {
