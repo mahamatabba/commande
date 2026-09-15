@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { Group, Paper, SimpleGrid, Skeleton, Stack } from "@mantine/core";
 
 /**
  * Silhouettes affichées pendant le chargement d'une page.
@@ -17,25 +17,25 @@ import { Skeleton } from "@/components/ui/skeleton";
 /** Titre de page, éventuellement suivi d'un bouton d'action à droite. */
 export function SqueletteEntete({ action = false }: { action?: boolean }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
+    <Group justify="space-between" wrap="wrap" gap="sm">
       <Skeleton className="h-8 w-52" />
       {action && <Skeleton className="h-9 w-36" />}
-    </div>
+    </Group>
   );
 }
 
 /** Barre de filtres : quelques champs alignés et un bouton. */
 export function SqueletteFiltres({ champs = 3 }: { champs?: number }) {
   return (
-    <div className="flex flex-wrap items-end gap-3">
+    <Group align="flex-end" wrap="wrap" gap="sm">
       {Array.from({ length: champs }).map((_, i) => (
-        <div key={i} className="space-y-1">
+        <Stack key={i} gap={4}>
           <Skeleton className="h-3.5 w-16" />
           <Skeleton className="h-9 w-40" />
-        </div>
+        </Stack>
       ))}
       <Skeleton className="h-9 w-24" />
-    </div>
+    </Group>
   );
 }
 
@@ -52,58 +52,70 @@ export function SqueletteTableau({
   lignes?: number;
 }) {
   return (
-    <div className="overflow-hidden rounded-lg border bg-card">
-      <div className="flex items-center gap-4 border-b bg-[#F4F3F0] px-4 py-3">
+    <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+      <Group
+        gap="md"
+        wrap="nowrap"
+        px="md"
+        py="sm"
+        className="border-b border-[var(--mantine-color-dark-4)] bg-[var(--mantine-color-dark-5)]"
+      >
         {Array.from({ length: colonnes }).map((_, i) => (
           <Skeleton key={i} className="h-3 flex-1" />
         ))}
-      </div>
-      <div className="divide-y">
+      </Group>
+      <div className="divide-y divide-[var(--mantine-color-dark-4)]">
         {Array.from({ length: lignes }).map((_, i) => (
-          <div key={i} className="flex items-center gap-4 px-4 py-3.5">
+          <Group key={i} gap="md" wrap="nowrap" px="md" py={14}>
             {Array.from({ length: colonnes }).map((_, j) => (
               <Skeleton key={j} className="h-3.5 flex-1" />
             ))}
-          </div>
+          </Group>
         ))}
       </div>
-    </div>
+    </Paper>
   );
 }
 
 /** Bloc encadré générique, utilisé pour les cartes de formulaire ou de fiche. */
 export function SqueletteCarte({ lignes = 3 }: { lignes?: number }) {
   return (
-    <div className="space-y-3 rounded-lg border bg-card p-5">
-      <Skeleton className="h-4 w-40" />
-      {Array.from({ length: lignes }).map((_, i) => (
-        <Skeleton key={i} className="h-3.5 w-full" />
-      ))}
-    </div>
+    <Paper withBorder radius="md" p="lg">
+      <Stack gap="sm">
+        <Skeleton className="h-4 w-40" />
+        {Array.from({ length: lignes }).map((_, i) => (
+          <Skeleton key={i} className="h-3.5 w-full" />
+        ))}
+      </Stack>
+    </Paper>
   );
 }
 
 /** Grille de tuiles chiffrées du tableau de bord et des statistiques. */
 export function SqueletteTuiles({ nombre = 4 }: { nombre?: number }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md">
       {Array.from({ length: nombre }).map((_, i) => (
-        <div key={i} className="space-y-2 rounded-lg border bg-card p-5">
-          <Skeleton className="h-3.5 w-24" />
-          <Skeleton className="h-7 w-28" />
-        </div>
+        <Paper key={i} withBorder radius="md" p="lg">
+          <Stack gap={8}>
+            <Skeleton className="h-3.5 w-24" />
+            <Skeleton className="h-7 w-28" />
+          </Stack>
+        </Paper>
       ))}
-    </div>
+    </SimpleGrid>
   );
 }
 
 /** Emplacement d'un graphique, à la hauteur réelle du conteneur Recharts. */
 export function SqueletteGraphique({ hauteur = "h-64" }: { hauteur?: string }) {
   return (
-    <div className="space-y-3 rounded-lg border bg-card p-5">
-      <Skeleton className="h-4 w-44" />
-      <Skeleton className={`w-full ${hauteur}`} />
-    </div>
+    <Paper withBorder radius="md" p="lg">
+      <Stack gap="sm">
+        <Skeleton className="h-4 w-44" />
+        <Skeleton className={`w-full ${hauteur}`} />
+      </Stack>
+    </Paper>
   );
 }
 
@@ -120,57 +132,59 @@ export function SqueletteListe({
   filtres?: number;
 }) {
   return (
-    <div className="space-y-4">
+    <Stack gap="md">
       <SqueletteEntete action={action} />
       {filtres > 0 && <SqueletteFiltres champs={filtres} />}
       <SqueletteTableau colonnes={colonnes} lignes={lignes} />
-    </div>
+    </Stack>
   );
 }
 
 /** Page de fiche : titre, bandeau d'informations puis tableaux liés. */
 export function SqueletteDetail({ tableaux = 2 }: { tableaux?: number }) {
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-2">
+    <Stack gap="lg">
+      <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
+        <Stack gap={8}>
           <Skeleton className="h-8 w-64" />
           <Skeleton className="h-4 w-80" />
           <Skeleton className="h-7 w-44" />
-        </div>
-        <div className="flex gap-2">
+        </Stack>
+        <Group gap="sm">
           <Skeleton className="h-9 w-28" />
           <Skeleton className="h-9 w-28" />
-        </div>
-      </div>
+        </Group>
+      </Group>
       {Array.from({ length: tableaux }).map((_, i) => (
-        <div key={i} className="space-y-2">
+        <Stack key={i} gap={8}>
           <Skeleton className="h-5 w-32" />
           <SqueletteTableau colonnes={4} lignes={3} />
-        </div>
+        </Stack>
       ))}
-    </div>
+    </Stack>
   );
 }
 
 /** Page de saisie : titre, cartes de formulaire et récapitulatif latéral. */
 export function SqueletteFormulaire() {
   return (
-    <div className="max-w-5xl space-y-6">
-      <div className="space-y-2">
+    <Stack gap="lg" className="max-w-5xl">
+      <Stack gap={8}>
         <Skeleton className="h-8 w-56" />
         <Skeleton className="h-4 w-96" />
-      </div>
+      </Stack>
       <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
-        <div className="space-y-6 lg:col-span-2">
+        <Stack gap="lg" className="lg:col-span-2">
           <SqueletteCarte lignes={2} />
-          <div className="space-y-3 rounded-lg border bg-card p-5">
-            <Skeleton className="h-4 w-28" />
-            <SqueletteTableau colonnes={6} lignes={2} />
-          </div>
-        </div>
+          <Paper withBorder radius="md" p="lg">
+            <Stack gap="sm">
+              <Skeleton className="h-4 w-28" />
+              <SqueletteTableau colonnes={6} lignes={2} />
+            </Stack>
+          </Paper>
+        </Stack>
         <SqueletteCarte lignes={2} />
       </div>
-    </div>
+    </Stack>
   );
 }
