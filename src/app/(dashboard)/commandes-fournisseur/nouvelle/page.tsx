@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { requirePermission } from "@/lib/permissions";
+import { Stack, Text, Title } from "@mantine/core";
 import { CommandeFournisseurForm } from "@/components/commandes/commande-fournisseur-form";
 
 export default async function PageNouvelleCommandeFournisseur() {
@@ -27,14 +28,14 @@ export default async function PageNouvelleCommandeFournisseur() {
   }));
 
   return (
-    <div className="max-w-5xl space-y-6">
+    <Stack gap="xl" maw={1024}>
       <div>
-        <h1 className="text-2xl font-semibold">Nouvel achat</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <Title order={1} size="h2">Nouvel achat</Title>
+        <Text size="sm" c="dimmed" mt={4}>
           Sélectionnez le fournisseur, ajoutez les articles puis validez pour créer la commande.
-        </p>
+        </Text>
       </div>
       <CommandeFournisseurForm fournisseurs={listeFournisseurs} articles={catalogue} />
-    </div>
+    </Stack>
   );
 }

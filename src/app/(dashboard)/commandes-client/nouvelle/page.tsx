@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { requirePermission } from "@/lib/permissions";
+import { Stack, Text, Title } from "@mantine/core";
 import { CommandeClientForm } from "@/components/commandes/commande-client-form";
 
 export default async function PageNouvelleCommandeClient() {
@@ -27,14 +28,14 @@ export default async function PageNouvelleCommandeClient() {
   }));
 
   return (
-    <div className="max-w-5xl space-y-6">
+    <Stack gap="xl" maw={1024}>
       <div>
-        <h1 className="text-2xl font-semibold">Nouvelle vente</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <Title order={1} size="h2">Nouvelle vente</Title>
+        <Text size="sm" c="dimmed" mt={4}>
           Sélectionnez le client, ajoutez les articles puis validez pour créer la commande.
-        </p>
+        </Text>
       </div>
       <CommandeClientForm clients={listeClients} articles={catalogue} />
-    </div>
+    </Stack>
   );
 }
