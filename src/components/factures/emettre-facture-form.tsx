@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, Group, Radio, Stack, Text } from "@mantine/core";
 import { formatMontant } from "@/lib/format";
 import { TAUX_TVA_STANDARD } from "@/lib/constants";
 import { decomposerTva, formatTaux } from "@/lib/tva";
@@ -31,70 +31,68 @@ export function EmettreFactureForm({
   const totaux = decomposerTva(montantHt, { exonere });
 
   return (
-    <form action={formAction} className="space-y-4">
-      <input type="hidden" name="commandeClientId" value={commandeClientId} />
-      <input type="hidden" name="regimeTva" value={exonere ? "EXONERE" : "ASSUJETTI"} />
+    <form action={formAction}>
+      <Stack gap="md">
+        <input type="hidden" name="commandeClientId" value={commandeClientId} />
+        <input type="hidden" name="regimeTva" value={exonere ? "EXONERE" : "ASSUJETTI"} />
 
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-medium">TVA</legend>
+        <Radio.Group
+          label="TVA"
+          value={exonere ? "EXONERE" : "ASSUJETTI"}
+          onChange={(v) => setExonere(v === "EXONERE")}
+        >
+          <Stack gap="xs" mt="xs">
+            <Radio.Card value="ASSUJETTI" radius="md" p="sm">
+              <Group wrap="nowrap" align="flex-start" gap="sm">
+                <Radio.Indicator mt={2} />
+                <div>
+                  <Text size="sm" fw={500}>Soumise à la TVA</Text>
+                  <Text size="xs" c="dimmed">
+                    {formatTaux(TAUX_TVA_STANDARD)} ajoutés au montant hors taxe.
+                  </Text>
+                </div>
+              </Group>
+            </Radio.Card>
 
-        <label className="flex cursor-pointer items-start gap-2 rounded-[2px] border border-border p-3 has-checked:border-[#1E3A5F] has-checked:bg-[#EEF2F7]">
-          <input
-            type="radio"
-            name="choixTva"
-            className="mt-0.5"
-            checked={!exonere}
-            onChange={() => setExonere(false)}
-          />
-          <span className="text-sm">
-            <span className="font-medium">Soumise à la TVA</span>
-            <span className="block text-xs text-muted-foreground">
-              {formatTaux(TAUX_TVA_STANDARD)} ajoutés au montant hors taxe.
-            </span>
-          </span>
-        </label>
+            <Radio.Card value="EXONERE" radius="md" p="sm">
+              <Group wrap="nowrap" align="flex-start" gap="sm">
+                <Radio.Indicator mt={2} />
+                <div>
+                  <Text size="sm" fw={500}>Exonérée</Text>
+                  <Text size="xs" c="dimmed">
+                    Aucune TVA facturée. Le client paie le montant hors taxe.
+                  </Text>
+                </div>
+              </Group>
+            </Radio.Card>
+          </Stack>
+        </Radio.Group>
 
-        <label className="flex cursor-pointer items-start gap-2 rounded-[2px] border border-border p-3 has-checked:border-[#1E3A5F] has-checked:bg-[#EEF2F7]">
-          <input
-            type="radio"
-            name="choixTva"
-            className="mt-0.5"
-            checked={exonere}
-            onChange={() => setExonere(true)}
-          />
-          <span className="text-sm">
-            <span className="font-medium">Exonérée</span>
-            <span className="block text-xs text-muted-foreground">
-              Aucune TVA facturée. Le client paie le montant hors taxe.
-            </span>
-          </span>
-        </label>
-      </fieldset>
+        <Stack gap={6} pt="md" style={{ borderTop: "1px solid var(--mantine-color-dark-4)" }}>
+          <Group justify="space-between">
+            <Text size="sm" c="dimmed">Total HT</Text>
+            <Text size="sm" className="font-mono tabular-nums">{formatMontant(totaux.montantHt)}</Text>
+          </Group>
+          <Group justify="space-between">
+            <Text size="sm" c="dimmed">
+              TVA {totaux.exonereTva ? "(exonérée)" : `(${formatTaux(totaux.tauxTva)})`}
+            </Text>
+            <Text size="sm" className="font-mono tabular-nums">{formatMontant(totaux.montantTva)}</Text>
+          </Group>
+          <Group justify="space-between" pt="xs" style={{ borderTop: "1px solid var(--mantine-color-dark-4)" }}>
+            <Text size="sm" fw={500}>Total TTC</Text>
+            <Text size="xl" fw={600} className="font-mono tabular-nums">
+              {formatMontant(totaux.montantTotal)}
+            </Text>
+          </Group>
+        </Stack>
 
-      <dl className="space-y-1.5 border-t border-border pt-4 text-sm">
-        <div className="flex justify-between">
-          <dt className="text-muted-foreground">Total HT</dt>
-          <dd className="font-mono tabular-nums">{formatMontant(totaux.montantHt)}</dd>
-        </div>
-        <div className="flex justify-between">
-          <dt className="text-muted-foreground">
-            TVA {totaux.exonereTva ? "(exonérée)" : `(${formatTaux(totaux.tauxTva)})`}
-          </dt>
-          <dd className="font-mono tabular-nums">{formatMontant(totaux.montantTva)}</dd>
-        </div>
-        <div className="flex items-baseline justify-between border-t border-border pt-2">
-          <dt className="font-medium">Total TTC</dt>
-          <dd className="font-mono text-xl font-semibold tabular-nums">
-            {formatMontant(totaux.montantTotal)}
-          </dd>
-        </div>
-      </dl>
+        {state.error && <Text size="sm" c="red">{state.error}</Text>}
 
-      {state.error && <p className="text-sm text-[#8A211C]">{state.error}</p>}
-
-      <Button type="submit" disabled={pending} className="w-full">
-        {pending ? "Émission..." : "Émettre la facture"}
-      </Button>
+        <Button type="submit" loading={pending} fullWidth>
+          {pending ? "Émission..." : "Émettre la facture"}
+        </Button>
+      </Stack>
     </form>
   );
 }

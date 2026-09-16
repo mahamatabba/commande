@@ -6,10 +6,8 @@ import { db } from "@/db";
 import { fournisseurs } from "@/db/schema";
 import { can, requirePermission } from "@/lib/permissions";
 import { bornerPagination, lienPagination, lirePage } from "@/lib/filtres";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge, Button, Group, Paper, Stack, TextInput, Title } from "@mantine/core";
+import { DataTable } from "mantine-datatable";
 import { FournisseurFormDialog } from "@/components/fournisseurs/fournisseur-form-dialog";
 import { PaginationListe } from "@/components/shared/pagination-liste";
 import { creerFournisseur, modifierFournisseur, basculerActifFournisseur } from "./actions";
@@ -53,85 +51,87 @@ export default async function PageFournisseurs({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Fournisseurs</h1>
+    <Stack gap="md">
+      <Group justify="space-between" wrap="wrap" gap="sm">
+        <Title order={1} size="h2">Fournisseurs</Title>
         {peutEcrire && <FournisseurFormDialog action={creerFournisseur} />}
-      </div>
+      </Group>
 
       <form className="max-w-sm">
-        <Input name="q" placeholder="Rechercher un fournisseur..." defaultValue={q} />
+        <TextInput name="q" placeholder="Rechercher un fournisseur..." defaultValue={q} />
       </form>
 
-      <div className="overflow-x-auto rounded-lg border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nom</TableHead>
-              <TableHead>Téléphone</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>NIF</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {liste.map((f) => (
-              <TableRow key={f.id}>
-                <TableCell className="font-medium">
-                  <Link href={`/fournisseurs/${f.id}`} className="hover:underline">
-                    {f.nom}
-                  </Link>
-                </TableCell>
-                <TableCell className="font-mono tabular-nums">{f.telephone}</TableCell>
-                <TableCell>{f.email ?? "—"}</TableCell>
-                <TableCell>
-                  {f.nif ? <Badge variant="secondary">NIF</Badge> : "—"}
-                </TableCell>
-                <TableCell>
-                  <Badge variant={f.actif ? "default" : "outline"}>
-                    {f.actif ? "Actif" : "Inactif"}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button render={<Link href={`/fournisseurs/${f.id}`} />} variant="ghost" size="sm">
-                      Voir
-                    </Button>
-                    {peutEcrire && (
-                      <>
-                        {/* Même dialogue que sur la fiche : corriger un
-                            téléphone ne demande plus d'ouvrir une page. */}
-                        <FournisseurFormDialog
-                          action={modifierFournisseur.bind(null, f.id)}
-                          fournisseur={f}
-                          trigger={
-                            <Button variant="ghost" size="sm">
-                              Modifier
-                            </Button>
-                          }
-                        />
-                        <form action={basculerActifFournisseur.bind(null, f.id, !f.actif)}>
-                          <Button type="submit" variant="ghost" size="sm">
-                            {f.actif ? "Désactiver" : "Activer"}
+      <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+        <DataTable
+          records={liste}
+          idAccessor="id"
+          withTableBorder={false}
+          noRecordsText="Aucun fournisseur."
+          columns={[
+            {
+              accessor: "nom",
+              title: "Nom",
+              render: (f) => (
+                <Link href={`/fournisseurs/${f.id}`} className="font-medium hover:underline">
+                  {f.nom}
+                </Link>
+              ),
+            },
+            {
+              accessor: "telephone",
+              title: "Téléphone",
+              render: (f) => <span className="font-mono tabular-nums">{f.telephone}</span>,
+            },
+            { accessor: "email", title: "Email", render: (f) => f.email ?? "—" },
+            {
+              accessor: "nif",
+              title: "NIF",
+              render: (f) => (f.nif ? <Badge color="gray" variant="light">NIF</Badge> : "—"),
+            },
+            {
+              accessor: "actif",
+              title: "Statut",
+              render: (f) => (
+                <Badge color={f.actif ? "green" : "gray"} variant="light">
+                  {f.actif ? "Actif" : "Inactif"}
+                </Badge>
+              ),
+            },
+            {
+              accessor: "actions",
+              title: "Actions",
+              textAlign: "right",
+              render: (f) => (
+                <Group justify="flex-end" gap="xs">
+                  <Button component={Link} href={`/fournisseurs/${f.id}`} variant="subtle" size="xs">
+                    Voir
+                  </Button>
+                  {peutEcrire && (
+                    <>
+                      {/* Même dialogue que sur la fiche : corriger un
+                          téléphone ne demande plus d'ouvrir une page. */}
+                      <FournisseurFormDialog
+                        action={modifierFournisseur.bind(null, f.id)}
+                        fournisseur={f}
+                        trigger={
+                          <Button variant="subtle" size="xs">
+                            Modifier
                           </Button>
-                        </form>
-                      </>
-                    )}
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-            {liste.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
-                  Aucun fournisseur.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+                        }
+                      />
+                      <form action={basculerActifFournisseur.bind(null, f.id, !f.actif)}>
+                        <Button type="submit" variant="subtle" size="xs">
+                          {f.actif ? "Désactiver" : "Activer"}
+                        </Button>
+                      </form>
+                    </>
+                  )}
+                </Group>
+              ),
+            },
+          ]}
+        />
+      </Paper>
 
       <PaginationListe
         base="/fournisseurs"
@@ -141,6 +141,6 @@ export default async function PageFournisseurs({
         total={total}
         nom="fournisseur"
       />
-    </div>
+    </Stack>
   );
 }

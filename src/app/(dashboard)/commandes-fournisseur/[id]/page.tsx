@@ -5,9 +5,7 @@ import { db } from "@/db";
 import { can, requirePermission } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
 import { STATUT_COMMANDE_FOURNISSEUR_BADGE } from "@/lib/statut-style";
-import { Badge } from "@mantine/core";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge, Button, Group, Paper, Stack, Table, Text, Title } from "@mantine/core";
 import { AnnulationDialog } from "@/components/shared/annulation-dialog";
 import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
 import {
@@ -47,23 +45,23 @@ export default async function PageCommandeFournisseur({
   if (!commande) notFound();
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <Stack gap="xl">
+      <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-mono text-2xl font-semibold tabular-nums">{commande.numero}</h1>
+          <Group gap="xs">
+            <Title order={1} size="h2" className="font-mono tabular-nums">{commande.numero}</Title>
             <Badge {...STATUT_COMMANDE_FOURNISSEUR_BADGE[commande.statut]}>
               {STATUT_LABEL[commande.statut]}
             </Badge>
-          </div>
-          <p className="mt-1 text-sm text-muted-foreground">
+          </Group>
+          <Text size="sm" c="dimmed" mt={4}>
             <Link href={`/fournisseurs/${commande.fournisseur.id}`} className="hover:underline">
               {commande.fournisseur.nom}
             </Link>{" "}
             · <span className="font-mono tabular-nums">{formatDate(commande.dateCommande)}</span>
-          </p>
+          </Text>
         </div>
-        <div className="flex gap-2">
+        <Group gap="xs" wrap="wrap">
           <ApercuDocumentDialog
             href={`/commandes-fournisseur/${commande.id}/pdf`}
             titre={`Bon de commande ${commande.numero}`}
@@ -87,45 +85,45 @@ export default async function PageCommandeFournisseur({
               titre="Annuler la commande"
             />
           )}
-        </div>
-      </div>
+        </Group>
+      </Group>
 
-      <div className="overflow-x-auto rounded-lg border bg-card">
+      <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Désignation</TableHead>
-              <TableHead className="text-right">Qté</TableHead>
-              <TableHead className="text-right">Prix unitaire</TableHead>
-              <TableHead className="text-right">Montant</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Désignation</Table.Th>
+              <Table.Th style={{ textAlign: "right" }}>Qté</Table.Th>
+              <Table.Th style={{ textAlign: "right" }}>Prix unitaire</Table.Th>
+              <Table.Th style={{ textAlign: "right" }}>Montant</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
             {commande.lignes.map((l) => (
-              <TableRow key={l.id}>
-                <TableCell>{l.designation}</TableCell>
-                <TableCell className="text-right font-mono tabular-nums">{l.quantite}</TableCell>
-                <TableCell className="text-right font-mono tabular-nums">
+              <Table.Tr key={l.id}>
+                <Table.Td>{l.designation}</Table.Td>
+                <Table.Td className="font-mono tabular-nums" style={{ textAlign: "right" }}>{l.quantite}</Table.Td>
+                <Table.Td className="font-mono tabular-nums" style={{ textAlign: "right" }}>
                   {formatMontant(l.prixUnitaire)}
-                </TableCell>
-                <TableCell className="text-right font-mono tabular-nums">
+                </Table.Td>
+                <Table.Td className="font-mono tabular-nums" style={{ textAlign: "right" }}>
                   {formatMontant(l.montantLigne)}
-                </TableCell>
-              </TableRow>
+                </Table.Td>
+              </Table.Tr>
             ))}
-          </TableBody>
+          </Table.Tbody>
         </Table>
-        <div className="flex justify-end gap-8 border-t bg-muted/50 p-3 text-sm">
-          <span className="font-mono tabular-nums">
+        <Group justify="flex-end" gap="xl" p="sm" style={{ borderTop: "1px solid var(--mantine-color-dark-4)" }}>
+          <Text size="sm" className="font-mono tabular-nums">
             Total : <strong>{formatMontant(commande.montantTotal)}</strong>
-          </span>
+          </Text>
           {peutVoirDecaissements && (
-            <span className="font-mono tabular-nums">
+            <Text size="sm" className="font-mono tabular-nums">
               Réglé : <strong>{formatMontant(commande.montantRegle)}</strong>
-            </span>
+            </Text>
           )}
-        </div>
-      </div>
-    </div>
+        </Group>
+      </Paper>
+    </Stack>
   );
 }

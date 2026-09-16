@@ -7,9 +7,8 @@ import { formatDate, formatMontant } from "@/lib/format";
 import { formatTaux } from "@/lib/tva";
 import { MOYEN_REGLEMENT_LABEL, STATUT_FACTURE_LABEL, libelle } from "@/lib/libelles";
 import { STATUT_FACTURE_BADGE } from "@/lib/statut-style";
-import { Badge } from "@mantine/core";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge, Button, Group, Paper, Stack, Table, Text, Title } from "@mantine/core";
+import { DataTable } from "mantine-datatable";
 import { AnnulationDialog } from "@/components/shared/annulation-dialog";
 import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
 import { MarquerPayeeDialog } from "@/components/factures/marquer-payee-dialog";
@@ -58,25 +57,25 @@ export default async function PageFacture({
   const encaissable = facture.statut !== "ANNULEE" && resteAPayer > 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <Stack gap="xl">
+      <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-mono text-2xl font-semibold tabular-nums">{facture.numero}</h1>
+          <Group gap="xs">
+            <Title order={1} size="h2" className="font-mono tabular-nums">{facture.numero}</Title>
             {peutVoirImpayes && (
               <Badge {...STATUT_FACTURE_BADGE[facture.statut]}>
                 {libelle(STATUT_FACTURE_LABEL, facture.statut)}
               </Badge>
             )}
-          </div>
-          <p className="mt-1 text-sm text-muted-foreground">
+          </Group>
+          <Text size="sm" c="dimmed" mt={4}>
             <Link href={`/clients/${facture.client.id}`} className="hover:underline">
               {nomAffiche(facture.client)}
             </Link>{" "}
             · <span className="font-mono tabular-nums">{formatDate(facture.dateFacture)}</span>
-          </p>
+          </Text>
         </div>
-        <div className="flex gap-2">
+        <Group gap="xs" wrap="wrap">
           <ApercuDocumentDialog
             href={`/factures/${facture.id}/pdf`}
             titre={`Facture ${facture.numero}`}
@@ -97,108 +96,109 @@ export default async function PageFacture({
               description="L'annulation est définitive et tracée. Si la facture est déjà réglée, un mouvement de caisse inverse sera généré automatiquement."
             />
           )}
-        </div>
-      </div>
+        </Group>
+      </Group>
 
       {facture.proformaOrigine && (
-        <p className="rounded-[2px] border border-[#C6D2E0] bg-[#EEF2F7] p-3 text-sm text-[#1E3A5F]">
-          Établie à partir de la proforma{" "}
-          <Link
-            href={`/proformas/${facture.proformaOrigine.id}`}
-            className="font-mono tabular-nums underline"
-          >
-            {facture.proformaOrigine.numero}
-          </Link>{" "}
-          du {formatDate(facture.proformaOrigine.dateProforma)}.
-        </p>
+        <Paper withBorder radius="md" p="sm" style={{ backgroundColor: "var(--mantine-color-dark-6)" }}>
+          <Text size="sm">
+            Établie à partir de la proforma{" "}
+            <Link href={`/proformas/${facture.proformaOrigine.id}`} className="font-mono tabular-nums underline">
+              {facture.proformaOrigine.numero}
+            </Link>{" "}
+            du {formatDate(facture.proformaOrigine.dateProforma)}.
+          </Text>
+        </Paper>
       )}
 
-      <div className="overflow-x-auto rounded-lg border bg-card">
+      <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Désignation</TableHead>
-              <TableHead className="text-right">Qté</TableHead>
-              <TableHead className="text-right">P.U. HT</TableHead>
-              <TableHead className="text-right">Montant HT</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Désignation</Table.Th>
+              <Table.Th style={{ textAlign: "right" }}>Qté</Table.Th>
+              <Table.Th style={{ textAlign: "right" }}>P.U. HT</Table.Th>
+              <Table.Th style={{ textAlign: "right" }}>Montant HT</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
             {facture.commandeClient.lignes.map((l) => (
-              <TableRow key={l.id}>
-                <TableCell>{l.designation}</TableCell>
-                <TableCell className="text-right font-mono tabular-nums">{l.quantite}</TableCell>
-                <TableCell className="text-right font-mono tabular-nums">
+              <Table.Tr key={l.id}>
+                <Table.Td>{l.designation}</Table.Td>
+                <Table.Td className="font-mono tabular-nums" style={{ textAlign: "right" }}>{l.quantite}</Table.Td>
+                <Table.Td className="font-mono tabular-nums" style={{ textAlign: "right" }}>
                   {formatMontant(l.prixUnitaire)}
-                </TableCell>
-                <TableCell className="text-right font-mono tabular-nums">
+                </Table.Td>
+                <Table.Td className="font-mono tabular-nums" style={{ textAlign: "right" }}>
                   {formatMontant(l.montantLigne)}
-                </TableCell>
-              </TableRow>
+                </Table.Td>
+              </Table.Tr>
             ))}
-          </TableBody>
+          </Table.Tbody>
         </Table>
-        <div className="flex flex-wrap justify-end gap-x-8 gap-y-2 border-t bg-muted/50 p-3 text-sm">
-          <span className="font-mono tabular-nums">
+        <Group gap="xl" p="sm" justify="flex-end" wrap="wrap" style={{ borderTop: "1px solid var(--mantine-color-dark-4)" }}>
+          <Text size="sm" className="font-mono tabular-nums">
             Total HT : <strong>{formatMontant(facture.montantHt)}</strong>
-          </span>
-          <span className="font-mono tabular-nums">
+          </Text>
+          <Text size="sm" className="font-mono tabular-nums">
             {facture.exonereTva ? "TVA exonérée" : `TVA ${formatTaux(facture.tauxTva)}`} :{" "}
             <strong>{formatMontant(facture.montantTva)}</strong>
-          </span>
-          <span className="font-mono tabular-nums">
+          </Text>
+          <Text size="sm" className="font-mono tabular-nums">
             Total TTC : <strong>{formatMontant(facture.montantTotal)}</strong>
-          </span>
+          </Text>
           {peutVoirImpayes && (
             <>
-              <span className="font-mono tabular-nums">
+              <Text size="sm" className="font-mono tabular-nums">
                 Réglé : <strong>{formatMontant(facture.montantRegle)}</strong>
-              </span>
-              <span className="font-mono tabular-nums">
+              </Text>
+              <Text size="sm" className="font-mono tabular-nums">
                 Reste à payer :{" "}
-                <strong className={resteAPayer > 0 ? "text-[#8A211C]" : undefined}>
+                <strong className={resteAPayer > 0 ? "text-[var(--mantine-color-red-5)]" : undefined}>
                   {formatMontant(resteAPayer)}
                 </strong>
-              </span>
+              </Text>
             </>
           )}
-        </div>
-      </div>
+        </Group>
+      </Paper>
 
       {peutVoirEncaissements && (
         <div>
-          <h2 className="mb-2 text-lg font-medium">Règlements</h2>
-          <div className="overflow-x-auto rounded-lg border bg-card">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Moyen</TableHead>
-                  <TableHead>Sens</TableHead>
-                  <TableHead className="text-right">Montant</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {facture.reglements.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-mono tabular-nums">{formatDate(r.dateReglement)}</TableCell>
-                    <TableCell>{libelle(MOYEN_REGLEMENT_LABEL, r.moyen)}</TableCell>
-                    <TableCell>{r.sens === "ENCAISSEMENT" ? "Encaissement" : "Reprise"}</TableCell>
-                    <TableCell className="text-right font-mono tabular-nums">{formatMontant(r.montant)}</TableCell>
-                  </TableRow>
-                ))}
-                {facture.reglements.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={4} className="py-6 text-center text-muted-foreground">
-                      Aucun règlement.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <Title order={2} size="h4" mb="sm">Règlements</Title>
+          <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+            <DataTable
+              records={facture.reglements}
+              idAccessor="id"
+              withTableBorder={false}
+              noRecordsText="Aucun règlement."
+              columns={[
+                {
+                  accessor: "dateReglement",
+                  title: "Date",
+                  render: (r) => <span className="font-mono tabular-nums">{formatDate(r.dateReglement)}</span>,
+                },
+                {
+                  accessor: "moyen",
+                  title: "Moyen",
+                  render: (r) => libelle(MOYEN_REGLEMENT_LABEL, r.moyen),
+                },
+                {
+                  accessor: "sens",
+                  title: "Sens",
+                  render: (r) => (r.sens === "ENCAISSEMENT" ? "Encaissement" : "Reprise"),
+                },
+                {
+                  accessor: "montant",
+                  title: "Montant",
+                  textAlign: "right",
+                  render: (r) => <span className="font-mono tabular-nums">{formatMontant(r.montant)}</span>,
+                },
+              ]}
+            />
+          </Paper>
         </div>
       )}
-    </div>
+    </Stack>
   );
 }

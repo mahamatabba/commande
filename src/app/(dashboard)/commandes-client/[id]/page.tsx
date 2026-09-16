@@ -11,9 +11,7 @@ import {
   libelle,
 } from "@/lib/libelles";
 import { STATUT_COMMANDE_CLIENT_BADGE } from "@/lib/statut-style";
-import { Badge } from "@mantine/core";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge, Button, Group, Paper, Stack, Table, Text, Title } from "@mantine/core";
 import { AnnulationDialog } from "@/components/shared/annulation-dialog";
 import { CorrectionModeReglementDialog } from "@/components/commandes/correction-mode-reglement-dialog";
 import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
@@ -55,24 +53,24 @@ export default async function PageCommandeClient({
   const proformaEnCours = commande.proformas.find((p) => p.statut === "EMISE");
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <Stack gap="xl">
+      <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-mono text-2xl font-semibold tabular-nums">{commande.numero}</h1>
+          <Group gap="xs">
+            <Title order={1} size="h2" className="font-mono tabular-nums">{commande.numero}</Title>
             <Badge {...STATUT_COMMANDE_CLIENT_BADGE[commande.statut]}>
               {libelle(STATUT_COMMANDE_CLIENT_LABEL, commande.statut)}
             </Badge>
-          </div>
-          <p className="mt-1 text-sm text-muted-foreground">
+          </Group>
+          <Text size="sm" c="dimmed" mt={4}>
             <Link href={`/clients/${commande.client.id}`} className="hover:underline">
               {nomAffiche(commande.client)}
             </Link>{" "}
             · <span className="font-mono tabular-nums">{formatDate(commande.dateCommande)}</span> ·{" "}
             {libelle(MODE_REGLEMENT_LABEL, commande.modeReglement)}
-          </p>
+          </Text>
         </div>
-        <div className="flex gap-2">
+        <Group gap="xs" wrap="wrap">
           <ApercuDocumentDialog
             href={`/commandes-client/${commande.id}/pdf`}
             titre={`Bon de commande ${commande.numero}`}
@@ -86,15 +84,12 @@ export default async function PageCommandeClient({
             </form>
           )}
           {peutFacturer && commande.statut === "VALIDEE" && !proformaEnCours && (
-            <Button
-              variant="outline"
-              render={<Link href={`/proformas/nouvelle?commandeClientId=${commande.id}`} />}
-            >
+            <Button variant="outline" component={Link} href={`/proformas/nouvelle?commandeClientId=${commande.id}`}>
               Établir une proforma
             </Button>
           )}
           {peutFacturer && commande.statut === "VALIDEE" && (
-            <Button render={<Link href={`/factures/nouvelle?commandeClientId=${commande.id}`} />}>
+            <Button component={Link} href={`/factures/nouvelle?commandeClientId=${commande.id}`}>
               Émettre la facture
             </Button>
           )}
@@ -110,55 +105,57 @@ export default async function PageCommandeClient({
               titre="Annuler la commande"
             />
           )}
-        </div>
-      </div>
+        </Group>
+      </Group>
 
       {commande.proformas.length > 0 && (
-        <div className="rounded-[2px] border border-[#C6D2E0] bg-[#EEF2F7] p-3 text-sm text-[#1E3A5F]">
-          <span className="font-medium">Proformas établies :</span>{" "}
-          {commande.proformas.map((p, i) => (
-            <span key={p.id}>
-              {i > 0 && " · "}
-              <Link href={`/proformas/${p.id}`} className="font-mono tabular-nums underline">
-                {p.numero}
-              </Link>{" "}
-              ({libelle(STATUT_PROFORMA_LABEL, p.statut).toLowerCase()})
-            </span>
-          ))}
-        </div>
+        <Paper withBorder radius="md" p="sm" style={{ backgroundColor: "var(--mantine-color-dark-6)" }}>
+          <Text size="sm">
+            <span className="font-medium">Proformas établies :</span>{" "}
+            {commande.proformas.map((p, i) => (
+              <span key={p.id}>
+                {i > 0 && " · "}
+                <Link href={`/proformas/${p.id}`} className="font-mono tabular-nums underline">
+                  {p.numero}
+                </Link>{" "}
+                ({libelle(STATUT_PROFORMA_LABEL, p.statut).toLowerCase()})
+              </span>
+            ))}
+          </Text>
+        </Paper>
       )}
 
-      <div className="overflow-x-auto rounded-lg border bg-card">
+      <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Désignation</TableHead>
-              <TableHead className="text-right">Qté</TableHead>
-              <TableHead className="text-right">Prix unitaire</TableHead>
-              <TableHead className="text-right">Montant</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Désignation</Table.Th>
+              <Table.Th style={{ textAlign: "right" }}>Qté</Table.Th>
+              <Table.Th style={{ textAlign: "right" }}>Prix unitaire</Table.Th>
+              <Table.Th style={{ textAlign: "right" }}>Montant</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
             {commande.lignes.map((l) => (
-              <TableRow key={l.id}>
-                <TableCell>{l.designation}</TableCell>
-                <TableCell className="text-right font-mono tabular-nums">{l.quantite}</TableCell>
-                <TableCell className="text-right font-mono tabular-nums">
+              <Table.Tr key={l.id}>
+                <Table.Td>{l.designation}</Table.Td>
+                <Table.Td className="font-mono tabular-nums" style={{ textAlign: "right" }}>{l.quantite}</Table.Td>
+                <Table.Td className="font-mono tabular-nums" style={{ textAlign: "right" }}>
                   {formatMontant(l.prixUnitaire)}
-                </TableCell>
-                <TableCell className="text-right font-mono tabular-nums">
+                </Table.Td>
+                <Table.Td className="font-mono tabular-nums" style={{ textAlign: "right" }}>
                   {formatMontant(l.montantLigne)}
-                </TableCell>
-              </TableRow>
+                </Table.Td>
+              </Table.Tr>
             ))}
-          </TableBody>
+          </Table.Tbody>
         </Table>
-        <div className="flex justify-end border-t bg-muted/50 p-3 text-sm">
-          <span className="font-mono tabular-nums">
+        <Group justify="flex-end" p="sm" style={{ borderTop: "1px solid var(--mantine-color-dark-4)" }}>
+          <Text size="sm" className="font-mono tabular-nums">
             Total : <strong>{formatMontant(commande.montantTotal)}</strong>
-          </span>
-        </div>
-      </div>
-    </div>
+          </Text>
+        </Group>
+      </Paper>
+    </Stack>
   );
 }

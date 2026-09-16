@@ -7,10 +7,9 @@ import { commandesFournisseur, fournisseurs } from "@/db/schema";
 import { can, requirePermission } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
 import { STATUT_COMMANDE_FOURNISSEUR_BADGE } from "@/lib/statut-style";
-import { Badge } from "@mantine/core";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge, Button, Group, Paper, Stack, Text, Title } from "@mantine/core";
+import { DataTable } from "mantine-datatable";
 import { FournisseurFormDialog } from "@/components/fournisseurs/fournisseur-form-dialog";
-import { Button } from "@/components/ui/button";
 import { modifierFournisseur } from "../actions";
 
 const STATUT_LABEL: Record<string, string> = {
@@ -63,23 +62,25 @@ export default async function PageFournisseur({
       : [];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <Stack gap="xl">
+      <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
         <div>
-          <h1 className="text-2xl font-semibold">{fournisseur.nom}</h1>
-          <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="font-mono tabular-nums">{fournisseur.telephone}</span>
-            {fournisseur.email && <span>· {fournisseur.email}</span>}
+          <Title order={1} size="h2">{fournisseur.nom}</Title>
+          <Group gap="xs" mt={4} wrap="wrap">
+            <Text size="sm" c="dimmed" className="font-mono tabular-nums">{fournisseur.telephone}</Text>
+            {fournisseur.email && <Text size="sm" c="dimmed">· {fournisseur.email}</Text>}
             {fournisseur.nif && (
-              <Badge variant="secondary" className="font-mono tabular-nums">
+              <Badge color="gray" variant="light" className="font-mono tabular-nums">
                 NIF {fournisseur.nif}
               </Badge>
             )}
-            <Badge variant={fournisseur.actif ? "default" : "outline"}>
+            <Badge color={fournisseur.actif ? "green" : "gray"} variant="light">
               {fournisseur.actif ? "Actif" : "Inactif"}
             </Badge>
-          </div>
-          {fournisseur.adresse && <p className="mt-1 text-sm text-muted-foreground">{fournisseur.adresse}</p>}
+          </Group>
+          {fournisseur.adresse && (
+            <Text size="sm" c="dimmed" mt={4}>{fournisseur.adresse}</Text>
+          )}
         </div>
         {peutEcrire && (
           <FournisseurFormDialog
@@ -88,97 +89,88 @@ export default async function PageFournisseur({
             trigger={<Button variant="outline">Modifier</Button>}
           />
         )}
-      </div>
+      </Group>
 
       <div>
-        <h2 className="mb-2 text-lg font-medium">Achats</h2>
-        <div className="overflow-x-auto rounded-lg border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Numéro</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead className="text-right">Montant</TableHead>
-                {peutVoirDecaissements && <TableHead className="text-right">Réglé</TableHead>}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {commandes.map((c) => (
-                <TableRow key={c.id}>
-                  <TableCell>
-                    <Link
-                      href={`/commandes-fournisseur/${c.id}`}
-                      className="font-mono font-medium tabular-nums hover:underline"
-                    >
-                      {c.numero}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="font-mono tabular-nums">{formatDate(c.dateCommande)}</TableCell>
-                  <TableCell>
-                    <Badge {...STATUT_COMMANDE_FOURNISSEUR_BADGE[c.statut]}>
-                      {STATUT_LABEL[c.statut]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right font-mono tabular-nums">
-                    {formatMontant(c.montantTotal)}
-                  </TableCell>
-                  {peutVoirDecaissements && (
-                    <TableCell className="text-right font-mono tabular-nums">
-                      {formatMontant(c.montantRegle)}
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))}
-              {commandes.length === 0 && (
-                <TableRow>
-                  <TableCell
-                    colSpan={peutVoirDecaissements ? 5 : 4}
-                    className="py-6 text-center text-muted-foreground"
-                  >
-                    Aucune commande.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+        <Title order={2} size="h4" mb="sm">Achats</Title>
+        <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+          <DataTable
+            records={commandes}
+            idAccessor="id"
+            withTableBorder={false}
+            noRecordsText="Aucune commande."
+            columns={[
+              {
+                accessor: "numero",
+                title: "Numéro",
+                render: (c) => (
+                  <Link href={`/commandes-fournisseur/${c.id}`} className="font-mono font-medium tabular-nums hover:underline">
+                    {c.numero}
+                  </Link>
+                ),
+              },
+              {
+                accessor: "dateCommande",
+                title: "Date",
+                render: (c) => <span className="font-mono tabular-nums">{formatDate(c.dateCommande)}</span>,
+              },
+              {
+                accessor: "statut",
+                title: "Statut",
+                render: (c) => (
+                  <Badge {...STATUT_COMMANDE_FOURNISSEUR_BADGE[c.statut]}>{STATUT_LABEL[c.statut]}</Badge>
+                ),
+              },
+              {
+                accessor: "montantTotal",
+                title: "Montant",
+                textAlign: "right",
+                render: (c) => <span className="font-mono tabular-nums">{formatMontant(c.montantTotal)}</span>,
+              },
+              ...(peutVoirDecaissements
+                ? [
+                    {
+                      accessor: "montantRegle",
+                      title: "Réglé",
+                      textAlign: "right" as const,
+                      render: (c: (typeof commandes)[number]) => (
+                        <span className="font-mono tabular-nums">{formatMontant(c.montantRegle)}</span>
+                      ),
+                    },
+                  ]
+                : []),
+            ]}
+          />
+        </Paper>
       </div>
 
       {peutVoirDecaissements && (
         <div>
-          <h2 className="mb-2 text-lg font-medium">Paiements (décaissements)</h2>
-          <div className="overflow-x-auto rounded-lg border bg-card">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Moyen</TableHead>
-                  <TableHead className="text-right">Montant</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paiementsFournisseur.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-mono tabular-nums">{formatDate(p.dateReglement)}</TableCell>
-                    <TableCell>{p.moyen}</TableCell>
-                    <TableCell className="text-right font-mono tabular-nums">
-                      {formatMontant(p.montant)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {paiementsFournisseur.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={3} className="py-6 text-center text-muted-foreground">
-                      Aucun paiement.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <Title order={2} size="h4" mb="sm">Paiements (décaissements)</Title>
+          <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+            <DataTable
+              records={paiementsFournisseur}
+              idAccessor="id"
+              withTableBorder={false}
+              noRecordsText="Aucun paiement."
+              columns={[
+                {
+                  accessor: "dateReglement",
+                  title: "Date",
+                  render: (p) => <span className="font-mono tabular-nums">{formatDate(p.dateReglement)}</span>,
+                },
+                { accessor: "moyen", title: "Moyen" },
+                {
+                  accessor: "montant",
+                  title: "Montant",
+                  textAlign: "right",
+                  render: (p) => <span className="font-mono tabular-nums">{formatMontant(p.montant)}</span>,
+                },
+              ]}
+            />
+          </Paper>
         </div>
       )}
-    </div>
+    </Stack>
   );
 }

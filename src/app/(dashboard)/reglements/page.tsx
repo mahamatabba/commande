@@ -7,7 +7,8 @@ import { requirePermission } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
 import { bornerPagination, lienPagination, lirePage } from "@/lib/filtres";
 import { MOYEN_REGLEMENT_LABEL, SENS_REGLEMENT_LABEL, libelle } from "@/lib/libelles";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Group, Paper, Stack, Title } from "@mantine/core";
+import { DataTable } from "mantine-datatable";
 import { ReglementForm } from "@/components/reglements/reglement-form";
 import { PaginationListe } from "@/components/shared/pagination-liste";
 
@@ -89,9 +90,9 @@ export default async function PageReglements({
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Règlements</h1>
+    <Stack gap="md">
+      <Group justify="space-between" wrap="wrap" gap="sm">
+        <Title order={1} size="h2">Règlements</Title>
         <ReglementForm
           factures={facturesEligibles.map((f) => ({
             id: f.id,
@@ -110,45 +111,41 @@ export default async function PageReglements({
             resteAPayer: c.resteAPayer,
           }))}
         />
-      </div>
+      </Group>
 
-      <div className="overflow-x-auto rounded-lg border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Sens</TableHead>
-              <TableHead>Cible</TableHead>
-              <TableHead>Moyen</TableHead>
-              <TableHead className="text-right">Montant</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {historique.map((r) => (
-              <TableRow key={r.id}>
-                <TableCell className="font-mono tabular-nums">{formatDate(r.dateReglement)}</TableCell>
-                <TableCell>{libelle(SENS_REGLEMENT_LABEL, r.sens)}</TableCell>
-                <TableCell>
-                  {r.facture
-                    ? `Facture ${r.facture.numero} — ${nomAffiche(r.facture.client)}`
-                    : r.commandeFournisseur
-                      ? `Achat ${r.commandeFournisseur.numero} — ${r.commandeFournisseur.fournisseur.nom}`
-                      : "—"}
-                </TableCell>
-                <TableCell>{libelle(MOYEN_REGLEMENT_LABEL, r.moyen)}</TableCell>
-                <TableCell className="text-right font-mono tabular-nums">{formatMontant(r.montant)}</TableCell>
-              </TableRow>
-            ))}
-            {historique.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="py-6 text-center text-muted-foreground">
-                  Aucun règlement enregistré.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+        <DataTable
+          records={historique}
+          idAccessor="id"
+          withTableBorder={false}
+          noRecordsText="Aucun règlement enregistré."
+          columns={[
+            {
+              accessor: "dateReglement",
+              title: "Date",
+              render: (r) => <span className="font-mono tabular-nums">{formatDate(r.dateReglement)}</span>,
+            },
+            { accessor: "sens", title: "Sens", render: (r) => libelle(SENS_REGLEMENT_LABEL, r.sens) },
+            {
+              accessor: "cible",
+              title: "Cible",
+              render: (r) =>
+                r.facture
+                  ? `Facture ${r.facture.numero} — ${nomAffiche(r.facture.client)}`
+                  : r.commandeFournisseur
+                    ? `Achat ${r.commandeFournisseur.numero} — ${r.commandeFournisseur.fournisseur.nom}`
+                    : "—",
+            },
+            { accessor: "moyen", title: "Moyen", render: (r) => libelle(MOYEN_REGLEMENT_LABEL, r.moyen) },
+            {
+              accessor: "montant",
+              title: "Montant",
+              textAlign: "right",
+              render: (r) => <span className="font-mono tabular-nums">{formatMontant(r.montant)}</span>,
+            },
+          ]}
+        />
+      </Paper>
 
       <PaginationListe
         base="/reglements"
@@ -158,6 +155,6 @@ export default async function PageReglements({
         total={totalReglements}
         nom="règlement"
       />
-    </div>
+    </Stack>
   );
 }

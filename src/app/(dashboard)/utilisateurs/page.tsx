@@ -3,8 +3,8 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { requirePermission } from "@/lib/permissions";
 import { formatDateHeure } from "@/lib/format";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge, Group, Paper, Stack, Title } from "@mantine/core";
+import { DataTable } from "mantine-datatable";
 import { UtilisateurCreationDialog } from "@/components/utilisateurs/utilisateur-creation-dialog";
 import { UtilisateurEditDialog } from "@/components/utilisateurs/utilisateur-edit-dialog";
 import { ReinitialiserMotDePasseDialog } from "@/components/utilisateurs/reinitialiser-mot-de-passe-dialog";
@@ -22,59 +22,61 @@ export default async function PageUtilisateurs() {
   const liste = await db.select().from(users).orderBy(users.nomComplet);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Utilisateurs</h1>
+    <Stack gap="md">
+      <Group justify="space-between" wrap="wrap" gap="sm">
+        <Title order={1} size="h2">Utilisateurs</Title>
         <UtilisateurCreationDialog />
-      </div>
+      </Group>
 
-      <div className="overflow-x-auto rounded-lg border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nom</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Rôle</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead>Créé le</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {liste.map((u) => (
-              <TableRow key={u.id}>
-                <TableCell className="font-medium">
+      <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+        <DataTable
+          records={liste}
+          idAccessor="id"
+          withTableBorder={false}
+          noRecordsText="Aucun utilisateur."
+          columns={[
+            {
+              accessor: "nomComplet",
+              title: "Nom",
+              render: (u) => (
+                <span className="font-medium">
                   {u.nomComplet}
-                  {u.id === Number(session.user.id) && (
-                    <span className="ml-2 text-xs text-muted-foreground">(vous)</span>
+                  {u.id === Number(session!.user.id) && (
+                    <span className="ml-2 text-xs text-[var(--mantine-color-dimmed)]">(vous)</span>
                   )}
-                </TableCell>
-                <TableCell>{u.email}</TableCell>
-                <TableCell>{LABEL_ROLE[u.role] ?? u.role}</TableCell>
-                <TableCell>
-                  <Badge variant={u.actif ? "default" : "outline"}>
-                    {u.actif ? "Actif" : "Inactif"}
-                  </Badge>
-                </TableCell>
-                <TableCell className="font-mono tabular-nums">{formatDateHeure(u.createdAt)}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <UtilisateurEditDialog utilisateur={u} />
-                    <ReinitialiserMotDePasseDialog id={u.id} nom={u.nomComplet} />
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-            {liste.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
-                  Aucun utilisateur.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+                </span>
+              ),
+            },
+            { accessor: "email", title: "Email" },
+            { accessor: "role", title: "Rôle", render: (u) => LABEL_ROLE[u.role] ?? u.role },
+            {
+              accessor: "actif",
+              title: "Statut",
+              render: (u) => (
+                <Badge color={u.actif ? "green" : "gray"} variant="light">
+                  {u.actif ? "Actif" : "Inactif"}
+                </Badge>
+              ),
+            },
+            {
+              accessor: "createdAt",
+              title: "Créé le",
+              render: (u) => <span className="font-mono tabular-nums">{formatDateHeure(u.createdAt)}</span>,
+            },
+            {
+              accessor: "actions",
+              title: "Actions",
+              textAlign: "right",
+              render: (u) => (
+                <Group justify="flex-end" gap="xs">
+                  <UtilisateurEditDialog utilisateur={u} />
+                  <ReinitialiserMotDePasseDialog id={u.id} nom={u.nomComplet} />
+                </Group>
+              ),
+            },
+          ]}
+        />
+      </Paper>
+    </Stack>
   );
 }

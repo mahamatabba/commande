@@ -14,7 +14,7 @@ import { can, requirePermission } from "@/lib/permissions";
 import { CHART_COLORS } from "@/lib/constants";
 import { formatMontant } from "@/lib/format";
 import { cleMois, debutPeriode, derniersMois, libelleMois } from "@/lib/stats";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, List, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { EvolutionChart } from "@/components/statistiques/evolution-chart";
 import { ClassementChart } from "@/components/statistiques/classement-chart";
 import { RepartitionChart } from "@/components/statistiques/repartition-chart";
@@ -150,44 +150,36 @@ export default async function PageStatistiques() {
     Number(repartitionModeBrute.find((r) => r.modeReglement === "BON_DE_COMMANDE")?.total ?? 0);
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-semibold">Statistiques</h1>
+    <Stack gap="xl">
+      <Title order={1} size="h2">Statistiques</Title>
 
       {peutVoirAchats && (
-        <section className="space-y-4">
-          <h2 className="text-lg font-semibold tracking-tight text-foreground">Achats</h2>
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Évolution des achats ({NB_MOIS} derniers mois)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <EvolutionChart data={achats.data} couleur={CHART_COLORS.bleu} libelleSerie="Achats" />
-              </CardContent>
+        <Stack gap="md">
+          <Title order={2} size="h4">Achats</Title>
+          <SimpleGrid cols={{ base: 1, lg: 2 }}>
+            <Card withBorder radius="md">
+              <Title order={3} size="h5" mb="sm">Évolution des achats ({NB_MOIS} derniers mois)</Title>
+              <EvolutionChart data={achats.data} couleur={CHART_COLORS.bleu} libelleSerie="Achats" />
             </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Top fournisseurs</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {topFournisseurs.length > 0 ? (
-                  <ClassementChart
-                    data={topFournisseurs.map((f) => ({ nom: f.nom, valeur: Number(f.total) }))}
-                    couleur={CHART_COLORS.bleu}
-                  />
-                ) : (
-                  <p className="py-6 text-center text-sm text-muted-foreground">Aucune donnée.</p>
-                )}
-              </CardContent>
+            <Card withBorder radius="md">
+              <Title order={3} size="h5" mb="sm">Top fournisseurs</Title>
+              {topFournisseurs.length > 0 ? (
+                <ClassementChart
+                  data={topFournisseurs.map((f) => ({ nom: f.nom, valeur: Number(f.total) }))}
+                  couleur={CHART_COLORS.bleu}
+                />
+              ) : (
+                <Text size="sm" c="dimmed" ta="center" py="lg">Aucune donnée.</Text>
+              )}
             </Card>
-          </div>
-        </section>
+          </SimpleGrid>
+        </Stack>
       )}
 
       {peutVoirVentes && (
-        <section className="space-y-4">
-          <h2 className="text-lg font-semibold tracking-tight text-foreground">Ventes &amp; marge</h2>
-          <div className="grid gap-4 sm:grid-cols-3">
+        <Stack gap="md">
+          <Title order={2} size="h4">Ventes &amp; marge</Title>
+          <SimpleGrid cols={{ base: 1, sm: 3 }}>
             <StatTile
               label={`Ventes HT (${NB_MOIS} derniers mois)`}
               montant={ventes.totalPeriode}
@@ -203,78 +195,68 @@ export default async function PageStatistiques() {
               montant={especesTotal + bonDeCommandeTotal}
               note="Total ventes actives"
             />
-          </div>
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Évolution des ventes HT ({NB_MOIS} derniers mois)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <EvolutionChart data={ventes.data} couleur={CHART_COLORS.orange} libelleSerie="Ventes" />
-              </CardContent>
+          </SimpleGrid>
+          <SimpleGrid cols={{ base: 1, lg: 2 }}>
+            <Card withBorder radius="md">
+              <Title order={3} size="h5" mb="sm">Évolution des ventes HT ({NB_MOIS} derniers mois)</Title>
+              <EvolutionChart data={ventes.data} couleur={CHART_COLORS.orange} libelleSerie="Ventes" />
             </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Top clients</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {topClients.length > 0 ? (
-                  <ClassementChart data={topClients} couleur={CHART_COLORS.orange} />
-                ) : (
-                  <p className="py-6 text-center text-sm text-muted-foreground">Aucune donnée.</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Mode de règlement des ventes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {especesTotal + bonDeCommandeTotal > 0 ? (
-                <RepartitionChart
-                  especes={especesTotal}
-                  bonDeCommande={bonDeCommandeTotal}
-                  couleurEspeces={CHART_COLORS.bleu}
-                  couleurBonDeCommande={CHART_COLORS.orange}
-                />
+            <Card withBorder radius="md">
+              <Title order={3} size="h5" mb="sm">Top clients</Title>
+              {topClients.length > 0 ? (
+                <ClassementChart data={topClients} couleur={CHART_COLORS.orange} />
               ) : (
-                <p className="py-6 text-center text-sm text-muted-foreground">Aucune donnée.</p>
+                <Text size="sm" c="dimmed" ta="center" py="lg">Aucune donnée.</Text>
               )}
-            </CardContent>
+            </Card>
+          </SimpleGrid>
+          <Card withBorder radius="md">
+            <Title order={3} size="h5" mb="sm">Mode de règlement des ventes</Title>
+            {especesTotal + bonDeCommandeTotal > 0 ? (
+              <RepartitionChart
+                especes={especesTotal}
+                bonDeCommande={bonDeCommandeTotal}
+                couleurEspeces={CHART_COLORS.bleu}
+                couleurBonDeCommande={CHART_COLORS.orange}
+              />
+            ) : (
+              <Text size="sm" c="dimmed" ta="center" py="lg">Aucune donnée.</Text>
+            )}
           </Card>
-        </section>
+        </Stack>
       )}
 
-      <details className="rounded-lg border border-border bg-card p-4 text-sm">
-        <summary className="cursor-pointer font-medium text-foreground">Voir les données en tableau</summary>
-        <div className="mt-4 space-y-4">
+      <Paper withBorder radius="md" p="md" component="details">
+        <Text component="summary" size="sm" fw={500} style={{ cursor: "pointer" }}>
+          Voir les données en tableau
+        </Text>
+        <Stack gap="md" mt="md">
           {peutVoirAchats && (
             <div>
-              <p className="mb-1 font-medium">Achats par mois</p>
-              <ul className="space-y-0.5 text-muted-foreground">
+              <Text size="sm" fw={500} mb={4}>Achats par mois</Text>
+              <List size="sm" c="dimmed" listStyleType="none">
                 {achats.data.map((p) => (
-                  <li key={p.cle}>
+                  <List.Item key={p.cle}>
                     {p.label} : <span className="font-mono tabular-nums">{formatMontant(p.valeur)}</span>
-                  </li>
+                  </List.Item>
                 ))}
-              </ul>
+              </List>
             </div>
           )}
           {peutVoirVentes && (
             <div>
-              <p className="mb-1 font-medium">Ventes HT par mois</p>
-              <ul className="space-y-0.5 text-muted-foreground">
+              <Text size="sm" fw={500} mb={4}>Ventes HT par mois</Text>
+              <List size="sm" c="dimmed" listStyleType="none">
                 {ventes.data.map((p) => (
-                  <li key={p.cle}>
+                  <List.Item key={p.cle}>
                     {p.label} : <span className="font-mono tabular-nums">{formatMontant(p.valeur)}</span>
-                  </li>
+                  </List.Item>
                 ))}
-              </ul>
+              </List>
             </div>
           )}
-        </div>
-      </details>
-    </div>
+        </Stack>
+      </Paper>
+    </Stack>
   );
 }

@@ -1,12 +1,10 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { requirePermission } from "@/lib/permissions";
 import { formatMontant } from "@/lib/format";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Alert, Button, Card, Grid, Stack, Table, Text, Title } from "@mantine/core";
+import Link from "next/link";
 import { EmettreFactureForm } from "@/components/factures/emettre-facture-form";
 
 const MODE_LABEL: Record<string, string> = {
@@ -39,92 +37,85 @@ export default async function PageNouvelleFacture({
 
   if (commande.statut !== "VALIDEE") {
     return (
-      <div className="max-w-2xl space-y-4">
-        <h1 className="text-2xl font-semibold">Émission de facture</h1>
-        <Card>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-[#8A211C]">
+      <Stack gap="md" maw={640}>
+        <Title order={1} size="h2">Émission de facture</Title>
+        <Card withBorder radius="md">
+          <Stack gap="md">
+            <Text size="sm" c="red">
               Cette commande n&apos;est pas au statut &laquo;&nbsp;Validée&nbsp;&raquo; (statut actuel :{" "}
               {commande.statut}). Elle ne peut pas être facturée.
-            </p>
-            <Button variant="outline" render={<Link href={`/commandes-client/${commande.id}`} />}>
+            </Text>
+            <Button variant="outline" component={Link} href={`/commandes-client/${commande.id}`}>
               Retour à la vente
             </Button>
-          </CardContent>
+          </Stack>
         </Card>
-      </div>
+      </Stack>
     );
   }
 
   return (
-    <div className="max-w-6xl space-y-6">
+    <Stack gap="xl" maw={1152}>
       <div>
-        <h1 className="text-2xl font-semibold">Émission de facture</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <Title order={1} size="h2">Émission de facture</Title>
+        <Text size="sm" c="dimmed" mt={4}>
           Vente {commande.numero} · {nomAffiche(commande.client)} · {MODE_LABEL[commande.modeReglement]}
-        </p>
+        </Text>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Lignes de la vente</CardTitle>
-            </CardHeader>
-            <CardContent className="px-0">
-              <div className="overflow-x-auto border-y border-border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Désignation</TableHead>
-                      <TableHead className="text-right">Qté</TableHead>
-                      <TableHead className="text-right">P.U. HT</TableHead>
-                      <TableHead className="text-right">Montant HT</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {commande.lignes.map((l) => (
-                      <TableRow key={l.id}>
-                        <TableCell>{l.designation}</TableCell>
-                        <TableCell className="text-right">{l.quantite}</TableCell>
-                        <TableCell className="text-right font-mono tabular-nums">
-                          {formatMontant(l.prixUnitaire)}
-                        </TableCell>
-                        <TableCell className="text-right font-mono tabular-nums">
-                          {formatMontant(l.montantLigne)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
+      <Grid align="flex-start">
+        <Grid.Col span={{ base: 12, lg: 8 }}>
+          <Card withBorder radius="md" p={0}>
+            <Title order={2} size="h5" p="md" pb="sm">Lignes de la vente</Title>
+            <Table>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Désignation</Table.Th>
+                  <Table.Th style={{ textAlign: "right" }}>Qté</Table.Th>
+                  <Table.Th style={{ textAlign: "right" }}>P.U. HT</Table.Th>
+                  <Table.Th style={{ textAlign: "right" }}>Montant HT</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {commande.lignes.map((l) => (
+                  <Table.Tr key={l.id}>
+                    <Table.Td>{l.designation}</Table.Td>
+                    <Table.Td style={{ textAlign: "right" }}>{l.quantite}</Table.Td>
+                    <Table.Td className="font-mono tabular-nums" style={{ textAlign: "right" }}>
+                      {formatMontant(l.prixUnitaire)}
+                    </Table.Td>
+                    <Table.Td className="font-mono tabular-nums" style={{ textAlign: "right" }}>
+                      {formatMontant(l.montantLigne)}
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
           </Card>
-        </div>
+        </Grid.Col>
 
-        <div className="lg:sticky lg:top-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Récapitulatif</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        <Grid.Col span={{ base: 12, lg: 4 }} style={{ position: "sticky", top: "1.5rem" }}>
+          <Card withBorder radius="md">
+            <Stack gap="md">
+              <Title order={2} size="h5">Récapitulatif</Title>
+
               {commande.modeReglement === "ESPECES" ? (
-                <p className="rounded-[2px] border border-[#BEDACD] bg-[#E7F0EB] p-3 text-sm text-[#14563E]">
+                <Alert color="green" variant="light">
                   Vente au comptant : la facture sera immédiatement marquée &laquo;&nbsp;Soldée&nbsp;&raquo; et un
                   encaissement du montant TTC sera automatiquement enregistré en caisse.
-                </p>
+                </Alert>
               ) : (
-                <p className="rounded-[2px] border border-[#EBD3A8] bg-[#FBF1E0] p-3 text-sm text-[#8A5300]">
+                <Alert color="yellow" variant="light">
                   Bon de commande : la facture sera émise avec le statut &laquo;&nbsp;Non payée&nbsp;&raquo;. Les
                   règlements se saisissent ensuite depuis l&apos;écran Règlements.
-                </p>
+                </Alert>
               )}
 
               {commande.client.exonereTva && (
-                <p className="rounded-[2px] border border-[#C6D2E0] bg-[#EEF2F7] p-3 text-sm text-[#1E3A5F]">
+                <Alert color="blue" variant="light">
                   Ce client est enregistré comme exonéré de TVA. Le choix reste
                   modifiable ci-dessous pour cette facture.
-                </p>
+                </Alert>
               )}
 
               <EmettreFactureForm
@@ -132,10 +123,10 @@ export default async function PageNouvelleFacture({
                 montantHt={commande.montantTotal}
                 exonerePartDefaut={commande.client.exonereTva}
               />
-            </CardContent>
+            </Stack>
           </Card>
-        </div>
-      </div>
-    </div>
+        </Grid.Col>
+      </Grid>
+    </Stack>
   );
 }

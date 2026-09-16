@@ -12,10 +12,9 @@ import {
   STATUT_FACTURE_BADGE,
   STATUT_PROFORMA_BADGE,
 } from "@/lib/statut-style";
-import { Badge } from "@mantine/core";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Alert, Badge, Button, Group, Paper, Stack, Text, Title } from "@mantine/core";
+import { DataTable } from "mantine-datatable";
 import { ClientFormDialog } from "@/components/clients/client-form-dialog";
-import { Button } from "@/components/ui/button";
 import { modifierClient } from "../actions";
 
 const STATUT_COMMANDE_LABEL: Record<string, string> = {
@@ -74,7 +73,7 @@ export default async function PageClient({
           .from(proformas)
           .where(eq(proformas.clientId, clientId))
           .orderBy(desc(proformas.dateProforma))
-      : Promise.resolve([]),
+      : Promise.resolve([] as (typeof proformas.$inferSelect)[]),
     peutVoirSolde
       ? db
           .select({ total: sql<number>`coalesce(sum(${factures.resteAPayer}), 0)` })
@@ -88,36 +87,42 @@ export default async function PageClient({
   const soldeDu = peutVoirSolde ? Number(soldeRows[0]?.total ?? 0) : 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <Stack gap="xl">
+      <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
         <div>
-          <h1 className="text-2xl font-semibold">
+          <Title order={1} size="h2">
             {client.raisonSociale || `${client.nom} ${client.prenom ?? ""}`.trim()}
-          </h1>
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <span className="font-mono tabular-nums">{client.telephone}</span>
-            {client.email && <span>· {client.email}</span>}
+          </Title>
+          <Group gap="xs" mt={4} wrap="wrap">
+            <Text size="sm" c="dimmed" className="font-mono tabular-nums">{client.telephone}</Text>
+            {client.email && <Text size="sm" c="dimmed">· {client.email}</Text>}
             {client.nif && (
-              <Badge variant="secondary" className="font-mono tabular-nums">
+              <Badge color="gray" variant="light" className="font-mono tabular-nums">
                 NIF {client.nif}
               </Badge>
             )}
-            <Badge variant={client.actif ? "default" : "outline"}>{client.actif ? "Actif" : "Inactif"}</Badge>
-          </div>
-          {client.adresse && <p className="mt-1 text-sm text-muted-foreground">{client.adresse}</p>}
+            <Badge color={client.actif ? "green" : "gray"} variant="light">
+              {client.actif ? "Actif" : "Inactif"}
+            </Badge>
+          </Group>
+          {client.adresse && (
+            <Text size="sm" c="dimmed" mt={4}>{client.adresse}</Text>
+          )}
           {peutVoirSolde && (
             soldeDu > 0 ? (
-              <div className="mt-3 inline-flex items-center gap-2 rounded-lg border border-[#E3BEBB] bg-[#F8E8E6] px-3 py-1.5 text-sm text-[#8A211C]">
-                <span>Solde dû :</span>
-                <span className="font-mono text-base font-semibold tabular-nums">{formatMontant(soldeDu)}</span>
-              </div>
+              <Alert color="red" variant="light" mt="sm" p="xs" className="inline-block">
+                <Group gap="xs">
+                  <span>Solde dû :</span>
+                  <span className="font-mono text-base font-semibold tabular-nums">{formatMontant(soldeDu)}</span>
+                </Group>
+              </Alert>
             ) : (
-              <p className="mt-2 text-sm text-muted-foreground">
+              <Text size="sm" c="dimmed" mt="xs">
                 Solde dû :{" "}
-                <span className="font-mono font-semibold tabular-nums text-foreground">
+                <span className="font-mono font-semibold tabular-nums text-[var(--mantine-color-text)]">
                   {formatMontant(soldeDu)}
                 </span>
-              </p>
+              </Text>
             )
           )}
         </div>
@@ -128,54 +133,52 @@ export default async function PageClient({
             trigger={<Button variant="outline">Modifier</Button>}
           />
         )}
-      </div>
+      </Group>
 
       <div>
-        <h2 className="mb-2 text-lg font-medium">Ventes</h2>
-        <div className="overflow-x-auto rounded-lg border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Numéro</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Mode de règlement</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead className="text-right">Montant</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {commandes.map((c) => (
-                <TableRow key={c.id}>
-                  <TableCell>
-                    <Link
-                      href={`/commandes-client/${c.id}`}
-                      className="font-mono font-medium tabular-nums hover:underline"
-                    >
-                      {c.numero}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="font-mono tabular-nums">{formatDate(c.dateCommande)}</TableCell>
-                  <TableCell>{c.modeReglement === "ESPECES" ? "Espèces" : "Bon de commande"}</TableCell>
-                  <TableCell>
-                    <Badge {...STATUT_COMMANDE_CLIENT_BADGE[c.statut]}>
-                      {STATUT_COMMANDE_LABEL[c.statut]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right font-mono tabular-nums">
-                    {formatMontant(c.montantTotal)}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {commandes.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} className="py-6 text-center text-muted-foreground">
-                    Aucune commande.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+        <Title order={2} size="h4" mb="sm">Ventes</Title>
+        <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+          <DataTable
+            records={commandes}
+            idAccessor="id"
+            withTableBorder={false}
+            noRecordsText="Aucune commande."
+            columns={[
+              {
+                accessor: "numero",
+                title: "Numéro",
+                render: (c) => (
+                  <Link href={`/commandes-client/${c.id}`} className="font-mono font-medium tabular-nums hover:underline">
+                    {c.numero}
+                  </Link>
+                ),
+              },
+              {
+                accessor: "dateCommande",
+                title: "Date",
+                render: (c) => <span className="font-mono tabular-nums">{formatDate(c.dateCommande)}</span>,
+              },
+              {
+                accessor: "modeReglement",
+                title: "Mode de règlement",
+                render: (c) => (c.modeReglement === "ESPECES" ? "Espèces" : "Bon de commande"),
+              },
+              {
+                accessor: "statut",
+                title: "Statut",
+                render: (c) => (
+                  <Badge {...STATUT_COMMANDE_CLIENT_BADGE[c.statut]}>{STATUT_COMMANDE_LABEL[c.statut]}</Badge>
+                ),
+              },
+              {
+                accessor: "montantTotal",
+                title: "Montant",
+                textAlign: "right",
+                render: (c) => <span className="font-mono tabular-nums">{formatMontant(c.montantTotal)}</span>,
+              },
+            ]}
+          />
+        </Paper>
       </div>
 
       {/* Section affichée seulement si le client a reçu au moins un chiffrage :
@@ -183,107 +186,117 @@ export default async function PageClient({
           fiche n'apprendrait rien. */}
       {peutVoirProformas && proformasClient.length > 0 && (
         <div>
-          <h2 className="mb-2 text-lg font-medium">Proformas</h2>
-          <div className="overflow-x-auto rounded-lg border bg-card">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Numéro</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Valable jusqu&apos;au</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead className="text-right">Montant</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {proformasClient.map((p) => {
-                  const expiree = p.statut === "EMISE" && p.dateValidite < new Date();
-                  return (
-                    <TableRow key={p.id}>
-                      <TableCell>
-                        <Link
-                          href={`/proformas/${p.id}`}
-                          className="font-mono font-medium tabular-nums hover:underline"
-                        >
-                          {p.numero}
-                        </Link>
-                      </TableCell>
-                      <TableCell className="font-mono tabular-nums">
-                        {formatDate(p.dateProforma)}
-                      </TableCell>
-                      <TableCell
-                        className={`font-mono tabular-nums${expiree ? " text-[#8A5300]" : ""}`}
+          <Title order={2} size="h4" mb="sm">Proformas</Title>
+          <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+            <DataTable
+              records={proformasClient}
+              idAccessor="id"
+              withTableBorder={false}
+              columns={[
+                {
+                  accessor: "numero",
+                  title: "Numéro",
+                  render: (p) => (
+                    <Link href={`/proformas/${p.id}`} className="font-mono font-medium tabular-nums hover:underline">
+                      {p.numero}
+                    </Link>
+                  ),
+                },
+                {
+                  accessor: "dateProforma",
+                  title: "Date",
+                  render: (p) => <span className="font-mono tabular-nums">{formatDate(p.dateProforma)}</span>,
+                },
+                {
+                  accessor: "dateValidite",
+                  title: "Valable jusqu'au",
+                  render: (p) => {
+                    const expiree = p.statut === "EMISE" && p.dateValidite < new Date();
+                    return (
+                      <span
+                        className={`font-mono tabular-nums${expiree ? " text-[var(--mantine-color-yellow-6)]" : ""}`}
                         title={expiree ? "Offre expirée : le prix annoncé n'engage plus AEI." : undefined}
                       >
                         {formatDate(p.dateValidite)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge {...STATUT_PROFORMA_BADGE[p.statut]}>
-                          {libelle(STATUT_PROFORMA_LABEL, p.statut)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right font-mono tabular-nums">
-                        {formatMontant(p.montantTotal)}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+                      </span>
+                    );
+                  },
+                },
+                {
+                  accessor: "statut",
+                  title: "Statut",
+                  render: (p) => (
+                    <Badge {...STATUT_PROFORMA_BADGE[p.statut]}>{libelle(STATUT_PROFORMA_LABEL, p.statut)}</Badge>
+                  ),
+                },
+                {
+                  accessor: "montantTotal",
+                  title: "Montant",
+                  textAlign: "right",
+                  render: (p) => <span className="font-mono tabular-nums">{formatMontant(p.montantTotal)}</span>,
+                },
+              ]}
+            />
+          </Paper>
         </div>
       )}
 
       <div>
-        <h2 className="mb-2 text-lg font-medium">Factures</h2>
-        <div className="overflow-x-auto rounded-lg border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Numéro</TableHead>
-                <TableHead>Date</TableHead>
-                {peutVoirSolde && <TableHead>Statut</TableHead>}
-                <TableHead className="text-right">Montant</TableHead>
-                {peutVoirSolde && <TableHead className="text-right">Reste à payer</TableHead>}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {facturesClient.map((f) => (
-                <TableRow key={f.id}>
-                  <TableCell>
-                    <Link href={`/factures/${f.id}`} className="font-mono font-medium tabular-nums hover:underline">
-                      {f.numero}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="font-mono tabular-nums">{formatDate(f.dateFacture)}</TableCell>
-                  {peutVoirSolde && (
-                    <TableCell>
-                      <Badge {...STATUT_FACTURE_BADGE[f.statut]}>
-                        {STATUT_FACTURE_LABEL[f.statut]}
-                      </Badge>
-                    </TableCell>
-                  )}
-                  <TableCell className="text-right font-mono tabular-nums">
-                    {formatMontant(f.montantTotal)}
-                  </TableCell>
-                  {peutVoirSolde && (
-                    <TableCell className="text-right font-mono tabular-nums">
-                      {formatMontant(f.resteAPayer ?? 0)}
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))}
-              {facturesClient.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={peutVoirSolde ? 5 : 3} className="py-6 text-center text-muted-foreground">
-                    Aucune facture.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+        <Title order={2} size="h4" mb="sm">Factures</Title>
+        <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+          <DataTable
+            records={facturesClient}
+            idAccessor="id"
+            withTableBorder={false}
+            noRecordsText="Aucune facture."
+            columns={[
+              {
+                accessor: "numero",
+                title: "Numéro",
+                render: (f) => (
+                  <Link href={`/factures/${f.id}`} className="font-mono font-medium tabular-nums hover:underline">
+                    {f.numero}
+                  </Link>
+                ),
+              },
+              {
+                accessor: "dateFacture",
+                title: "Date",
+                render: (f) => <span className="font-mono tabular-nums">{formatDate(f.dateFacture)}</span>,
+              },
+              ...(peutVoirSolde
+                ? [
+                    {
+                      accessor: "statut",
+                      title: "Statut",
+                      render: (f: (typeof facturesClient)[number]) => (
+                        <Badge {...STATUT_FACTURE_BADGE[f.statut]}>{STATUT_FACTURE_LABEL[f.statut]}</Badge>
+                      ),
+                    },
+                  ]
+                : []),
+              {
+                accessor: "montantTotal",
+                title: "Montant",
+                textAlign: "right",
+                render: (f) => <span className="font-mono tabular-nums">{formatMontant(f.montantTotal)}</span>,
+              },
+              ...(peutVoirSolde
+                ? [
+                    {
+                      accessor: "resteAPayer",
+                      title: "Reste à payer",
+                      textAlign: "right" as const,
+                      render: (f: (typeof facturesClient)[number]) => (
+                        <span className="font-mono tabular-nums">{formatMontant(f.resteAPayer ?? 0)}</span>
+                      ),
+                    },
+                  ]
+                : []),
+            ]}
+          />
+        </Paper>
       </div>
-    </div>
+    </Stack>
   );
 }

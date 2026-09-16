@@ -18,18 +18,8 @@ import {
 } from "@/lib/filtres";
 import { STATUT_FACTURE_BADGE } from "@/lib/statut-style";
 import { PaginationListe } from "@/components/shared/pagination-liste";
-import { Badge } from "@mantine/core";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ActionIcon, Badge, Button, Group, Paper, Select, Stack, TextInput, Title } from "@mantine/core";
+import { DataTable } from "mantine-datatable";
 import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
 import { Eye, FileText } from "lucide-react";
 
@@ -112,115 +102,122 @@ export default async function PageFactures({
   }
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Factures</h1>
+    <Stack gap="md">
+      <Title order={1} size="h2">Factures</Title>
 
-      <form className="flex flex-wrap items-end gap-3">
-        {peutVoirImpayes && (
-          <div className="space-y-1">
-            <Label htmlFor="statut">Statut</Label>
-            <Select name="statut" defaultValue={statutFiltre}>
-              <SelectTrigger id="statut" className="w-48">
-                <SelectValue placeholder="Tous" />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUTS_FACTURE.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {libelle(STATUT_FACTURE_LABEL, s)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-        <div className="space-y-1">
-          <Label htmlFor="du">Du</Label>
-          <Input id="du" name="du" type="date" defaultValue={du} />
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="au">Au</Label>
-          <Input id="au" name="au" type="date" defaultValue={au} />
-        </div>
-        <Button type="submit" variant="outline">
-          Filtrer
-        </Button>
-        {(statut || du || au) && (
-          <Button variant="ghost" render={<Link href="/factures" />}>
-            Réinitialiser
+      <form>
+        <Group align="flex-end" wrap="wrap" gap="sm">
+          {peutVoirImpayes && (
+            <Select
+              label="Statut"
+              name="statut"
+              defaultValue={statutFiltre}
+              placeholder="Tous"
+              clearable
+              w={160}
+              data={STATUTS_FACTURE.map((s) => ({ value: s, label: libelle(STATUT_FACTURE_LABEL, s) }))}
+            />
+          )}
+          <TextInput label="Du" name="du" type="date" defaultValue={du} />
+          <TextInput label="Au" name="au" type="date" defaultValue={au} />
+          <Button type="submit" variant="outline">
+            Filtrer
           </Button>
-        )}
+          {(statut || du || au) && (
+            <Button variant="subtle" component={Link} href="/factures">
+              Réinitialiser
+            </Button>
+          )}
+        </Group>
       </form>
 
-      <div className="overflow-x-auto rounded-lg border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Numéro</TableHead>
-              <TableHead>Client</TableHead>
-              <TableHead>Date</TableHead>
-              {peutVoirImpayes && <TableHead>Statut</TableHead>}
-              <TableHead className="text-right">Montant</TableHead>
-              {peutVoirImpayes && <TableHead className="text-right">Reste à payer</TableHead>}
-              <TableHead className="w-10" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {liste.map((f) => (
-              <TableRow key={f.id}>
-                <TableCell>
-                  <Link href={`/factures/${f.id}`} className="font-mono tabular-nums font-medium hover:underline">
-                    {f.numero}
-                  </Link>
-                </TableCell>
-                <TableCell>{nomAffiche({ nom: f.clientNom, prenom: f.clientPrenom, raisonSociale: f.clientRaisonSociale })}</TableCell>
-                <TableCell className="font-mono tabular-nums">{formatDate(f.dateFacture)}</TableCell>
-                {peutVoirImpayes && (
-                  <TableCell>
-                    <Badge {...STATUT_FACTURE_BADGE[f.statut!]}>
-                      {libelle(STATUT_FACTURE_LABEL, f.statut)}
-                    </Badge>
-                  </TableCell>
-                )}
-                <TableCell className="text-right font-mono tabular-nums">{formatMontant(f.montantTotal)}</TableCell>
-                {peutVoirImpayes && (
-                  <TableCell className="text-right font-mono tabular-nums">{formatMontant(f.resteAPayer!)}</TableCell>
-                )}
-                <TableCell>
-                  <div className="flex items-center justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      title="Voir le détail"
-                      render={<Link href={`/factures/${f.id}`} />}
-                    >
-                      <Eye />
-                      <span className="sr-only">Voir le détail</span>
-                    </Button>
-                    <ApercuDocumentDialog
-                      href={`/factures/${f.id}/pdf`}
-                      titre={`Facture ${f.numero}`}
-                      nomFichier={`facture-${f.numero}`}
-                      trigger={
-                        <Button variant="ghost" size="icon-sm" title="Aperçu PDF">
-                          <FileText />
-                          <span className="sr-only">Aperçu PDF</span>
-                        </Button>
-                      }
-                    />
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-            {liste.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={peutVoirImpayes ? 7 : 5} className="py-8 text-center text-muted-foreground">
-                  Aucune facture.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+        <DataTable
+          records={liste}
+          idAccessor="id"
+          withTableBorder={false}
+          noRecordsText="Aucune facture."
+          columns={[
+            {
+              accessor: "numero",
+              title: "Numéro",
+              render: (f) => (
+                <Link href={`/factures/${f.id}`} className="font-mono font-medium tabular-nums hover:underline">
+                  {f.numero}
+                </Link>
+              ),
+            },
+            {
+              accessor: "client",
+              title: "Client",
+              render: (f) => nomAffiche({ nom: f.clientNom, prenom: f.clientPrenom, raisonSociale: f.clientRaisonSociale }),
+            },
+            {
+              accessor: "dateFacture",
+              title: "Date",
+              render: (f) => <span className="font-mono tabular-nums">{formatDate(f.dateFacture)}</span>,
+            },
+            ...(peutVoirImpayes
+              ? [
+                  {
+                    accessor: "statut",
+                    title: "Statut",
+                    render: (f: (typeof liste)[number]) => (
+                      <Badge {...STATUT_FACTURE_BADGE[f.statut!]}>{libelle(STATUT_FACTURE_LABEL, f.statut)}</Badge>
+                    ),
+                  },
+                ]
+              : []),
+            {
+              accessor: "montantTotal",
+              title: "Montant",
+              textAlign: "right",
+              render: (f) => <span className="font-mono tabular-nums">{formatMontant(f.montantTotal)}</span>,
+            },
+            ...(peutVoirImpayes
+              ? [
+                  {
+                    accessor: "resteAPayer",
+                    title: "Reste à payer",
+                    textAlign: "right" as const,
+                    render: (f: (typeof liste)[number]) => (
+                      <span className="font-mono tabular-nums">{formatMontant(f.resteAPayer!)}</span>
+                    ),
+                  },
+                ]
+              : []),
+            {
+              accessor: "actions",
+              title: "",
+              textAlign: "right",
+              render: (f) => (
+                <Group justify="flex-end" gap={4} wrap="nowrap">
+                  <ActionIcon
+                    component={Link}
+                    href={`/factures/${f.id}`}
+                    variant="subtle"
+                    color="gray"
+                    title="Voir le détail"
+                    aria-label="Voir le détail"
+                  >
+                    <Eye size={16} />
+                  </ActionIcon>
+                  <ApercuDocumentDialog
+                    href={`/factures/${f.id}/pdf`}
+                    titre={`Facture ${f.numero}`}
+                    nomFichier={`facture-${f.numero}`}
+                    trigger={
+                      <ActionIcon variant="subtle" color="gray" title="Aperçu PDF" aria-label="Aperçu PDF">
+                        <FileText size={16} />
+                      </ActionIcon>
+                    }
+                  />
+                </Group>
+              ),
+            },
+          ]}
+        />
+      </Paper>
 
       <PaginationListe
         base="/factures"
@@ -230,6 +227,6 @@ export default async function PageFactures({
         total={total}
         nom="facture"
       />
-    </div>
+    </Stack>
   );
 }

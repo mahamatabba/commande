@@ -15,17 +15,8 @@ import {
   lireStatut,
 } from "@/lib/filtres";
 import { PaginationListe } from "@/components/shared/pagination-liste";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button, Group, Paper, Select, Stack, TextInput, Title } from "@mantine/core";
+import { DataTable } from "mantine-datatable";
 
 const LABEL_ACTION: Record<string, string> = {
   creation: "Création",
@@ -105,77 +96,70 @@ export default async function PageJournal({
   }
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Journal d&apos;activité</h1>
+    <Stack gap="md">
+      <Title order={1} size="h2">Journal d&apos;activité</Title>
 
-      <form className="flex flex-wrap items-end gap-3">
-        <div className="space-y-1">
-          <Label htmlFor="du">Du</Label>
-          <Input id="du" name="du" type="date" defaultValue={du} />
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="au">Au</Label>
-          <Input id="au" name="au" type="date" defaultValue={au} />
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="entite">Entité</Label>
-          <Select name="entite" defaultValue={entiteFiltre ?? "toutes"}>
-            <SelectTrigger id="entite" className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="toutes">Toutes</SelectItem>
-              {Object.entries(LABEL_ENTITE).map(([valeur, libelle]) => (
-                <SelectItem key={valeur} value={valeur}>
-                  {libelle}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <Button type="submit" variant="outline">
-          Filtrer
-        </Button>
+      <form>
+        <Group align="flex-end" wrap="wrap" gap="sm">
+          <TextInput label="Du" name="du" type="date" defaultValue={du} />
+          <TextInput label="Au" name="au" type="date" defaultValue={au} />
+          <Select
+            label="Entité"
+            name="entite"
+            defaultValue={entiteFiltre ?? "toutes"}
+            w={180}
+            data={[
+              { value: "toutes", label: "Toutes" },
+              ...Object.entries(LABEL_ENTITE).map(([valeur, lib]) => ({ value: valeur, label: lib })),
+            ]}
+          />
+          <Button type="submit" variant="outline">
+            Filtrer
+          </Button>
+        </Group>
       </form>
 
-      <div className="overflow-x-auto rounded-lg border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Utilisateur</TableHead>
-              <TableHead>Action</TableHead>
-              <TableHead>Entité</TableHead>
-              <TableHead>ID</TableHead>
-              <TableHead>Détails</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {entrees.map((e) => (
-              <TableRow key={e.id}>
-                <TableCell className="font-mono tabular-nums whitespace-nowrap">{formatDateHeure(e.createdAt)}</TableCell>
-                <TableCell>{e.user?.nomComplet ?? "—"}</TableCell>
-                <TableCell>{LABEL_ACTION[e.action] ?? e.action}</TableCell>
-                <TableCell>{e.action === "connexion" ? "—" : (LABEL_ENTITE[e.entite] ?? e.entite)}</TableCell>
-                <TableCell className="font-mono tabular-nums">{e.action === "connexion" ? "—" : (e.entiteId ?? "—")}</TableCell>
-                <TableCell
-                  className="max-w-sm truncate text-xs text-muted-foreground"
+      <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+        <DataTable
+          records={entrees}
+          idAccessor="id"
+          withTableBorder={false}
+          noRecordsText="Aucune activité enregistrée."
+          columns={[
+            {
+              accessor: "createdAt",
+              title: "Date",
+              render: (e) => <span className="font-mono tabular-nums whitespace-nowrap">{formatDateHeure(e.createdAt)}</span>,
+            },
+            { accessor: "user", title: "Utilisateur", render: (e) => e.user?.nomComplet ?? "—" },
+            { accessor: "action", title: "Action", render: (e) => LABEL_ACTION[e.action] ?? e.action },
+            {
+              accessor: "entite",
+              title: "Entité",
+              render: (e) => (e.action === "connexion" ? "—" : (LABEL_ENTITE[e.entite] ?? e.entite)),
+            },
+            {
+              accessor: "entiteId",
+              title: "ID",
+              render: (e) => (
+                <span className="font-mono tabular-nums">{e.action === "connexion" ? "—" : (e.entiteId ?? "—")}</span>
+              ),
+            },
+            {
+              accessor: "details",
+              title: "Détails",
+              render: (e) => (
+                <span
+                  className="block max-w-sm truncate text-xs text-[var(--mantine-color-dimmed)]"
                   title={e.details ? formaterDetailsJournal(e.entite, e.details) : undefined}
                 >
                   {e.details ? formaterDetailsJournal(e.entite, e.details) : "—"}
-                </TableCell>
-              </TableRow>
-            ))}
-            {entrees.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
-                  Aucune activité enregistrée.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+                </span>
+              ),
+            },
+          ]}
+        />
+      </Paper>
 
       <PaginationListe
         base="/journal"
@@ -185,6 +169,6 @@ export default async function PageJournal({
         total={total}
         nom="entrée"
       />
-    </div>
+    </Stack>
   );
 }

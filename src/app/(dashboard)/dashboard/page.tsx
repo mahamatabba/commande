@@ -13,13 +13,12 @@ import { can } from "@/lib/permissions";
 import { calculerSoldeCaisse } from "@/lib/caisse";
 import { CHART_COLORS } from "@/lib/constants";
 import { cleMois, debutPeriode, derniersMois, libelleMois } from "@/lib/stats";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, Card, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { StatTile } from "@/components/statistiques/stat-tile";
 import { EvolutionChart } from "@/components/statistiques/evolution-chart";
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h2 className="text-lg font-semibold tracking-tight text-foreground">{children}</h2>;
+  return <Title order={2} size="h4">{children}</Title>;
 }
 
 const NB_MOIS_GRAPHIQUE = 6;
@@ -34,15 +33,13 @@ function serieMensuelle(lignes: { mois: string; total: string }[]): { cle: strin
 
 function CountTile({ label, valeur, href, note }: { label: string; valeur: number; href: string; note?: string }) {
   return (
-    <Link href={href}>
-      <Card className="transition-colors hover:border-primary/30 hover:bg-accent">
-        <CardContent className="space-y-1">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <p className="text-2xl font-semibold tabular-nums">{valeur}</p>
-          {note && <p className="text-xs text-muted-foreground">{note}</p>}
-        </CardContent>
-      </Card>
-    </Link>
+    <Card component={Link} href={href} withBorder radius="md" className="transition-colors hover:border-[var(--mantine-color-brand-6)]">
+      <Stack gap={4}>
+        <Text size="sm" c="dimmed">{label}</Text>
+        <Text size="xl" fw={600} className="font-mono tabular-nums">{valeur}</Text>
+        {note && <Text size="xs" c="dimmed">{note}</Text>}
+      </Stack>
+    </Card>
   );
 }
 
@@ -204,19 +201,19 @@ export default async function PageTableauDeBord() {
       .join(" · ") || "Offres remises, en attente de réponse";
 
   return (
-    <div className="space-y-8">
+    <Stack gap="xl">
       <div>
-        <h1 className="text-2xl font-semibold">Tableau de bord</h1>
-        <p className="text-muted-foreground">
-          Connecté en tant que <strong className="text-foreground">{session!.user.name}</strong> — rôle{" "}
-          <strong className="text-foreground">{session!.user.role}</strong>.
-        </p>
+        <Title order={1} size="h2">Tableau de bord</Title>
+        <Text c="dimmed">
+          Connecté en tant que <Text component="strong" c="var(--mantine-color-text)">{session!.user.name}</Text> — rôle{" "}
+          <Text component="strong" c="var(--mantine-color-text)">{session!.user.role}</Text>.
+        </Text>
       </div>
 
       {afficheActivite && (
-        <section className="space-y-4">
+        <Stack gap="md">
           <SectionTitle>Activité en cours</SectionTitle>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }}>
             {peutCommandesFournisseur && (
               <CountTile
                 label="Achats validés"
@@ -249,53 +246,49 @@ export default async function PageTableauDeBord() {
                 note="Non soldées ou partiellement réglées"
               />
             )}
-          </div>
-        </section>
+          </SimpleGrid>
+        </Stack>
       )}
 
       {afficheStats && (
-        <section className="space-y-4">
+        <Stack gap="md">
           <SectionTitle>Ce mois-ci</SectionTitle>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <SimpleGrid cols={{ base: 1, sm: 2 }}>
             {peutStatsAchats && (
               <StatTile label="Achats fournisseurs" montant={Number(achatsMoisRows[0]?.total ?? 0)} />
             )}
             {peutStatsVentes && (
               <StatTile label="Ventes facturées" montant={Number(ventesMoisRows[0]?.total ?? 0)} />
             )}
-          </div>
-          <div className="grid gap-4 lg:grid-cols-2">
+          </SimpleGrid>
+          <SimpleGrid cols={{ base: 1, lg: 2 }}>
             {peutStatsAchats && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Évolution des achats ({NB_MOIS_GRAPHIQUE} derniers mois)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <EvolutionChart data={achatsSerie} couleur={CHART_COLORS.bleu} libelleSerie="Achats" />
-                </CardContent>
+              <Card withBorder radius="md">
+                <Title order={3} size="h5" mb="sm">
+                  Évolution des achats ({NB_MOIS_GRAPHIQUE} derniers mois)
+                </Title>
+                <EvolutionChart data={achatsSerie} couleur={CHART_COLORS.bleu} libelleSerie="Achats" />
               </Card>
             )}
             {peutStatsVentes && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Évolution des ventes ({NB_MOIS_GRAPHIQUE} derniers mois)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <EvolutionChart data={ventesSerie} couleur={CHART_COLORS.orange} libelleSerie="Ventes" />
-                </CardContent>
+              <Card withBorder radius="md">
+                <Title order={3} size="h5" mb="sm">
+                  Évolution des ventes ({NB_MOIS_GRAPHIQUE} derniers mois)
+                </Title>
+                <EvolutionChart data={ventesSerie} couleur={CHART_COLORS.orange} libelleSerie="Ventes" />
               </Card>
             )}
-          </div>
-          <Link href="/statistiques" className="text-sm font-medium text-primary hover:underline">
+          </SimpleGrid>
+          <Text size="sm" fw={500} component={Link} href="/statistiques" className="hover:underline" c="brand">
             Voir les statistiques détaillées →
-          </Link>
-        </section>
+          </Text>
+        </Stack>
       )}
 
       {afficheCaisse && (
-        <section className="space-y-4">
+        <Stack gap="md">
           <SectionTitle>Caisse</SectionTitle>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }}>
             {peutSoldeCaisse && <StatTile label="Solde de caisse" montant={soldeCaisse} highlight />}
             {peutImpayes && (
               <StatTile label="Total impayés" montant={Number(totalImpayesRows[0]?.total ?? 0)} />
@@ -306,29 +299,29 @@ export default async function PageTableauDeBord() {
             {peutDecaissements && (
               <StatTile label="Décaissements (mois)" montant={Number(decaissementsMoisRows[0]?.total ?? 0)} />
             )}
-          </div>
-        </section>
+          </SimpleGrid>
+        </Stack>
       )}
 
       {afficheAdmin && (
-        <section className="space-y-4">
+        <Stack gap="md">
           <SectionTitle>Administration</SectionTitle>
-          <div className="rounded-lg border border-border bg-muted/50 p-4">
-            <div className="flex flex-wrap gap-3">
+          <Paper withBorder radius="md" p="md" style={{ backgroundColor: "var(--mantine-color-dark-6)" }}>
+            <Group gap="sm" wrap="wrap">
               {peutUtilisateurs && (
-                <Button variant="outline" render={<Link href="/utilisateurs" />}>
+                <Button variant="outline" component={Link} href="/utilisateurs">
                   Gérer les utilisateurs
                 </Button>
               )}
               {peutJournal && (
-                <Button variant="outline" render={<Link href="/journal" />}>
+                <Button variant="outline" component={Link} href="/journal">
                   Consulter le journal d&apos;activité
                 </Button>
               )}
-            </div>
-          </div>
-        </section>
+            </Group>
+          </Paper>
+        </Stack>
       )}
-    </div>
+    </Stack>
   );
 }

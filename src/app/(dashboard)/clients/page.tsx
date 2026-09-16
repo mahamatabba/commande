@@ -6,10 +6,8 @@ import { db } from "@/db";
 import { clients } from "@/db/schema";
 import { can, requirePermission } from "@/lib/permissions";
 import { bornerPagination, lienPagination, lirePage } from "@/lib/filtres";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge, Button, Group, Paper, Stack, TextInput, Title } from "@mantine/core";
+import { DataTable } from "mantine-datatable";
 import { ClientFormDialog } from "@/components/clients/client-form-dialog";
 import { PaginationListe } from "@/components/shared/pagination-liste";
 import { creerClient, modifierClient, basculerActifClient } from "./actions";
@@ -63,81 +61,88 @@ export default async function PageClients({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Clients</h1>
+    <Stack gap="md">
+      <Group justify="space-between" wrap="wrap" gap="sm">
+        <Title order={1} size="h2">Clients</Title>
         {peutEcrire && <ClientFormDialog action={creerClient} />}
-      </div>
+      </Group>
 
       <form className="max-w-sm">
-        <Input name="q" placeholder="Rechercher un client..." defaultValue={q} />
+        <TextInput name="q" placeholder="Rechercher un client..." defaultValue={q} />
       </form>
 
-      <div className="overflow-x-auto rounded-lg border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nom / Raison sociale</TableHead>
-              <TableHead>Téléphone</TableHead>
-              <TableHead>NIF</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {liste.map((c) => (
-              <TableRow key={c.id}>
-                <TableCell className="font-medium">
-                  <Link href={`/clients/${c.id}`} className="hover:underline">
-                    {nomAffiche(c)}
-                  </Link>
-                </TableCell>
-                <TableCell className="font-mono tabular-nums">{c.telephone}</TableCell>
-                <TableCell>{c.nif ? <Badge variant="secondary">NIF</Badge> : "—"}</TableCell>
-                <TableCell>
-                  <Badge variant={c.actif ? "default" : "outline"}>{c.actif ? "Actif" : "Inactif"}</Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button render={<Link href={`/clients/${c.id}`} />} variant="ghost" size="sm">
-                      Voir
-                    </Button>
-                    {peutEcrire && (
-                      <>
-                        {/* Corriger un numéro de téléphone obligeait à ouvrir la
-                            fiche pour y trouver le même formulaire : deux
-                            chargements de page pour une faute de frappe. Le
-                            dialogue est celui de la fiche, à l'identique. */}
-                        <ClientFormDialog
-                          action={modifierClient.bind(null, c.id)}
-                          client={c}
-                          trigger={
-                            <Button variant="ghost" size="sm">
-                              Modifier
-                            </Button>
-                          }
-                        />
-                        <form action={basculerActifClient.bind(null, c.id, !c.actif)}>
-                          <Button type="submit" variant="ghost" size="sm">
-                            {c.actif ? "Désactiver" : "Activer"}
+      <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+        <DataTable
+          records={liste}
+          idAccessor="id"
+          withTableBorder={false}
+          noRecordsText="Aucun client."
+          columns={[
+            {
+              accessor: "nom",
+              title: "Nom / Raison sociale",
+              render: (c) => (
+                <Link href={`/clients/${c.id}`} className="font-medium hover:underline">
+                  {nomAffiche(c)}
+                </Link>
+              ),
+            },
+            {
+              accessor: "telephone",
+              title: "Téléphone",
+              render: (c) => <span className="font-mono tabular-nums">{c.telephone}</span>,
+            },
+            {
+              accessor: "nif",
+              title: "NIF",
+              render: (c) => (c.nif ? <Badge color="gray" variant="light">NIF</Badge> : "—"),
+            },
+            {
+              accessor: "actif",
+              title: "Statut",
+              render: (c) => (
+                <Badge color={c.actif ? "green" : "gray"} variant="light">
+                  {c.actif ? "Actif" : "Inactif"}
+                </Badge>
+              ),
+            },
+            {
+              accessor: "actions",
+              title: "Actions",
+              textAlign: "right",
+              render: (c) => (
+                <Group justify="flex-end" gap="xs">
+                  <Button component={Link} href={`/clients/${c.id}`} variant="subtle" size="xs">
+                    Voir
+                  </Button>
+                  {peutEcrire && (
+                    <>
+                      {/* Corriger un numéro de téléphone obligeait à ouvrir la
+                          fiche pour y trouver le même formulaire : deux
+                          chargements de page pour une faute de frappe. Le
+                          dialogue est celui de la fiche, à l'identique. */}
+                      <ClientFormDialog
+                        action={modifierClient.bind(null, c.id)}
+                        client={c}
+                        trigger={
+                          <Button variant="subtle" size="xs">
+                            Modifier
                           </Button>
-                        </form>
-                      </>
-                    )}
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-            {liste.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                  Aucun client.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+                        }
+                      />
+                      <form action={basculerActifClient.bind(null, c.id, !c.actif)}>
+                        <Button type="submit" variant="subtle" size="xs">
+                          {c.actif ? "Désactiver" : "Activer"}
+                        </Button>
+                      </form>
+                    </>
+                  )}
+                </Group>
+              ),
+            },
+          ]}
+        />
+      </Paper>
 
       <PaginationListe
         base="/clients"
@@ -147,6 +152,6 @@ export default async function PageClients({
         total={total}
         nom="client"
       />
-    </div>
+    </Stack>
   );
 }

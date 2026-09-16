@@ -18,18 +18,8 @@ import {
 import { PaginationListe } from "@/components/shared/pagination-liste";
 import { STATUT_COMMANDE_FOURNISSEUR_LABEL, libelle } from "@/lib/libelles";
 import { STATUT_COMMANDE_FOURNISSEUR_BADGE } from "@/lib/statut-style";
-import { Badge } from "@mantine/core";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ActionIcon, Badge, Button, Group, Paper, Select, Stack, TextInput, Title } from "@mantine/core";
+import { DataTable } from "mantine-datatable";
 import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
 import { Eye, FileText } from "lucide-react";
 
@@ -93,118 +83,124 @@ export default async function PageCommandesFournisseur({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Achats</h1>
+    <Stack gap="md">
+      <Group justify="space-between" wrap="wrap" gap="sm">
+        <Title order={1} size="h2">Achats</Title>
         {peutEcrire && (
-          <Button render={<Link href="/commandes-fournisseur/nouvelle" />}>
+          <Button component={Link} href="/commandes-fournisseur/nouvelle">
             Nouvel achat
           </Button>
         )}
-      </div>
+      </Group>
 
-      <form className="flex flex-wrap items-end gap-3">
-        <div className="space-y-1">
-          <Label htmlFor="statut">Statut</Label>
-          <Select name="statut" defaultValue={statutFiltre}>
-            <SelectTrigger id="statut" className="w-40">
-              <SelectValue placeholder="Tous" />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUTS_COMMANDE_FOURNISSEUR.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {libelle(STATUT_COMMANDE_FOURNISSEUR_LABEL, s)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="du">Du</Label>
-          <Input id="du" name="du" type="date" defaultValue={du} />
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="au">Au</Label>
-          <Input id="au" name="au" type="date" defaultValue={au} />
-        </div>
-        <Button type="submit" variant="outline">
-          Filtrer
-        </Button>
-        {(statut || du || au) && (
-          <Button variant="ghost" render={<Link href="/commandes-fournisseur" />}>
-            Réinitialiser
+      <form>
+        <Group align="flex-end" wrap="wrap" gap="sm">
+          <Select
+            label="Statut"
+            name="statut"
+            defaultValue={statutFiltre}
+            placeholder="Tous"
+            clearable
+            w={160}
+            data={STATUTS_COMMANDE_FOURNISSEUR.map((s) => ({
+              value: s,
+              label: libelle(STATUT_COMMANDE_FOURNISSEUR_LABEL, s),
+            }))}
+          />
+          <TextInput label="Du" name="du" type="date" defaultValue={du} />
+          <TextInput label="Au" name="au" type="date" defaultValue={au} />
+          <Button type="submit" variant="outline">
+            Filtrer
           </Button>
-        )}
+          {(statut || du || au) && (
+            <Button variant="subtle" component={Link} href="/commandes-fournisseur">
+              Réinitialiser
+            </Button>
+          )}
+        </Group>
       </form>
 
-      <div className="overflow-x-auto rounded-lg border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Numéro</TableHead>
-              <TableHead>Fournisseur</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead className="text-right">Montant</TableHead>
-              {peutVoirDecaissements && <TableHead className="text-right">Réglé</TableHead>}
-              <TableHead className="w-10" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {commandes.map((c) => (
-              <TableRow key={c.id}>
-                <TableCell>
-                  <Link href={`/commandes-fournisseur/${c.id}`} className="font-mono tabular-nums font-medium hover:underline">
-                    {c.numero}
-                  </Link>
-                </TableCell>
-                <TableCell>{c.fournisseurNom}</TableCell>
-                <TableCell className="font-mono tabular-nums">{formatDate(c.dateCommande)}</TableCell>
-                <TableCell>
-                  <Badge {...STATUT_COMMANDE_FOURNISSEUR_BADGE[c.statut]}>
-                    {libelle(STATUT_COMMANDE_FOURNISSEUR_LABEL, c.statut)}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right font-mono tabular-nums">{formatMontant(c.montantTotal)}</TableCell>
-                {peutVoirDecaissements && (
-                  <TableCell className="text-right font-mono tabular-nums">{formatMontant(c.montantRegle!)}</TableCell>
-                )}
-                <TableCell>
-                  <div className="flex items-center justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      title="Voir le détail"
-                      render={<Link href={`/commandes-fournisseur/${c.id}`} />}
-                    >
-                      <Eye />
-                      <span className="sr-only">Voir le détail</span>
-                    </Button>
-                    <ApercuDocumentDialog
-                      href={`/commandes-fournisseur/${c.id}/pdf`}
-                      titre={`Bon de commande ${c.numero}`}
-                      nomFichier={`bon-commande-${c.numero}`}
-                      trigger={
-                        <Button variant="ghost" size="icon-sm" title="Aperçu PDF">
-                          <FileText />
-                          <span className="sr-only">Aperçu PDF</span>
-                        </Button>
-                      }
-                    />
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-            {commandes.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={peutVoirDecaissements ? 7 : 6} className="py-8 text-center text-muted-foreground">
-                  Aucune commande.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+        <DataTable
+          records={commandes}
+          idAccessor="id"
+          withTableBorder={false}
+          noRecordsText="Aucune commande."
+          columns={[
+            {
+              accessor: "numero",
+              title: "Numéro",
+              render: (c) => (
+                <Link href={`/commandes-fournisseur/${c.id}`} className="font-mono font-medium tabular-nums hover:underline">
+                  {c.numero}
+                </Link>
+              ),
+            },
+            { accessor: "fournisseurNom", title: "Fournisseur" },
+            {
+              accessor: "dateCommande",
+              title: "Date",
+              render: (c) => <span className="font-mono tabular-nums">{formatDate(c.dateCommande)}</span>,
+            },
+            {
+              accessor: "statut",
+              title: "Statut",
+              render: (c) => (
+                <Badge {...STATUT_COMMANDE_FOURNISSEUR_BADGE[c.statut]}>
+                  {libelle(STATUT_COMMANDE_FOURNISSEUR_LABEL, c.statut)}
+                </Badge>
+              ),
+            },
+            {
+              accessor: "montantTotal",
+              title: "Montant",
+              textAlign: "right",
+              render: (c) => <span className="font-mono tabular-nums">{formatMontant(c.montantTotal)}</span>,
+            },
+            ...(peutVoirDecaissements
+              ? [
+                  {
+                    accessor: "montantRegle",
+                    title: "Réglé",
+                    textAlign: "right" as const,
+                    render: (c: (typeof commandes)[number]) => (
+                      <span className="font-mono tabular-nums">{formatMontant(c.montantRegle!)}</span>
+                    ),
+                  },
+                ]
+              : []),
+            {
+              accessor: "actions",
+              title: "",
+              textAlign: "right",
+              render: (c) => (
+                <Group justify="flex-end" gap={4} wrap="nowrap">
+                  <ActionIcon
+                    component={Link}
+                    href={`/commandes-fournisseur/${c.id}`}
+                    variant="subtle"
+                    color="gray"
+                    title="Voir le détail"
+                    aria-label="Voir le détail"
+                  >
+                    <Eye size={16} />
+                  </ActionIcon>
+                  <ApercuDocumentDialog
+                    href={`/commandes-fournisseur/${c.id}/pdf`}
+                    titre={`Bon de commande ${c.numero}`}
+                    nomFichier={`bon-commande-${c.numero}`}
+                    trigger={
+                      <ActionIcon variant="subtle" color="gray" title="Aperçu PDF" aria-label="Aperçu PDF">
+                        <FileText size={16} />
+                      </ActionIcon>
+                    }
+                  />
+                </Group>
+              ),
+            },
+          ]}
+        />
+      </Paper>
 
       <PaginationListe
         base="/commandes-fournisseur"
@@ -214,6 +210,6 @@ export default async function PageCommandesFournisseur({
         total={total}
         nom="achat"
       />
-    </div>
+    </Stack>
   );
 }

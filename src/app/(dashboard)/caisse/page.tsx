@@ -8,20 +8,17 @@ import { calculerSoldeCaisse } from "@/lib/caisse";
 import { formatDate, formatMontant } from "@/lib/format";
 import { bornerDebut, bornerFin, bornerPagination, lienPagination, lirePage } from "@/lib/filtres";
 import { SENS_REGLEMENT_LABEL, libelle } from "@/lib/libelles";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge, Button, Group, Paper, SimpleGrid, Stack, TextInput, Title } from "@mantine/core";
+import { DataTable } from "mantine-datatable";
 import { StatTile } from "@/components/statistiques/stat-tile";
 import { PaginationListe } from "@/components/shared/pagination-liste";
 
 /** Nombre de mouvements affichés par page. */
 const PAR_PAGE = 100;
 
-const SENS_CLASS: Record<string, string> = {
-  ENCAISSEMENT: "bg-[#E7F0EB] text-[#14563E] border-[#BEDACD]",
-  DECAISSEMENT: "bg-[#F8E8E6] text-[#8A211C] border-[#E3BEBB]",
+const SENS_BADGE: Record<string, { color: string; variant: "light" }> = {
+  ENCAISSEMENT: { color: "green", variant: "light" },
+  DECAISSEMENT: { color: "red", variant: "light" },
 };
 
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
@@ -120,72 +117,71 @@ export default async function PageCaisse({
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Caisse</h1>
+    <Stack gap="md">
+      <Title order={1} size="h2">Caisse</Title>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <SimpleGrid cols={{ base: 1, sm: 3 }}>
         <StatTile label="Solde actuel" montant={solde} highlight />
         <StatTile label="Encaissements de la période" montant={totalEncaissements} />
         <StatTile label="Décaissements de la période" montant={totalDecaissements} />
-      </div>
+      </SimpleGrid>
 
-      <form className="flex flex-wrap items-end gap-3">
-        <div className="space-y-1">
-          <Label htmlFor="du">Du</Label>
-          <Input id="du" name="du" type="date" defaultValue={du} />
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="au">Au</Label>
-          <Input id="au" name="au" type="date" defaultValue={au} />
-        </div>
-        <Button type="submit" variant="outline">
-          Filtrer
-        </Button>
+      <form>
+        <Group align="flex-end" wrap="wrap" gap="sm">
+          <TextInput label="Du" name="du" type="date" defaultValue={du} />
+          <TextInput label="Au" name="au" type="date" defaultValue={au} />
+          <Button type="submit" variant="outline">Filtrer</Button>
+        </Group>
       </form>
 
-      <div className="overflow-x-auto rounded-lg border border-border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Sens</TableHead>
-              <TableHead>Origine</TableHead>
-              <TableHead className="text-right">Montant</TableHead>
-              <TableHead className="text-right">Solde après</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {mouvements.map((m) => (
-              <TableRow key={m.id}>
-                <TableCell>{formatDate(m.dateMouvement)}</TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={SENS_CLASS[m.sens]}>
-                    {libelle(SENS_REGLEMENT_LABEL, m.sens)}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {m.reglement.facture
-                    ? `Facture ${m.reglement.facture.numero} — ${nomAffiche(m.reglement.facture.client)}`
-                    : m.reglement.commandeFournisseur
-                      ? `Achat ${m.reglement.commandeFournisseur.numero} — ${m.reglement.commandeFournisseur.fournisseur.nom}`
-                      : "—"}
-                </TableCell>
-                <TableCell className="text-right font-mono tabular-nums">{formatMontant(m.montant)}</TableCell>
-                <TableCell className="text-right font-mono font-medium tabular-nums">
+      <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+        <DataTable
+          records={mouvements}
+          idAccessor="id"
+          withTableBorder={false}
+          noRecordsText="Aucun mouvement de caisse."
+          columns={[
+            {
+              accessor: "dateMouvement",
+              title: "Date",
+              render: (m) => <span className="font-mono tabular-nums">{formatDate(m.dateMouvement)}</span>,
+            },
+            {
+              accessor: "sens",
+              title: "Sens",
+              render: (m) => (
+                <Badge {...SENS_BADGE[m.sens]}>{libelle(SENS_REGLEMENT_LABEL, m.sens)}</Badge>
+              ),
+            },
+            {
+              accessor: "origine",
+              title: "Origine",
+              render: (m) =>
+                m.reglement.facture
+                  ? `Facture ${m.reglement.facture.numero} — ${nomAffiche(m.reglement.facture.client)}`
+                  : m.reglement.commandeFournisseur
+                    ? `Achat ${m.reglement.commandeFournisseur.numero} — ${m.reglement.commandeFournisseur.fournisseur.nom}`
+                    : "—",
+            },
+            {
+              accessor: "montant",
+              title: "Montant",
+              textAlign: "right",
+              render: (m) => <span className="font-mono tabular-nums">{formatMontant(m.montant)}</span>,
+            },
+            {
+              accessor: "soldeApres",
+              title: "Solde après",
+              textAlign: "right",
+              render: (m) => (
+                <span className="font-mono font-medium tabular-nums">
                   {formatMontant(soldeParMouvement.get(m.id) ?? m.soldeApres)}
-                </TableCell>
-              </TableRow>
-            ))}
-            {mouvements.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="py-6 text-center text-muted-foreground">
-                  Aucun mouvement de caisse.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+                </span>
+              ),
+            },
+          ]}
+        />
+      </Paper>
 
       <PaginationListe
         base="/caisse"
@@ -195,6 +191,6 @@ export default async function PageCaisse({
         total={nombreMouvements}
         nom="mouvement"
       />
-    </div>
+    </Stack>
   );
 }
