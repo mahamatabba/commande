@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@mantine/core";
 
 // Même raison que pour l'évolution : Recharts est chargé après la page.
 // Voir le commentaire détaillé dans `evolution-chart.tsx`.

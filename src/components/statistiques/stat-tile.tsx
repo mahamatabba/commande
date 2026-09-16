@@ -1,5 +1,4 @@
-import { cn } from "@/lib/utils";
-import { Card, CardContent } from "@/components/ui/card";
+import { Paper, Stack, Text } from "@mantine/core";
 import { formatMontant } from "@/lib/format";
 
 export function StatTile({
@@ -14,25 +13,34 @@ export function StatTile({
   highlight?: boolean;
 }) {
   return (
-    <Card className={cn(highlight && "border-primary bg-primary text-primary-foreground")}>
-      <CardContent className="space-y-1">
-        <p className={cn("text-sm", highlight ? "text-primary-foreground/70" : "text-muted-foreground")}>
+    <Paper
+      withBorder
+      radius="md"
+      p="lg"
+      style={
+        highlight
+          ? { backgroundColor: "var(--mantine-color-brand-6)", borderColor: "var(--mantine-color-brand-6)" }
+          : undefined
+      }
+    >
+      <Stack gap={4}>
+        <Text size="sm" c={highlight ? "white" : "dimmed"} opacity={highlight ? 0.7 : 1}>
           {label}
-        </p>
-        <p
-          className={cn(
-            "font-mono font-semibold tabular-nums",
-            highlight ? "text-3xl" : "text-2xl",
-          )}
+        </Text>
+        <Text
+          className="font-mono tabular-nums"
+          fw={600}
+          size={highlight ? "30px" : "26px"}
+          c={highlight ? "white" : undefined}
         >
           {formatMontant(montant)}
-        </p>
+        </Text>
         {note && (
-          <p className={cn("text-xs", highlight ? "text-primary-foreground/70" : "text-muted-foreground")}>
+          <Text size="xs" c={highlight ? "white" : "dimmed"} opacity={highlight ? 0.7 : 1}>
             {note}
-          </p>
+          </Text>
         )}
-      </CardContent>
-    </Card>
+      </Stack>
+    </Paper>
   );
 }

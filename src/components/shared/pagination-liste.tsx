@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button, Group, Text } from "@mantine/core";
 import { lienPagination, type ParamsListe } from "@/lib/filtres";
 
 /**
@@ -36,13 +36,13 @@ export function PaginationListe({
   const pluriel = nomPluriel ?? `${nom}s`;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-      <span>
+    <Group justify="space-between" wrap="wrap" gap="sm">
+      <Text size="sm" c="dimmed">
         Page {page} sur {nbPages} · {total} {total > 1 ? pluriel : nom}
-      </span>
-      <div className="flex gap-2">
+      </Text>
+      <Group gap="xs">
         {page > 1 ? (
-          <Button variant="outline" size="sm" render={<Link href={lienPagination(base, params, page - 1)} />}>
+          <Button variant="outline" size="sm" component={Link} href={lienPagination(base, params, page - 1)}>
             Précédent
           </Button>
         ) : (
@@ -51,7 +51,7 @@ export function PaginationListe({
           </Button>
         )}
         {page < nbPages ? (
-          <Button variant="outline" size="sm" render={<Link href={lienPagination(base, params, page + 1)} />}>
+          <Button variant="outline" size="sm" component={Link} href={lienPagination(base, params, page + 1)}>
             Suivant
           </Button>
         ) : (
@@ -59,7 +59,7 @@ export function PaginationListe({
             Suivant
           </Button>
         )}
-      </div>
-    </div>
+      </Group>
+    </Group>
   );
 }

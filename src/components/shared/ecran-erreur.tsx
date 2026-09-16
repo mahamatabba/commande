@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { AlertTriangle, Lock, RotateCcw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, Group, Paper, Stack, Text, ThemeIcon, Title } from "@mantine/core";
 import { DIGEST_ACCES_REFUSE } from "@/lib/permissions";
 
 export type ErreurAffichable = Error & { digest?: string };
@@ -31,38 +31,41 @@ export function EcranErreur({
 
   return (
     <div className="flex min-h-[60vh] items-center justify-center p-6">
-      <div className="w-full max-w-lg rounded-[2px] border border-border bg-card p-8">
-        <div
-          className={
-            accesRefuse
-              ? "inline-flex rounded-[2px] border border-[#C6D2E0] bg-[#EEF2F7] p-2 text-[#1E3A5F]"
-              : "inline-flex rounded-[2px] border border-[#E3BEBB] bg-[#F8E8E6] p-2 text-[#A32A24]"
-          }
-        >
-          <Icone className="size-5" aria-hidden />
-        </div>
+      <Paper withBorder radius="md" p="xl" className="w-full max-w-lg">
+        <Stack gap="md">
+          <ThemeIcon
+            variant="light"
+            color={accesRefuse ? "blue" : "red"}
+            size="lg"
+            radius="md"
+            className="self-start"
+          >
+            <Icone size={18} aria-hidden />
+          </ThemeIcon>
 
-        <h1 className="mt-4 text-xl font-semibold">{titre}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{explication}</p>
+          <div>
+            <Title order={2} size="h3">{titre}</Title>
+            <Text size="sm" c="dimmed" mt={4}>{explication}</Text>
 
-        {!accesRefuse && erreur.digest && (
-          <p className="mt-4 font-mono text-xs tabular-nums text-muted-foreground">
-            Référence technique : {erreur.digest}
-          </p>
-        )}
+            {!accesRefuse && erreur.digest && (
+              <Text size="xs" c="dimmed" mt="sm" className="font-mono tabular-nums">
+                Référence technique : {erreur.digest}
+              </Text>
+            )}
+          </div>
 
-        <div className="mt-6 flex flex-wrap gap-2">
-          {!accesRefuse && reessayer && (
-            <Button onClick={reessayer}>
-              <RotateCcw />
-              Réessayer
+          <Group gap="sm">
+            {!accesRefuse && reessayer && (
+              <Button onClick={reessayer} leftSection={<RotateCcw size={16} />}>
+                Réessayer
+              </Button>
+            )}
+            <Button variant="outline" component={Link} href="/dashboard">
+              Retour au tableau de bord
             </Button>
-          )}
-          <Button variant="outline" render={<Link href="/dashboard" />}>
-            Retour au tableau de bord
-          </Button>
-        </div>
-      </div>
+          </Group>
+        </Stack>
+      </Paper>
     </div>
   );
 }
