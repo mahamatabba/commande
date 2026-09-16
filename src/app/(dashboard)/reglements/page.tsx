@@ -4,13 +4,11 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { commandesFournisseur, factures, clients, fournisseurs, reglements } from "@/db/schema";
 import { requirePermission } from "@/lib/permissions";
-import { formatDate, formatMontant } from "@/lib/format";
 import { bornerPagination, lienPagination, lirePage } from "@/lib/filtres";
-import { MOYEN_REGLEMENT_LABEL, SENS_REGLEMENT_LABEL, libelle } from "@/lib/libelles";
 import { Group, Paper, Stack, Title } from "@mantine/core";
-import { DataTable } from "mantine-datatable";
 import { ReglementForm } from "@/components/reglements/reglement-form";
 import { PaginationListe } from "@/components/shared/pagination-liste";
+import { ReglementsTable } from "./reglements-table";
 
 /** Nombre de règlements affichés par page dans l'historique. */
 const PAR_PAGE = 50;
@@ -114,37 +112,7 @@ export default async function PageReglements({
       </Group>
 
       <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
-        <DataTable
-          records={historique}
-          idAccessor="id"
-          withTableBorder={false}
-          noRecordsText="Aucun règlement enregistré."
-          columns={[
-            {
-              accessor: "dateReglement",
-              title: "Date",
-              render: (r) => <span className="font-mono tabular-nums">{formatDate(r.dateReglement)}</span>,
-            },
-            { accessor: "sens", title: "Sens", render: (r) => libelle(SENS_REGLEMENT_LABEL, r.sens) },
-            {
-              accessor: "cible",
-              title: "Cible",
-              render: (r) =>
-                r.facture
-                  ? `Facture ${r.facture.numero} — ${nomAffiche(r.facture.client)}`
-                  : r.commandeFournisseur
-                    ? `Achat ${r.commandeFournisseur.numero} — ${r.commandeFournisseur.fournisseur.nom}`
-                    : "—",
-            },
-            { accessor: "moyen", title: "Moyen", render: (r) => libelle(MOYEN_REGLEMENT_LABEL, r.moyen) },
-            {
-              accessor: "montant",
-              title: "Montant",
-              textAlign: "right",
-              render: (r) => <span className="font-mono tabular-nums">{formatMontant(r.montant)}</span>,
-            },
-          ]}
-        />
+        <ReglementsTable historique={historique} />
       </Paper>
 
       <PaginationListe

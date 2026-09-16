@@ -5,7 +5,6 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { clients, proformas } from "@/db/schema";
 import { requirePermission } from "@/lib/permissions";
-import { formatDate, formatMontant } from "@/lib/format";
 import { STATUT_PROFORMA_LABEL, libelle } from "@/lib/libelles";
 import {
   STATUTS_PROFORMA,
@@ -16,17 +15,9 @@ import {
   lirePage,
   lireStatut,
 } from "@/lib/filtres";
-import { STATUT_PROFORMA_BADGE } from "@/lib/statut-style";
 import { PaginationListe } from "@/components/shared/pagination-liste";
-import { ActionIcon, Badge, Button, Group, Paper, Select, Stack, Text, TextInput, Title } from "@mantine/core";
-import { DataTable } from "mantine-datatable";
-import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
-import { Eye, FileText } from "lucide-react";
-
-function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
-  if (c.raisonSociale) return c.raisonSociale;
-  return c.prenom ? `${c.nom} ${c.prenom}` : c.nom;
-}
+import { Button, Group, Paper, Select, Stack, Text, TextInput, Title } from "@mantine/core";
+import { ProformasTable } from "./proformas-table";
 
 /** Nombre de proformas affichées par page. */
 const PAR_PAGE = 50;
@@ -87,8 +78,6 @@ export default async function PageProformas({
     redirect(lienPagination("/proformas", params, pageCourante));
   }
 
-  const aujourdHui = new Date();
-
   return (
     <Stack gap="md">
       <div>
@@ -124,91 +113,7 @@ export default async function PageProformas({
       </form>
 
       <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
-        <DataTable
-          records={liste}
-          idAccessor="id"
-          withTableBorder={false}
-          noRecordsText="Aucune proforma. Elles s'établissent depuis la fiche d'une vente validée."
-          columns={[
-            {
-              accessor: "numero",
-              title: "Numéro",
-              render: (p) => (
-                <Link href={`/proformas/${p.id}`} className="font-mono font-medium tabular-nums hover:underline">
-                  {p.numero}
-                </Link>
-              ),
-            },
-            {
-              accessor: "client",
-              title: "Client",
-              render: (p) => nomAffiche({ nom: p.clientNom, prenom: p.clientPrenom, raisonSociale: p.clientRaisonSociale }),
-            },
-            {
-              accessor: "dateProforma",
-              title: "Date",
-              render: (p) => <span className="font-mono tabular-nums">{formatDate(p.dateProforma)}</span>,
-            },
-            {
-              accessor: "dateValidite",
-              title: "Valable jusqu'au",
-              render: (p) => {
-                // Une offre dont la date est passée reste « émise » en base :
-                // le statut dit où en est le document, la mention dit si le
-                // prix engage encore AEI. Ce sont deux informations différentes.
-                const expiree = p.statut === "EMISE" && p.dateValidite < aujourdHui;
-                return (
-                  <span className="font-mono tabular-nums">
-                    <span className={expiree ? "text-[var(--mantine-color-red-5)]" : undefined}>
-                      {formatDate(p.dateValidite)}
-                    </span>
-                    {expiree && <span className="ml-2 text-xs text-[var(--mantine-color-red-5)]">expirée</span>}
-                  </span>
-                );
-              },
-            },
-            {
-              accessor: "statut",
-              title: "Statut",
-              render: (p) => <Badge {...STATUT_PROFORMA_BADGE[p.statut]}>{libelle(STATUT_PROFORMA_LABEL, p.statut)}</Badge>,
-            },
-            {
-              accessor: "montantTotal",
-              title: "Montant TTC",
-              textAlign: "right",
-              render: (p) => <span className="font-mono tabular-nums">{formatMontant(p.montantTotal)}</span>,
-            },
-            {
-              accessor: "actions",
-              title: "",
-              textAlign: "right",
-              render: (p) => (
-                <Group justify="flex-end" gap={4} wrap="nowrap">
-                  <ActionIcon
-                    component={Link}
-                    href={`/proformas/${p.id}`}
-                    variant="subtle"
-                    color="gray"
-                    title="Voir le détail"
-                    aria-label="Voir le détail"
-                  >
-                    <Eye size={16} />
-                  </ActionIcon>
-                  <ApercuDocumentDialog
-                    href={`/proformas/${p.id}/pdf`}
-                    titre={`Proforma ${p.numero}`}
-                    nomFichier={`proforma-${p.numero}`}
-                    trigger={
-                      <ActionIcon variant="subtle" color="gray" title="Aperçu PDF" aria-label="Aperçu PDF">
-                        <FileText size={16} />
-                      </ActionIcon>
-                    }
-                  />
-                </Group>
-              ),
-            },
-          ]}
-        />
+        <ProformasTable liste={liste} />
       </Paper>
 
       <PaginationListe

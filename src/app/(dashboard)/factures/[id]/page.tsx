@@ -5,14 +5,14 @@ import { db } from "@/db";
 import { can, requirePermission } from "@/lib/permissions";
 import { formatDate, formatMontant } from "@/lib/format";
 import { formatTaux } from "@/lib/tva";
-import { MOYEN_REGLEMENT_LABEL, STATUT_FACTURE_LABEL, libelle } from "@/lib/libelles";
+import { STATUT_FACTURE_LABEL, libelle } from "@/lib/libelles";
 import { STATUT_FACTURE_BADGE } from "@/lib/statut-style";
 import { Badge, Button, Group, Paper, Stack, Table, Text, Title } from "@mantine/core";
-import { DataTable } from "mantine-datatable";
 import { AnnulationDialog } from "@/components/shared/annulation-dialog";
 import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
 import { MarquerPayeeDialog } from "@/components/factures/marquer-payee-dialog";
 import { annulerFacture, marquerFacturePayee } from "../actions";
+import { ReglementsFactureTable } from "./reglements-table";
 
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
   if (c.raisonSociale) return c.raisonSociale;
@@ -167,35 +167,7 @@ export default async function PageFacture({
         <div>
           <Title order={2} size="h4" mb="sm">Règlements</Title>
           <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
-            <DataTable
-              records={facture.reglements}
-              idAccessor="id"
-              withTableBorder={false}
-              noRecordsText="Aucun règlement."
-              columns={[
-                {
-                  accessor: "dateReglement",
-                  title: "Date",
-                  render: (r) => <span className="font-mono tabular-nums">{formatDate(r.dateReglement)}</span>,
-                },
-                {
-                  accessor: "moyen",
-                  title: "Moyen",
-                  render: (r) => libelle(MOYEN_REGLEMENT_LABEL, r.moyen),
-                },
-                {
-                  accessor: "sens",
-                  title: "Sens",
-                  render: (r) => (r.sens === "ENCAISSEMENT" ? "Encaissement" : "Reprise"),
-                },
-                {
-                  accessor: "montant",
-                  title: "Montant",
-                  textAlign: "right",
-                  render: (r) => <span className="font-mono tabular-nums">{formatMontant(r.montant)}</span>,
-                },
-              ]}
-            />
+            <ReglementsFactureTable reglements={facture.reglements} />
           </Paper>
         </div>
       )}

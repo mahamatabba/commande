@@ -5,26 +5,14 @@ import { db } from "@/db";
 import { mouvementsCaisse } from "@/db/schema";
 import { requirePermission } from "@/lib/permissions";
 import { calculerSoldeCaisse } from "@/lib/caisse";
-import { formatDate, formatMontant } from "@/lib/format";
 import { bornerDebut, bornerFin, bornerPagination, lienPagination, lirePage } from "@/lib/filtres";
-import { SENS_REGLEMENT_LABEL, libelle } from "@/lib/libelles";
-import { Badge, Button, Group, Paper, SimpleGrid, Stack, TextInput, Title } from "@mantine/core";
-import { DataTable } from "mantine-datatable";
+import { Button, Group, Paper, SimpleGrid, Stack, TextInput, Title } from "@mantine/core";
 import { StatTile } from "@/components/statistiques/stat-tile";
 import { PaginationListe } from "@/components/shared/pagination-liste";
+import { CaisseTable } from "./caisse-table";
 
 /** Nombre de mouvements affichés par page. */
 const PAR_PAGE = 100;
-
-const SENS_BADGE: Record<string, { color: string; variant: "light" }> = {
-  ENCAISSEMENT: { color: "green", variant: "light" },
-  DECAISSEMENT: { color: "red", variant: "light" },
-};
-
-function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
-  if (c.raisonSociale) return c.raisonSociale;
-  return c.prenom ? `${c.nom} ${c.prenom}` : c.nom;
-}
 
 export default async function PageCaisse({
   searchParams,
@@ -115,6 +103,10 @@ export default async function PageCaisse({
     cumul += m.sens === "ENCAISSEMENT" ? m.montant : -m.montant;
     soldeParMouvement.set(m.id, cumul);
   }
+  const mouvementsAffiches = mouvements.map((m) => ({
+    ...m,
+    soldeAffiche: soldeParMouvement.get(m.id) ?? m.soldeApres,
+  }));
 
   return (
     <Stack gap="md">
@@ -135,52 +127,7 @@ export default async function PageCaisse({
       </form>
 
       <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
-        <DataTable
-          records={mouvements}
-          idAccessor="id"
-          withTableBorder={false}
-          noRecordsText="Aucun mouvement de caisse."
-          columns={[
-            {
-              accessor: "dateMouvement",
-              title: "Date",
-              render: (m) => <span className="font-mono tabular-nums">{formatDate(m.dateMouvement)}</span>,
-            },
-            {
-              accessor: "sens",
-              title: "Sens",
-              render: (m) => (
-                <Badge {...SENS_BADGE[m.sens]}>{libelle(SENS_REGLEMENT_LABEL, m.sens)}</Badge>
-              ),
-            },
-            {
-              accessor: "origine",
-              title: "Origine",
-              render: (m) =>
-                m.reglement.facture
-                  ? `Facture ${m.reglement.facture.numero} — ${nomAffiche(m.reglement.facture.client)}`
-                  : m.reglement.commandeFournisseur
-                    ? `Achat ${m.reglement.commandeFournisseur.numero} — ${m.reglement.commandeFournisseur.fournisseur.nom}`
-                    : "—",
-            },
-            {
-              accessor: "montant",
-              title: "Montant",
-              textAlign: "right",
-              render: (m) => <span className="font-mono tabular-nums">{formatMontant(m.montant)}</span>,
-            },
-            {
-              accessor: "soldeApres",
-              title: "Solde après",
-              textAlign: "right",
-              render: (m) => (
-                <span className="font-mono font-medium tabular-nums">
-                  {formatMontant(soldeParMouvement.get(m.id) ?? m.soldeApres)}
-                </span>
-              ),
-            },
-          ]}
-        />
+        <CaisseTable mouvements={mouvementsAffiches} />
       </Paper>
 
       <PaginationListe

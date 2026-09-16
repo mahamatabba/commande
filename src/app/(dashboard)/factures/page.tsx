@@ -5,7 +5,6 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { clients, factures } from "@/db/schema";
 import { can, requirePermission } from "@/lib/permissions";
-import { formatDate, formatMontant } from "@/lib/format";
 import { STATUT_FACTURE_LABEL, libelle } from "@/lib/libelles";
 import {
   STATUTS_FACTURE,
@@ -16,17 +15,9 @@ import {
   lirePage,
   lireStatut,
 } from "@/lib/filtres";
-import { STATUT_FACTURE_BADGE } from "@/lib/statut-style";
 import { PaginationListe } from "@/components/shared/pagination-liste";
-import { ActionIcon, Badge, Button, Group, Paper, Select, Stack, TextInput, Title } from "@mantine/core";
-import { DataTable } from "mantine-datatable";
-import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
-import { Eye, FileText } from "lucide-react";
-
-function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
-  if (c.raisonSociale) return c.raisonSociale;
-  return c.prenom ? `${c.nom} ${c.prenom}` : c.nom;
-}
+import { Button, Group, Paper, Select, Stack, TextInput, Title } from "@mantine/core";
+import { FacturesTable } from "./factures-table";
 
 /** Nombre de factures affichées par page. */
 const PAR_PAGE = 50;
@@ -132,91 +123,7 @@ export default async function PageFactures({
       </form>
 
       <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
-        <DataTable
-          records={liste}
-          idAccessor="id"
-          withTableBorder={false}
-          noRecordsText="Aucune facture."
-          columns={[
-            {
-              accessor: "numero",
-              title: "Numéro",
-              render: (f) => (
-                <Link href={`/factures/${f.id}`} className="font-mono font-medium tabular-nums hover:underline">
-                  {f.numero}
-                </Link>
-              ),
-            },
-            {
-              accessor: "client",
-              title: "Client",
-              render: (f) => nomAffiche({ nom: f.clientNom, prenom: f.clientPrenom, raisonSociale: f.clientRaisonSociale }),
-            },
-            {
-              accessor: "dateFacture",
-              title: "Date",
-              render: (f) => <span className="font-mono tabular-nums">{formatDate(f.dateFacture)}</span>,
-            },
-            ...(peutVoirImpayes
-              ? [
-                  {
-                    accessor: "statut",
-                    title: "Statut",
-                    render: (f: (typeof liste)[number]) => (
-                      <Badge {...STATUT_FACTURE_BADGE[f.statut!]}>{libelle(STATUT_FACTURE_LABEL, f.statut)}</Badge>
-                    ),
-                  },
-                ]
-              : []),
-            {
-              accessor: "montantTotal",
-              title: "Montant",
-              textAlign: "right",
-              render: (f) => <span className="font-mono tabular-nums">{formatMontant(f.montantTotal)}</span>,
-            },
-            ...(peutVoirImpayes
-              ? [
-                  {
-                    accessor: "resteAPayer",
-                    title: "Reste à payer",
-                    textAlign: "right" as const,
-                    render: (f: (typeof liste)[number]) => (
-                      <span className="font-mono tabular-nums">{formatMontant(f.resteAPayer!)}</span>
-                    ),
-                  },
-                ]
-              : []),
-            {
-              accessor: "actions",
-              title: "",
-              textAlign: "right",
-              render: (f) => (
-                <Group justify="flex-end" gap={4} wrap="nowrap">
-                  <ActionIcon
-                    component={Link}
-                    href={`/factures/${f.id}`}
-                    variant="subtle"
-                    color="gray"
-                    title="Voir le détail"
-                    aria-label="Voir le détail"
-                  >
-                    <Eye size={16} />
-                  </ActionIcon>
-                  <ApercuDocumentDialog
-                    href={`/factures/${f.id}/pdf`}
-                    titre={`Facture ${f.numero}`}
-                    nomFichier={`facture-${f.numero}`}
-                    trigger={
-                      <ActionIcon variant="subtle" color="gray" title="Aperçu PDF" aria-label="Aperçu PDF">
-                        <FileText size={16} />
-                      </ActionIcon>
-                    }
-                  />
-                </Group>
-              ),
-            },
-          ]}
-        />
+        <FacturesTable liste={liste} peutVoirImpayes={peutVoirImpayes} />
       </Paper>
 
       <PaginationListe

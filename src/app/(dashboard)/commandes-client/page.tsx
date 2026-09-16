@@ -5,7 +5,6 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { clients, commandesClient } from "@/db/schema";
 import { can, requirePermission } from "@/lib/permissions";
-import { formatDate, formatMontant } from "@/lib/format";
 import {
   STATUTS_COMMANDE_CLIENT,
   bornerDebut,
@@ -16,17 +15,9 @@ import {
   lireStatut,
 } from "@/lib/filtres";
 import { PaginationListe } from "@/components/shared/pagination-liste";
-import { MODE_REGLEMENT_LABEL, STATUT_COMMANDE_CLIENT_LABEL, libelle } from "@/lib/libelles";
-import { STATUT_COMMANDE_CLIENT_BADGE } from "@/lib/statut-style";
-import { ActionIcon, Badge, Button, Group, Paper, Select, Stack, TextInput, Title } from "@mantine/core";
-import { DataTable } from "mantine-datatable";
-import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
-import { Eye, FileText } from "lucide-react";
-
-function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
-  if (c.raisonSociale) return c.raisonSociale;
-  return c.prenom ? `${c.nom} ${c.prenom}` : c.nom;
-}
+import { STATUT_COMMANDE_CLIENT_LABEL, libelle } from "@/lib/libelles";
+import { Button, Group, Paper, Select, Stack, TextInput, Title } from "@mantine/core";
+import { CommandesClientTable } from "./commandes-client-table";
 
 /** Nombre de ventes affichées par page. */
 const PAR_PAGE = 50;
@@ -127,82 +118,7 @@ export default async function PageCommandesClient({
       </form>
 
       <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
-        <DataTable
-          records={commandes}
-          idAccessor="id"
-          withTableBorder={false}
-          noRecordsText="Aucune commande."
-          columns={[
-            {
-              accessor: "numero",
-              title: "Numéro",
-              render: (c) => (
-                <Link href={`/commandes-client/${c.id}`} className="font-mono font-medium tabular-nums hover:underline">
-                  {c.numero}
-                </Link>
-              ),
-            },
-            {
-              accessor: "client",
-              title: "Client",
-              render: (c) => nomAffiche({ nom: c.clientNom, prenom: c.clientPrenom, raisonSociale: c.clientRaisonSociale }),
-            },
-            {
-              accessor: "dateCommande",
-              title: "Date",
-              render: (c) => <span className="font-mono tabular-nums">{formatDate(c.dateCommande)}</span>,
-            },
-            {
-              accessor: "modeReglement",
-              title: "Mode",
-              render: (c) => libelle(MODE_REGLEMENT_LABEL, c.modeReglement),
-            },
-            {
-              accessor: "statut",
-              title: "Statut",
-              render: (c) => (
-                <Badge {...STATUT_COMMANDE_CLIENT_BADGE[c.statut]}>
-                  {libelle(STATUT_COMMANDE_CLIENT_LABEL, c.statut)}
-                </Badge>
-              ),
-            },
-            {
-              accessor: "montantTotal",
-              title: "Montant",
-              textAlign: "right",
-              render: (c) => <span className="font-mono tabular-nums">{formatMontant(c.montantTotal)}</span>,
-            },
-            {
-              accessor: "actions",
-              title: "",
-              textAlign: "right",
-              render: (c) => (
-                <Group justify="flex-end" gap={4} wrap="nowrap">
-                  <ActionIcon
-                    component={Link}
-                    href={`/commandes-client/${c.id}`}
-                    variant="subtle"
-                    color="gray"
-                    title="Voir le détail"
-                    aria-label="Voir le détail"
-                  >
-                    <Eye size={16} />
-                  </ActionIcon>
-                  <ApercuDocumentDialog
-                    href={`/commandes-client/${c.id}/pdf`}
-                    titre={`Bon de commande ${c.numero}`}
-                    nomFichier={`bon-commande-${c.numero}`}
-                    trigger={
-                      <ActionIcon variant="subtle" color="gray" title="Aperçu PDF" aria-label="Aperçu PDF">
-                        <FileText size={16} />
-                      </ActionIcon>
-                    }
-                  />
-                </Group>
-              ),
-            },
-          ]}
-        />
+        <CommandesClientTable commandes={commandes} />
       </Paper>
 
       <PaginationListe
