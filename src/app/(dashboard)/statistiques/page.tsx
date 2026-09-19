@@ -14,7 +14,11 @@ import { can, requirePermission } from "@/lib/permissions";
 import { CHART_COLORS } from "@/lib/constants";
 import { formatMontant } from "@/lib/format";
 import { cleMois, debutPeriode, derniersMois, libelleMois } from "@/lib/stats";
-import { Card, List, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+// Sous-composants importés à plat (`ListItem`) et non en notation pointée
+// (`List.Item`) : dans un composant serveur, `List` n'est qu'une référence
+// vers @mantine/core, et `.Item` y désigne un export qui n'existe pas. Le
+// composant vaut alors `undefined` au rendu et la page casse.
+import { Card, List, ListItem, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { EvolutionChart } from "@/components/statistiques/evolution-chart";
 import { ClassementChart } from "@/components/statistiques/classement-chart";
 import { RepartitionChart } from "@/components/statistiques/repartition-chart";
@@ -236,9 +240,9 @@ export default async function PageStatistiques() {
               <Text size="sm" fw={500} mb={4}>Achats par mois</Text>
               <List size="sm" c="dimmed" listStyleType="none">
                 {achats.data.map((p) => (
-                  <List.Item key={p.cle}>
+                  <ListItem key={p.cle}>
                     {p.label} : <span className="font-mono tabular-nums">{formatMontant(p.valeur)}</span>
-                  </List.Item>
+                  </ListItem>
                 ))}
               </List>
             </div>
@@ -248,9 +252,9 @@ export default async function PageStatistiques() {
               <Text size="sm" fw={500} mb={4}>Ventes HT par mois</Text>
               <List size="sm" c="dimmed" listStyleType="none">
                 {ventes.data.map((p) => (
-                  <List.Item key={p.cle}>
+                  <ListItem key={p.cle}>
                     {p.label} : <span className="font-mono tabular-nums">{formatMontant(p.valeur)}</span>
-                  </List.Item>
+                  </ListItem>
                 ))}
               </List>
             </div>
