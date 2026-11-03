@@ -4,6 +4,7 @@ import { cloneElement, useActionState, useEffect, useState } from "react";
 import { notifications } from "@mantine/notifications";
 import { Button, Group, Modal, NumberInput, SimpleGrid, Stack, Text, TextInput } from "@mantine/core";
 import type { EtatFormulaire } from "@/app/(dashboard)/articles/actions";
+import { TAUX_TVA_STANDARD } from "@/lib/constants";
 
 type Article = {
   id: number;
@@ -64,7 +65,10 @@ export function ArticleFormDialog({
                 label="Taux TVA (%)"
                 name="tauxTva"
                 decimalScale={2}
-                defaultValue={article?.tauxTva ?? 18}
+                defaultValue={article?.tauxTva ?? TAUX_TVA_STANDARD}
+                decimalSeparator=","
+                min={0}
+                max={100}
               />
             </SimpleGrid>
             <TextInput label="Désignation" name="designation" required defaultValue={article?.designation} />

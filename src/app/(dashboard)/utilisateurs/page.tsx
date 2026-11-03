@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { db } from "@/db";
+import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
 import { requirePermission } from "@/lib/permissions";
 import { Group, Paper, Stack, Title } from "@mantine/core";
@@ -22,6 +23,7 @@ export default async function PageUtilisateurs() {
       createdAt: users.createdAt,
     })
     .from(users)
+    .where(eq(users.supprime, false))
     .orderBy(users.nomComplet);
 
   return (

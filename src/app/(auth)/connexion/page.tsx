@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Image from "next/image";
 import { Button, PasswordInput, TextInput } from "@mantine/core";
 import { connecter } from "./actions";
 
@@ -9,33 +10,50 @@ export default function PageConnexion() {
 
   return (
     <div className="grid min-h-screen md:grid-cols-[44%_1fr]">
-      <div className="hidden flex-col justify-between bg-[var(--mantine-color-dark-8)] px-12 py-14 md:flex">
+      <div
+        className="relative hidden flex-col justify-between overflow-hidden px-12 py-14 md:flex"
+        style={{
+          background:
+            "radial-gradient(circle at 15% 10%, rgba(0,174,239,0.22), transparent 45%), radial-gradient(circle at 90% 95%, rgba(250,167,85,0.22), transparent 45%), var(--mantine-color-dark-8)",
+        }}
+      >
         <div>
-          <div className="flex size-[38px] items-center justify-center rounded-md bg-[var(--mantine-color-dark-0)] text-sm font-semibold text-[var(--mantine-color-dark-9)]">
-            AEI
+          <div className="flex items-center gap-4">
+            <span className="flex h-[84px] w-[96px] items-center justify-center rounded-xl bg-white p-2 shadow-lg">
+              <Image src="/brand/aei-icon.png" alt="Logo AEI" width={248} height={215} priority className="h-full w-auto" />
+            </span>
+            <div>
+              <p className="text-[17px] leading-tight font-bold tracking-wide text-white">
+                ABDELDJELIL ÉTUDE INFORMATIQUE
+              </p>
+              <p className="mt-1 text-sm font-medium text-[#00AEEF]">Partenaire agréé HP</p>
+            </div>
           </div>
-          <p className="mt-3 text-sm text-[var(--mantine-color-dark-2)]">
-            Abdeldjalil Étude Informatique
-          </p>
-          <h1 className="mt-8 text-[30px] leading-tight font-semibold text-white">
+          <h1 className="mt-14 text-[34px] leading-tight font-bold text-white">
             Gestion commerciale
           </h1>
-          <p className="mt-3 max-w-[320px] text-[15px] leading-relaxed text-[var(--mantine-color-dark-2)]">
-            Achats fournisseurs, ventes clients, facturation et caisse. Un
-            seul registre, tenu à jour.
+          <div className="mt-3 h-1 w-14 rounded bg-[#FAA755]" />
+          <p className="mt-5 max-w-[360px] text-[15px] leading-relaxed text-[var(--mantine-color-dark-1)]">
+            Bons de commande fournisseurs, ventes, proformas, factures et caisse.
+            Un seul registre, tenu à jour.
           </p>
         </div>
-        <p className="font-mono text-xs text-[var(--mantine-color-dark-3)]">
-          N&apos;Djaména, Tchad · exercice 2026
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-[var(--mantine-color-dark-2)]">
+            Avenue Charles de Gaulle · N&apos;Djaména, Tchad
+          </p>
+          <span className="flex size-11 items-center justify-center rounded-full bg-white p-1">
+            <Image src="/brand/hp-logo.png" alt="HP" width={66} height={66} className="h-full w-full" />
+          </span>
+        </div>
       </div>
 
       <div className="flex items-center justify-center bg-[var(--mantine-color-dark-7)] px-6 py-14">
         <div className="w-full max-w-[380px]">
-          <div className="mb-3 flex size-[38px] items-center justify-center rounded-md bg-[var(--mantine-color-brand-5)] text-sm font-semibold text-white md:hidden">
-            AEI
-          </div>
-          <h2 className="text-[22px] font-semibold text-[var(--mantine-color-text)]">
+          <span className="mb-5 flex h-[64px] w-[74px] items-center justify-center rounded-xl bg-white p-1.5 md:hidden">
+            <Image src="/brand/aei-icon.png" alt="Logo AEI" width={248} height={215} className="h-full w-auto" />
+          </span>
+          <h2 className="text-[26px] font-bold text-[var(--mantine-color-text)]">
             Connexion
           </h2>
           <p className="mt-1 text-sm text-[var(--mantine-color-dimmed)]">

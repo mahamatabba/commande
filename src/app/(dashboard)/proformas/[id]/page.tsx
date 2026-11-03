@@ -15,7 +15,8 @@ import { Alert, Badge, Button, Group, Paper, Stack, Table, TableTbody, TableTd, 
 import { AnnulationDialog } from "@/components/shared/annulation-dialog";
 import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
 import { ConversionProformaDialog } from "@/components/proformas/conversion-dialog";
-import { annulerProforma, convertirProformaEnFacture } from "../actions";
+import { SuppressionDialog } from "@/components/shared/suppression-dialog";
+import { annulerProforma, convertirProformaEnFacture, supprimerProforma } from "../actions";
 
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
   if (c.raisonSociale) return c.raisonSociale;
@@ -27,10 +28,10 @@ export default async function PageProforma({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ nouveau?: string }>;
+  searchParams: Promise<{ nouveau?: string; modifiee?: string }>;
 }) {
   const { id } = await params;
-  const { nouveau } = await searchParams;
+  const { nouveau, modifiee } = await searchParams;
   const proformaId = Number(id);
   const session = await auth();
   requirePermission(session, "factures:read");
@@ -76,8 +77,13 @@ export default async function PageProforma({
             titre={`Proforma ${proforma.numero}`}
             nomFichier={`proforma-${proforma.numero}`}
             trigger={<Button variant="outline">Voir la proforma</Button>}
-            defaultOpen={nouveau === "1"}
+            defaultOpen={nouveau === "1" || modifiee === "1"}
           />
+          {peutConvertir && proforma.statut === "EMISE" && (
+            <Button variant="default" component={Link} href={`/proformas/${proforma.id}/modifier`}>
+              Modifier
+            </Button>
+          )}
           {peutConvertir && proforma.statut === "EMISE" && (
             <ConversionProformaDialog
               action={convertirProformaEnFacture.bind(null, proforma.id)}
@@ -90,6 +96,15 @@ export default async function PageProforma({
               action={annulerProforma.bind(null, proforma.id)}
               titre="Annuler la proforma"
               description="Aucune écriture comptable n'est reprise : une proforma n'en a généré aucune. L'annulation libère la vente pour un nouveau chiffrage."
+            />
+          )}
+          {peutAnnuler && proforma.statut === "ANNULEE" && (
+            <SuppressionDialog
+              action={supprimerProforma.bind(null, proforma.id)}
+              titre={`Supprimer la proforma ${proforma.numero}`}
+              libelleBouton="Supprimer la proforma"
+              messageSucces="Proforma supprimée"
+              description="Une proforma n'a généré aucune écriture : la supprimer ne touche ni la caisse ni la vente. La suppression reste tracée dans le journal."
             />
           )}
         </Group>
@@ -152,6 +167,24 @@ export default async function PageProforma({
           <Text size="sm" className="font-mono tabular-nums">
             Valable jusqu&apos;au : <strong>{formatDate(proforma.dateValidite)}</strong>
           </Text>
+        </Group>
+      </Paper>
+
+      <Paper withBorder radius="md" p="md">
+        <Title order={2} size="h5" mb="sm">Conditions de l&apos;offre</Title>
+        <Group gap="xl" wrap="wrap" align="flex-start">
+          <div>
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>Délai de livraison</Text>
+            <Text size="sm">{proforma.delaiLivraison ?? "Non précisé"}</Text>
+          </div>
+          <div>
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>Garantie</Text>
+            <Text size="sm">{proforma.garantie ?? "Non précisée"}</Text>
+          </div>
+          <div>
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>Validité</Text>
+            <Text size="sm">Jusqu&apos;au {formatDate(proforma.dateValidite)}</Text>
+          </div>
         </Group>
       </Paper>
     </Stack>

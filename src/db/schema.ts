@@ -86,6 +86,11 @@ export const users = pgTable("users", {
   nomComplet: varchar("nom_complet", { length: 255 }).notNull(),
   role: roleEnum("role").notNull().default("AGENT"),
   actif: boolean("actif").notNull().default(true),
+  // Compte supprimé alors qu'il est l'auteur de pièces (factures, ventes,
+  // règlements…) : la ligne doit rester pour que ces pièces gardent leur
+  // auteur, mais le compte disparaît de la liste et ne peut plus se
+  // connecter. Un compte sans aucune pièce est, lui, réellement effacé.
+  supprime: boolean("supprime").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -335,6 +340,11 @@ export const proformas = pgTable(
     tauxTva: tauxTva("taux_tva").notNull().default(0),
     montantTva: montant("montant_tva").notNull().default(0),
     montantTotal: montant("montant_total").notNull(),
+    // Conditions commerciales imprimées sur la proforma. Texte libre : un
+    // délai s'exprime aussi bien en jours qu'en « à réception du bon de
+    // commande », et une garantie en mois, pièces seules ou main-d'œuvre.
+    delaiLivraison: varchar("delai_livraison", { length: 255 }),
+    garantie: varchar("garantie", { length: 255 }),
     statut: statutProformaEnum("statut").notNull().default("EMISE"),
     // Renseigné à la conversion : garde le lien entre le chiffrage remis au
     // client et la facture qui en découle.

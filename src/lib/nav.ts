@@ -1,44 +1,103 @@
 import type { Session } from "next-auth";
 import { can, type Permission } from "@/lib/permissions";
 
+/**
+ * Nom d'icône (résolu côté client dans `sidebar-nav.tsx`). Une chaîne plutôt
+ * qu'un composant : la liste est construite côté serveur et transmise à un
+ * composant client, et une fonction ne traverse pas cette frontière.
+ */
+export type NavIcone =
+  | "tableau"
+  | "statistiques"
+  | "fournisseurs"
+  | "achats"
+  | "clients"
+  | "ventes"
+  | "proformas"
+  | "factures"
+  | "articles"
+  | "reglements"
+  | "caisse"
+  | "utilisateurs"
+  | "journal";
+
 export type NavItem = {
   href: string;
   label: string;
+  icone: NavIcone;
   /** Une des permissions suffit à afficher le lien (OR logique). */
   permissions?: Permission[];
 };
 
-const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "Tableau de bord" },
-  { href: "/fournisseurs", label: "Fournisseurs", permissions: ["referentiels:read"] },
-  { href: "/clients", label: "Clients", permissions: ["referentiels:read"] },
-  { href: "/articles", label: "Articles", permissions: ["referentiels:read"] },
+export type NavSection = { titre: string; items: NavItem[] };
+
+/**
+ * Le menu suit le circuit de l'entreprise : ce qu'on achète (avec les bons
+ * de commande fournisseur), ce qu'on vend (proformas, factures), l'argent qui
+ * circule. Le bon de commande appartient aux achats ; côté ventes, on parle
+ * de vente, de proforma et de facture.
+ */
+const NAV_SECTIONS: NavSection[] = [
   {
-    href: "/commandes-fournisseur",
-    label: "Achats",
-    permissions: ["commandes_fournisseur:read"],
+    titre: "Pilotage",
+    items: [
+      { href: "/dashboard", label: "Tableau de bord", icone: "tableau" },
+      {
+        href: "/statistiques",
+        label: "Statistiques",
+        icone: "statistiques",
+        permissions: ["statistiques:achats_sorties", "statistiques:globales_marge"],
+      },
+    ],
   },
   {
-    href: "/commandes-client",
-    label: "Ventes",
-    permissions: ["commandes_client:read"],
+    titre: "Achats",
+    items: [
+      {
+        href: "/commandes-fournisseur",
+        label: "Bons de commande",
+        icone: "achats",
+        permissions: ["commandes_fournisseur:read"],
+      },
+      { href: "/fournisseurs", label: "Fournisseurs", icone: "fournisseurs", permissions: ["referentiels:read"] },
+    ],
   },
-  { href: "/proformas", label: "Proformas", permissions: ["factures:read"] },
-  { href: "/factures", label: "Factures", permissions: ["factures:read"] },
-  { href: "/reglements", label: "Règlements", permissions: ["reglements:saisir"] },
-  { href: "/caisse", label: "Caisse", permissions: ["caisse:solde:read"] },
   {
-    href: "/statistiques",
-    label: "Statistiques",
-    permissions: ["statistiques:achats_sorties", "statistiques:globales_marge"],
+    titre: "Ventes",
+    items: [
+      { href: "/commandes-client", label: "Ventes", icone: "ventes", permissions: ["commandes_client:read"] },
+      { href: "/proformas", label: "Proformas", icone: "proformas", permissions: ["factures:read"] },
+      { href: "/factures", label: "Factures", icone: "factures", permissions: ["factures:read"] },
+      { href: "/clients", label: "Clients", icone: "clients", permissions: ["referentiels:read"] },
+    ],
   },
-  { href: "/utilisateurs", label: "Utilisateurs", permissions: ["utilisateurs:gerer"] },
-  { href: "/journal", label: "Journal d'activité", permissions: ["journal:consulter"] },
+  {
+    titre: "Catalogue",
+    items: [{ href: "/articles", label: "Articles", icone: "articles", permissions: ["referentiels:read"] }],
+  },
+  {
+    titre: "Trésorerie",
+    items: [
+      { href: "/reglements", label: "Règlements", icone: "reglements", permissions: ["reglements:saisir"] },
+      { href: "/caisse", label: "Caisse", icone: "caisse", permissions: ["caisse:solde:read"] },
+    ],
+  },
+  {
+    titre: "Administration",
+    items: [
+      { href: "/utilisateurs", label: "Utilisateurs", icone: "utilisateurs", permissions: ["utilisateurs:gerer"] },
+      { href: "/journal", label: "Journal d'activité", icone: "journal", permissions: ["journal:consulter"] },
+    ],
+  },
 ];
 
-export function getNavItems(session: Session | null): NavItem[] {
-  return NAV_ITEMS.filter((item) => {
-    if (!item.permissions || item.permissions.length === 0) return true;
-    return item.permissions.some((p) => can(session, p));
-  });
+/** Sections du menu visibles pour cette session ; une section vide disparaît. */
+export function getNavSections(session: Session | null): NavSection[] {
+  return NAV_SECTIONS.map((section) => ({
+    titre: section.titre,
+    items: section.items.filter((item) => {
+      if (!item.permissions || item.permissions.length === 0) return true;
+      return item.permissions.some((p) => can(session, p));
+    }),
+  })).filter((section) => section.items.length > 0);
 }

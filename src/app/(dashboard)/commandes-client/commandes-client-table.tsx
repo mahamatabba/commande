@@ -91,8 +91,8 @@ export function CommandesClientTable({ commandes }: { commandes: CommandeClient[
               </ActionIcon>
               <ApercuDocumentDialog
                 href={`/commandes-client/${c.id}/pdf`}
-                titre={`Bon de commande ${c.numero}`}
-                nomFichier={`bon-commande-${c.numero}`}
+                titre={`Bon de livraison ${c.numero}`}
+                nomFichier={`bon-livraison-${c.numero}`}
                 trigger={
                   <ActionIcon variant="subtle" color="gray" title="Aperçu PDF" aria-label="Aperçu PDF">
                     <FileText size={16} />

@@ -38,6 +38,10 @@ function lireErreurPg(erreur: unknown): ErreurPg | null {
   return null;
 }
 
+export function estViolationCleEtrangere(erreur: unknown): boolean {
+  return lireErreurPg(erreur)?.code === CLE_ETRANGERE;
+}
+
 export function estViolationUnicite(erreur: unknown, contrainte?: string): boolean {
   const pg = lireErreurPg(erreur);
   if (pg?.code !== UNICITE) return false;

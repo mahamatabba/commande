@@ -39,10 +39,14 @@ import { LOGO_AEI, LOGO_HP } from "./logos";
 
 const MARGE = 28;
 
+/** Bandeau de marque (logos + raison sociale). */
+const HAUTEUR_MARQUE = 96;
+/** Bandeau du titre du document (libellé, numéro, date). */
+const HAUTEUR_TITRE = 60;
 /** Hauteur exacte de l'en-tête, réservée en haut de chaque page. */
-const HAUTEUR_ENTETE = 133;
+const HAUTEUR_ENTETE = HAUTEUR_MARQUE + 4 + 2 + HAUTEUR_TITRE;
 /** Hauteur exacte du pied de page, réservée en bas de chaque page. */
-const HAUTEUR_PIED = 41;
+const HAUTEUR_PIED = 50;
 
 export const COULEURS = {
   encre: "#1A1917",
@@ -85,48 +89,65 @@ const styles = StyleSheet.create({
   // — En-tête ————————————————————————————————————————————————
   entete: { position: "absolute", top: 0, left: 0, right: 0 },
   enteteMarque: {
-    height: 64,
+    height: HAUTEUR_MARQUE,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: MARGE,
   },
-  enteteRaison: { flex: 1, alignItems: "center", paddingHorizontal: 14 },
-  filetOrange: { height: 3, backgroundColor: COULEURS.orange },
+  // Les deux logos occupent des cadres de même largeur : la raison sociale
+  // reste ainsi exactement centrée sur la feuille, quelle que soit la forme
+  // de chaque logo.
+  cadreLogo: { width: 92, height: 80, alignItems: "center", justifyContent: "center" },
+  enteteRaison: { flex: 1, alignItems: "center", paddingHorizontal: 10 },
+  filetOrange: { height: 4, backgroundColor: COULEURS.orange },
+  filetCyanFin: { height: 2, backgroundColor: COULEURS.cyan },
   enteteTitre: {
-    height: 66,
+    height: HAUTEUR_TITRE,
     flexDirection: "row",
-    alignItems: "flex-end",
+    alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: MARGE,
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: COULEURS.filetFonce,
-    borderTopStyle: "solid",
   },
-  carreAei: {
-    width: 28,
-    height: 28,
-    backgroundColor: COULEURS.navy,
-    alignItems: "center",
-    justifyContent: "center",
+  cartouche: {
+    flexDirection: "row",
+    borderWidth: 1,
+    borderColor: COULEURS.bordure,
+    borderStyle: "solid",
+  },
+  cartoucheCase: { paddingHorizontal: 12, paddingVertical: 6, minWidth: 92 },
+  cartoucheLabel: {
+    fontSize: 6.5,
+    fontFamily: "Helvetica-Bold",
+    color: COULEURS.gris,
+    letterSpacing: 0.6,
+    marginBottom: 3,
   },
 
   // — Pied de page ———————————————————————————————————————————
   pied: { position: "absolute", bottom: 0, left: 0, right: 0 },
   filetCyan: { height: 3, backgroundColor: COULEURS.cyan },
   piedCorps: {
-    height: 38,
+    height: HAUTEUR_PIED - 3,
     flexDirection: "row",
     alignItems: "stretch",
     justifyContent: "space-between",
+    backgroundColor: COULEURS.fond,
     // Pas de marge à droite : le badge NIF déborde jusqu'au bord du papier,
     // comme sur le papier à en-tête réel.
     paddingLeft: MARGE,
   },
+  piedColonne: { justifyContent: "center", marginRight: 22 },
+  piedLabel: {
+    fontSize: 6,
+    fontFamily: "Helvetica-Bold",
+    color: COULEURS.grisClair,
+    letterSpacing: 0.6,
+    marginBottom: 2,
+  },
   badgeNif: {
     backgroundColor: COULEURS.orange,
     justifyContent: "center",
-    paddingHorizontal: 14,
+    paddingHorizontal: 18,
   },
   numeroPage: {
     position: "absolute",
@@ -289,31 +310,54 @@ function EnTete({ label, numero, date }: { label: string; numero: string; date: 
   return (
     <View fixed style={styles.entete}>
       <View style={styles.enteteMarque}>
-        <ImagePdf src={LOGO_AEI} style={{ width: 56, height: 40 }} />
+        <View style={styles.cadreLogo}>
+          {/* Proportions d'origine du logo (248 × 215) : jamais déformé. */}
+          <ImagePdf src={LOGO_AEI} style={{ width: 88, height: 76 }} />
+        </View>
         <View style={styles.enteteRaison}>
-          <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: COULEURS.cyan }}>
+          <Text
+            style={{
+              fontSize: 15,
+              fontFamily: "Helvetica-Bold",
+              color: COULEURS.navy,
+              letterSpacing: 0.4,
+              textAlign: "center",
+            }}
+          >
             {AEI_INFO.nom}
           </Text>
-          <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold", marginTop: 2 }}>
+          <View style={{ height: 2, width: 60, backgroundColor: COULEURS.cyan, marginVertical: 5 }} />
+          <Text style={{ fontSize: 8.5, fontFamily: "Helvetica-Bold", color: COULEURS.cyan }}>
             {AEI_INFO.tagline}
           </Text>
-          <Text style={{ fontSize: 7, color: COULEURS.gris, marginTop: 2 }}>{AEI_INFO.adresse}</Text>
+          <Text style={{ fontSize: 7.5, color: COULEURS.gris, marginTop: 3, textAlign: "center" }}>
+            {AEI_INFO.adresse}
+          </Text>
         </View>
-        <ImagePdf src={LOGO_HP} style={{ width: 64, height: 42 }} />
+        <View style={styles.cadreLogo}>
+          <ImagePdf src={LOGO_HP} style={{ width: 66, height: 66 }} />
+        </View>
       </View>
       <View style={styles.filetOrange} />
+      <View style={styles.filetCyanFin} />
       <View style={styles.enteteTitre}>
-        <View style={styles.carreAei}>
-          <Text style={{ fontSize: 8, fontFamily: "Helvetica-Bold", color: COULEURS.blanc }}>
-            AEI
-          </Text>
-        </View>
-        <View style={{ alignItems: "flex-end" }}>
-          <Text style={{ fontSize: 17, fontFamily: "Helvetica-Bold", color: COULEURS.navy }}>
+        <View>
+          <Text style={{ fontSize: 20, fontFamily: "Helvetica-Bold", color: COULEURS.navy, letterSpacing: 0.8 }}>
             {label}
           </Text>
-          <Text style={{ fontSize: 9, marginTop: 3 }}>N° {numero}</Text>
-          <Text style={{ fontSize: 7.5, color: COULEURS.gris, marginTop: 2 }}>Date : {date}</Text>
+          <View style={{ height: 3, width: 36, backgroundColor: COULEURS.orange, marginTop: 4 }} />
+        </View>
+        <View style={styles.cartouche}>
+          <View style={[styles.cartoucheCase, { backgroundColor: COULEURS.navy }]}>
+            <Text style={[styles.cartoucheLabel, { color: "#C7D2DE" }]}>NUMÉRO</Text>
+            <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold", color: COULEURS.blanc }}>
+              {numero}
+            </Text>
+          </View>
+          <View style={styles.cartoucheCase}>
+            <Text style={styles.cartoucheLabel}>DATE</Text>
+            <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold" }}>{date}</Text>
+          </View>
         </View>
       </View>
     </View>
@@ -325,12 +369,15 @@ function PiedDePage() {
     <View fixed style={styles.pied}>
       <View style={styles.filetCyan} />
       <View style={styles.piedCorps}>
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold" }}>
-            {AEI_INFO.telephones.join("  -  ")}
-          </Text>
-          <View style={{ width: 18 }} />
-          <View>
+        <View style={{ flexDirection: "row", alignItems: "stretch" }}>
+          <View style={styles.piedColonne}>
+            <Text style={styles.piedLabel}>TÉLÉPHONE</Text>
+            <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold" }}>
+              {AEI_INFO.telephones.join("  ·  ")}
+            </Text>
+          </View>
+          <View style={styles.piedColonne}>
+            <Text style={styles.piedLabel}>EMAIL</Text>
             {AEI_INFO.emails.map((email) => (
               <Text
                 key={email}
@@ -342,8 +389,11 @@ function PiedDePage() {
           </View>
         </View>
         <View style={styles.badgeNif}>
-          <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold", color: COULEURS.blanc }}>
-            NIF : {AEI_INFO.nif}
+          <Text style={{ fontSize: 6, fontFamily: "Helvetica-Bold", color: COULEURS.blanc, letterSpacing: 0.6 }}>
+            NIF
+          </Text>
+          <Text style={{ fontSize: 9, fontFamily: "Helvetica-Bold", color: COULEURS.blanc }}>
+            {AEI_INFO.nif}
           </Text>
         </View>
       </View>
@@ -528,6 +578,47 @@ export function TotalSecondaire({
       <Text style={{ fontSize: 8, fontFamily: "Helvetica-Bold", color: couleurs.texte }}>
         {formatMontant(montant)}
       </Text>
+    </View>
+  );
+}
+
+/**
+ * Bandeau de conditions commerciales (délai de livraison, garantie,
+ * validité) : une case par condition, côte à côte. Une condition non
+ * renseignée n'apparaît pas.
+ */
+export function BlocConditions({ conditions }: { conditions: { label: string; valeur: string | null | undefined }[] }) {
+  const visibles = conditions.filter((c) => c.valeur);
+  if (visibles.length === 0) return null;
+  return (
+    <View
+      wrap={false}
+      style={{
+        flexDirection: "row",
+        borderWidth: 1,
+        borderColor: COULEURS.bordure,
+        borderStyle: "solid",
+        borderLeftWidth: 3,
+        borderLeftColor: COULEURS.cyan,
+        marginBottom: 12,
+      }}
+    >
+      {visibles.map((c, i) => (
+        <View
+          key={c.label}
+          style={{
+            flex: 1,
+            paddingHorizontal: 10,
+            paddingVertical: 7,
+            borderLeftWidth: i === 0 ? 0 : 1,
+            borderLeftColor: COULEURS.filetFonce,
+            borderLeftStyle: "solid",
+          }}
+        >
+          <Text style={styles.boiteTitre}>{c.label.toUpperCase()}</Text>
+          <Text style={{ fontSize: 8.5, fontFamily: "Helvetica-Bold" }}>{c.valeur}</Text>
+        </View>
+      ))}
     </View>
   );
 }

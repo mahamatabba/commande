@@ -28,7 +28,7 @@ export default async function PageNouvelleCommandeClient() {
   }));
 
   return (
-    <Stack gap="xl" maw={1024}>
+    <Stack gap="xl" maw={1320}>
       <div>
         <Title order={1} size="h2">Nouvelle vente</Title>
         <Text size="sm" c="dimmed" mt={4}>

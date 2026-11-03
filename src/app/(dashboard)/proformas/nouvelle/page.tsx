@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { requirePermission } from "@/lib/permissions";
+import { tauxParDefaut } from "@/lib/tva";
 import { formatMontant } from "@/lib/format";
 import { MODE_REGLEMENT_LABEL, libelle } from "@/lib/libelles";
 // Sous-composants importés à plat (`TableThead`) et non en notation pointée
@@ -31,7 +32,7 @@ export default async function PageNouvelleProforma({
 
   const commande = await db.query.commandesClient.findFirst({
     where: (c, { eq }) => eq(c.id, id),
-    with: { client: true, lignes: true, proformas: true },
+    with: { client: true, lignes: { with: { article: { columns: { tauxTva: true } } } }, proformas: true },
   });
   if (!commande) notFound();
 
@@ -108,7 +109,7 @@ export default async function PageNouvelleProforma({
           </Card>
         </GridCol>
 
-        <GridCol span={{ base: 12, lg: 4 }} style={{ position: "sticky", top: "1.5rem" }}>
+        <GridCol span={{ base: 12, lg: 4 }} style={{ position: "sticky", top: "6.5rem" }}>
           <Card withBorder radius="md">
             <Stack gap="md">
               <Title order={2} size="h5">Chiffrage</Title>
@@ -130,6 +131,7 @@ export default async function PageNouvelleProforma({
                 commandeClientId={commande.id}
                 montantHt={commande.montantTotal}
                 exonerePartDefaut={commande.client.exonereTva}
+                tauxParDefaut={tauxParDefaut(commande.lignes.map((l) => l.article?.tauxTva))}
               />
             </Stack>
           </Card>

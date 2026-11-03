@@ -17,11 +17,12 @@ export const AEI_INFO = {
  * des montants HORS TAXE : la TVA s'ajoute par-dessus à l'émission de la
  * facture, elle n'est jamais déduite d'un total réputé TTC.
  *
- * Ce taux n'est qu'une valeur par défaut. Le taux réellement appliqué est
+ * Ce taux n'est qu'une valeur par défaut, proposée à l'émission : il reste
+ * modifiable sur chaque facture et chaque proforma. Le taux réellement appliqué est
  * figé sur la facture (`factures.tauxTva`) au moment de l'émission, pour que
  * les factures déjà émises ne bougent plus si le taux légal change.
  */
-export const TAUX_TVA_STANDARD = 19.5;
+export const TAUX_TVA_STANDARD = 19.25;
 
 /**
  * Palette catégorielle de référence (voir skill dataviz) : 8 teintes, ordre

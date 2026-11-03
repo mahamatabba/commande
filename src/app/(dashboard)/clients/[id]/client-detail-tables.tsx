@@ -93,7 +93,7 @@ export function ClientDetailTables({
               {
                 accessor: "modeReglement",
                 title: "Mode de règlement",
-                render: (c) => (c.modeReglement === "ESPECES" ? "Espèces" : "Bon de commande"),
+                render: (c) => (c.modeReglement === "ESPECES" ? "Espèces" : "À crédit"),
               },
               {
                 accessor: "statut",

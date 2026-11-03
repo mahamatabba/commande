@@ -118,14 +118,14 @@ export function LignesEditor({
       <input type="hidden" name={name} value={JSON.stringify(lignes)} />
 
       <div className="overflow-x-auto rounded-md border border-[var(--mantine-color-dark-4)] bg-[var(--mantine-color-dark-6)]">
-        <Table verticalSpacing="xs">
+        <Table verticalSpacing="xs" miw={880}>
           <Table.Thead>
             <Table.Tr>
               <Table.Th w={80}>Code</Table.Th>
               <Table.Th w={224}>Article</Table.Th>
-              <Table.Th>Désignation</Table.Th>
+              <Table.Th miw={200}>Désignation</Table.Th>
               <Table.Th w={128}>Qté</Table.Th>
-              <Table.Th w={128}>P.U. HT</Table.Th>
+              <Table.Th w={150}>P.U. HT</Table.Th>
               <Table.Th w={128} ta="right">Montant HT</Table.Th>
               <Table.Th w={40} />
             </Table.Tr>

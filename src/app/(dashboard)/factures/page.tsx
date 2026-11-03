@@ -16,7 +16,7 @@ import {
   lireStatut,
 } from "@/lib/filtres";
 import { PaginationListe } from "@/components/shared/pagination-liste";
-import { Button, Group, Paper, Select, Stack, TextInput, Title } from "@mantine/core";
+import { Alert, Button, Group, Paper, Select, Stack, TextInput, Title } from "@mantine/core";
 import { FacturesTable } from "./factures-table";
 
 /** Nombre de factures affichées par page. */
@@ -25,7 +25,7 @@ const PAR_PAGE = 50;
 export default async function PageFactures({
   searchParams,
 }: {
-  searchParams: Promise<{ statut?: string; du?: string; au?: string; page?: string }>;
+  searchParams: Promise<{ statut?: string; du?: string; au?: string; page?: string; supprimee?: string }>;
 }) {
   const session = await auth();
   requirePermission(session, "factures:read");
@@ -95,6 +95,11 @@ export default async function PageFactures({
   return (
     <Stack gap="md">
       <Title order={1} size="h2">Factures</Title>
+      {params.supprimee === "1" && (
+        <Alert color="green" variant="light">
+          La facture annulée a été supprimée définitivement.
+        </Alert>
+      )}
 
       <form>
         <Group align="flex-end" wrap="wrap" gap="sm">

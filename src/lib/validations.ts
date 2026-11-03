@@ -25,6 +25,30 @@ const dateMetier = z.coerce
     "La date ne peut pas être dans le futur",
   );
 
+/**
+ * Taux de TVA saisi en pourcentage. Accepte la virgule française (« 19,25 »)
+ * aussi bien que le point : sans cette tolérance, « 19,25 » n'était pas un
+ * nombre, la valeur était écartée et c'est le taux par défaut qui finissait
+ * sur la facture.
+ */
+export const tauxTvaSaisi = z.preprocess(
+  (v) => (typeof v === "string" ? v.trim().replace(",", ".") : v),
+  z.coerce
+    .number({ message: "Le taux de TVA doit être un nombre" })
+    .min(0, "Le taux de TVA ne peut pas être négatif")
+    .max(100, "Le taux de TVA ne peut pas dépasser 100 %")
+    // Deux décimales au plus : c'est la précision de la colonne en base.
+    .transform((n) => Math.round(n * 100) / 100),
+);
+
+/** Texte libre facultatif borné à la taille de la colonne (255). */
+const optionalCourt = z
+  .string()
+  .max(255, "255 caractères maximum")
+  .optional()
+  .or(z.literal(""))
+  .transform((v) => (v ? v.trim() || null : null));
+
 const optionalTexte = z
   .string()
   .optional()
@@ -68,7 +92,10 @@ export const articleSchema = z.object({
   designation: z.string().min(1, "La désignation est requise"),
   prixAchatIndicatif: z.coerce.number().int().min(0),
   prixVente: z.coerce.number().int().min(0),
-  tauxTva: z.coerce.number().min(0).max(100).default(TAUX_TVA_STANDARD),
+  tauxTva: z.preprocess(
+    (v) => (v === "" || v == null ? TAUX_TVA_STANDARD : v),
+    tauxTvaSaisi,
+  ),
 });
 export type ArticleInput = z.infer<typeof articleSchema>;
 
@@ -113,6 +140,7 @@ export const emissionFactureSchema = z.object({
   regimeTva: z.enum(["ASSUJETTI", "EXONERE"], {
     message: "Précisez si la facture est soumise à la TVA",
   }),
+  tauxTva: tauxTvaSaisi,
 });
 export type EmissionFactureInput = z.infer<typeof emissionFactureSchema>;
 
@@ -132,6 +160,9 @@ export const emissionProformaSchema = z.object({
     .int("La durée de validité doit être un nombre entier de jours")
     .min(1, "La proforma doit être valable au moins un jour")
     .max(365, "La durée de validité ne peut pas dépasser un an"),
+  tauxTva: tauxTvaSaisi,
+  delaiLivraison: optionalCourt,
+  garantie: optionalCourt,
 });
 export type EmissionProformaInput = z.infer<typeof emissionProformaSchema>;
 
@@ -181,3 +212,12 @@ export const utilisateurModificationSchema = z.object({
   actif: z.coerce.boolean(),
 });
 export type UtilisateurModificationInput = z.infer<typeof utilisateurModificationSchema>;
+
+/**
+ * Modification d'une proforma encore en circulation : mêmes conditions qu'à
+ * l'établissement, plus les lignes chiffrées (prix négocié, quantité revue).
+ */
+export const modificationProformaSchema = emissionProformaSchema
+  .omit({ commandeClientId: true })
+  .extend({ lignes: z.array(ligneSchema).min(1, "Au moins une ligne est requise") });
+export type ModificationProformaInput = z.infer<typeof modificationProformaSchema>;

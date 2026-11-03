@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { requirePermission } from "@/lib/permissions";
+import { tauxParDefaut } from "@/lib/tva";
 import { formatMontant } from "@/lib/format";
 // Sous-composants importés à plat (`TableThead`) et non en notation pointée
 // (`Table.Thead`) : dans un composant serveur, `Table` n'est qu'une référence
@@ -13,7 +14,7 @@ import { EmettreFactureForm } from "@/components/factures/emettre-facture-form";
 
 const MODE_LABEL: Record<string, string> = {
   ESPECES: "Espèces (comptant)",
-  BON_DE_COMMANDE: "Bon de commande (à crédit)",
+  BON_DE_COMMANDE: "À crédit",
 };
 
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
@@ -35,7 +36,7 @@ export default async function PageNouvelleFacture({
 
   const commande = await db.query.commandesClient.findFirst({
     where: (c, { eq }) => eq(c.id, id),
-    with: { client: true, lignes: true },
+    with: { client: true, lignes: { with: { article: { columns: { tauxTva: true } } } } },
   });
   if (!commande) notFound();
 
@@ -98,7 +99,7 @@ export default async function PageNouvelleFacture({
           </Card>
         </GridCol>
 
-        <GridCol span={{ base: 12, lg: 4 }} style={{ position: "sticky", top: "1.5rem" }}>
+        <GridCol span={{ base: 12, lg: 4 }} style={{ position: "sticky", top: "6.5rem" }}>
           <Card withBorder radius="md">
             <Stack gap="md">
               <Title order={2} size="h5">Récapitulatif</Title>
@@ -110,7 +111,7 @@ export default async function PageNouvelleFacture({
                 </Alert>
               ) : (
                 <Alert color="yellow" variant="light">
-                  Bon de commande : la facture sera émise avec le statut &laquo;&nbsp;Non payée&nbsp;&raquo;. Les
+                  Vente à crédit : la facture sera émise avec le statut &laquo;&nbsp;Non payée&nbsp;&raquo;. Les
                   règlements se saisissent ensuite depuis l&apos;écran Règlements.
                 </Alert>
               )}
@@ -126,6 +127,7 @@ export default async function PageNouvelleFacture({
                 commandeClientId={commande.id}
                 montantHt={commande.montantTotal}
                 exonerePartDefaut={commande.client.exonereTva}
+                tauxParDefaut={tauxParDefaut(commande.lignes.map((l) => l.article?.tauxTva))}
               />
             </Stack>
           </Card>

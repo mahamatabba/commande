@@ -31,8 +31,8 @@ export function CommandeClientForm({
   const [total, setTotal] = useState(0);
 
   return (
-    <form action={formAction} className="grid gap-6 lg:grid-cols-3 lg:items-start">
-      <div className="space-y-6 lg:col-span-2">
+    <form action={formAction} className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_340px] 2xl:items-start">
+      <div className="min-w-0 space-y-6">
         <Card withBorder radius="md" padding="lg">
           <Text fw={600} mb="md">Informations de la vente</Text>
           <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
@@ -75,7 +75,7 @@ export function CommandeClientForm({
               required
               data={[
                 { value: "ESPECES", label: "Espèces (comptant)" },
-                { value: "BON_DE_COMMANDE", label: "Bon de commande (à crédit)" },
+                { value: "BON_DE_COMMANDE", label: "À crédit" },
               ]}
             />
           </SimpleGrid>
@@ -87,7 +87,7 @@ export function CommandeClientForm({
         </Card>
       </div>
 
-      <div className="lg:sticky lg:top-6">
+      <div className="2xl:sticky 2xl:top-[6.5rem]">
         <Card withBorder radius="md" padding="lg">
           <Text fw={600} mb="md">Récapitulatif</Text>
           <Stack gap="md">

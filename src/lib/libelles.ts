@@ -15,7 +15,9 @@ export const MOYEN_REGLEMENT_LABEL: Record<string, string> = {
 
 export const MODE_REGLEMENT_LABEL: Record<string, string> = {
   ESPECES: "Espèces",
-  BON_DE_COMMANDE: "Bon de commande",
+  // Valeur technique historique : côté ventes, il s'agit d'une vente à
+  // crédit (le « bon de commande » est réservé aux achats fournisseurs).
+  BON_DE_COMMANDE: "À crédit",
 };
 
 export const STATUT_FACTURE_LABEL: Record<string, string> = {

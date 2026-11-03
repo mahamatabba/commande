@@ -81,10 +81,10 @@ export default async function PageCommandesFournisseur({
   return (
     <Stack gap="md">
       <Group justify="space-between" wrap="wrap" gap="sm">
-        <Title order={1} size="h2">Achats</Title>
+        <Title order={1} size="h2">Achats — bons de commande</Title>
         {peutEcrire && (
           <Button component={Link} href="/commandes-fournisseur/nouvelle">
-            Nouvel achat
+            Nouveau bon de commande
           </Button>
         )}
       </Group>

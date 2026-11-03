@@ -72,7 +72,7 @@ export function FacturePdf({ facture }: { facture: DonneesFacture }) {
                 {libelle(STATUT_FACTURE_LABEL, facture.statut)}
               </BadgeStatut>
             </Rang>
-            <Rang label="Bon de commande">{facture.commandeClient.numero}</Rang>
+            <Rang label="Référence vente">{facture.commandeClient.numero}</Rang>
             <Rang label="Mode de règlement">
               {libelle(MODE_REGLEMENT_LABEL, facture.commandeClient.modeReglement)}
             </Rang>

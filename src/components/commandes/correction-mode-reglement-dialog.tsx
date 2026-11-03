@@ -50,7 +50,7 @@ export function CorrectionModeReglementDialog({
                 required
                 data={[
                   { value: "ESPECES", label: "Espèces (comptant)" },
-                  { value: "BON_DE_COMMANDE", label: "Bon de commande (à crédit)" },
+                  { value: "BON_DE_COMMANDE", label: "À crédit" },
                 ]}
               />
               {state.error && (

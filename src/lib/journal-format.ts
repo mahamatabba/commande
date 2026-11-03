@@ -8,7 +8,7 @@ const ROLE_LABEL: Record<string, string> = {
 
 const MODE_REGLEMENT_LABEL: Record<string, string> = {
   ESPECES: "Espèces",
-  BON_DE_COMMANDE: "Bon de commande",
+  BON_DE_COMMANDE: "À crédit",
 };
 
 const STATUT_LABEL: Record<string, string> = {
@@ -41,6 +41,10 @@ export function formaterDetailsJournal(entite: string, details: unknown): string
 
   if (entite === "utilisateur") {
     if (d.motDePasseReinitialise) return "Mot de passe réinitialisé";
+    if (typeof d.supprimeDefinitivement === "boolean") {
+      const qui = [texte(d.nomComplet), texte(d.email)].filter(Boolean).join(" — ");
+      return `${qui} — compte supprimé${d.supprimeDefinitivement ? "" : " (conservé pour l'historique de ses pièces)"}`;
+    }
     const role = texte(d.role);
     if (role) {
       const parties = [texte(d.nomComplet), ROLE_LABEL[role] ?? role, texte(d.email)];
@@ -66,6 +70,13 @@ export function formaterDetailsJournal(entite: string, details: unknown): string
       return [numero, montant !== undefined ? formatMontant(montant) : undefined, mode ? `(${MODE_REGLEMENT_LABEL[mode] ?? mode})` : undefined]
         .filter(Boolean)
         .join(" — ");
+    }
+  }
+
+  if (entite === "facture" || entite === "proforma") {
+    if (typeof d.reglementsSupprimes === "number" || d.suppression === true) {
+      const montant = nombre(d.montantTotal);
+      return `${texte(d.numero) ?? ""} supprimée${montant !== undefined ? ` — ${formatMontant(montant)}` : ""}`.trim();
     }
   }
 

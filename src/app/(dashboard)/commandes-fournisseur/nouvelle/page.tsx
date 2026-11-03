@@ -28,9 +28,9 @@ export default async function PageNouvelleCommandeFournisseur() {
   }));
 
   return (
-    <Stack gap="xl" maw={1024}>
+    <Stack gap="xl" maw={1320}>
       <div>
-        <Title order={1} size="h2">Nouvel achat</Title>
+        <Title order={1} size="h2">Nouveau bon de commande fournisseur</Title>
         <Text size="sm" c="dimmed" mt={4}>
           Sélectionnez le fournisseur, ajoutez les articles puis validez pour créer la commande.
         </Text>

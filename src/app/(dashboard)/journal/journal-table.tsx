@@ -11,6 +11,7 @@ const LABEL_ACTION: Record<string, string> = {
   annulation: "Annulation",
   reglement: "Règlement",
   conversion: "Conversion",
+  suppression: "Suppression",
   connexion: "Connexion",
 };
 

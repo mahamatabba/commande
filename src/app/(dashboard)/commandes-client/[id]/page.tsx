@@ -77,9 +77,9 @@ export default async function PageCommandeClient({
         <Group gap="xs" wrap="wrap">
           <ApercuDocumentDialog
             href={`/commandes-client/${commande.id}/pdf`}
-            titre={`Bon de commande ${commande.numero}`}
-            nomFichier={`bon-commande-${commande.numero}`}
-            trigger={<Button variant="outline">Voir le bon de commande</Button>}
+            titre={`Bon de livraison ${commande.numero}`}
+            nomFichier={`bon-livraison-${commande.numero}`}
+            trigger={<Button variant="outline">Voir le bon de livraison</Button>}
             defaultOpen={nouveau === "1"}
           />
           {peutEcrire && commande.statut === "BROUILLON" && (

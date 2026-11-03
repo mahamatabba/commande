@@ -1,116 +1,114 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Button, Group, NumberInput, Radio, Stack, Text } from "@mantine/core";
-import { formatDate, formatMontant } from "@/lib/format";
-import { TAUX_TVA_STANDARD } from "@/lib/constants";
-import { decomposerTva, formatTaux } from "@/lib/tva";
+import { Button, NumberInput, Stack, Text, TextInput } from "@mantine/core";
+import { formatDate } from "@/lib/format";
+import { RecapitulatifTva, RegimeTvaFields } from "@/components/documents/regime-tva-fields";
 import { emettreProforma } from "@/app/(dashboard)/proformas/actions";
 
-const VALIDITE_PAR_DEFAUT = 30;
+export const VALIDITE_PAR_DEFAUT = 30;
 
 /**
- * Même choix de régime de TVA que pour une facture — le montant annoncé au
- * client en dépend — auquel s'ajoute la durée de validité de l'offre, qui
- * sera imprimée sur le document.
+ * Conditions commerciales imprimées sur la proforma : durée de validité de
+ * l'offre, délai de livraison et garantie. Partagées entre l'établissement
+ * et la modification d'une proforma.
+ */
+export function ConditionsProformaFields({
+  validiteJours,
+  onValiditeChange,
+  delaiLivraison,
+  garantie,
+  depuis = new Date(),
+}: {
+  validiteJours: string | number;
+  onValiditeChange: (v: string | number) => void;
+  delaiLivraison?: string | null;
+  garantie?: string | null;
+  /** Date à partir de laquelle la validité court (date de la proforma). */
+  depuis?: Date;
+}) {
+  // Aperçu de l'échéance : le client doit voir, avant de valider, jusqu'à
+  // quelle date le prix annoncé l'engage.
+  const jours = Number(validiteJours);
+  const echeance =
+    Number.isInteger(jours) && jours >= 1 && jours <= 365
+      ? new Date(depuis.getTime() + jours * 24 * 60 * 60 * 1000)
+      : null;
+
+  return (
+    <>
+      <NumberInput
+        label="Validité de l'offre (jours)"
+        name="validiteJours"
+        min={1}
+        max={365}
+        required
+        value={validiteJours}
+        onChange={onValiditeChange}
+        description={
+          echeance
+            ? `Le prix annoncé engage AEI jusqu'au ${formatDate(echeance)}.`
+            : "Indiquez un nombre de jours entre 1 et 365."
+        }
+      />
+      <TextInput
+        label="Délai de livraison"
+        name="delaiLivraison"
+        placeholder="Ex. : 15 jours après réception du bon de commande"
+        maxLength={255}
+        defaultValue={delaiLivraison ?? ""}
+      />
+      <TextInput
+        label="Garantie"
+        name="garantie"
+        placeholder="Ex. : 12 mois pièces et main-d'œuvre"
+        maxLength={255}
+        defaultValue={garantie ?? ""}
+      />
+    </>
+  );
+}
+
+/**
+ * Même choix de régime et de taux de TVA que pour une facture — le montant
+ * annoncé au client en dépend — auxquels s'ajoutent les conditions de l'offre
+ * (validité, délai de livraison, garantie), imprimées sur le document.
  */
 export function EmettreProformaForm({
   commandeClientId,
   montantHt,
   exonerePartDefaut,
+  tauxParDefaut,
 }: {
   commandeClientId: number;
   montantHt: number;
   exonerePartDefaut: boolean;
+  tauxParDefaut: number;
 }) {
   const [state, formAction, pending] = useActionState(emettreProforma, {
     error: null,
     success: false,
   });
   const [exonere, setExonere] = useState(exonerePartDefaut);
+  const [taux, setTaux] = useState<string | number>(tauxParDefaut);
   const [validiteJours, setValiditeJours] = useState<string | number>(VALIDITE_PAR_DEFAUT);
-
-  const totaux = decomposerTva(montantHt, { exonere });
-
-  // Aperçu de l'échéance : le client doit voir, avant de valider, jusqu'à
-  // quelle date le prix annoncé l'engage.
-  const jours = Number(validiteJours);
-  const echeance =
-    Number.isInteger(jours) && jours >= 1 && jours <= 365
-      ? new Date(Date.now() + jours * 24 * 60 * 60 * 1000)
-      : null;
 
   return (
     <form action={formAction}>
       <Stack gap="md">
         <input type="hidden" name="commandeClientId" value={commandeClientId} />
-        <input type="hidden" name="regimeTva" value={exonere ? "EXONERE" : "ASSUJETTI"} />
 
-        <Radio.Group
-          label="TVA"
-          value={exonere ? "EXONERE" : "ASSUJETTI"}
-          onChange={(v) => setExonere(v === "EXONERE")}
-        >
-          <Stack gap="xs" mt="xs">
-            <Radio.Card value="ASSUJETTI" radius="md" p="sm">
-              <Group wrap="nowrap" align="flex-start" gap="sm">
-                <Radio.Indicator mt={2} />
-                <div>
-                  <Text size="sm" fw={500}>Soumise à la TVA</Text>
-                  <Text size="xs" c="dimmed">
-                    {formatTaux(TAUX_TVA_STANDARD)} ajoutés au montant hors taxe.
-                  </Text>
-                </div>
-              </Group>
-            </Radio.Card>
-
-            <Radio.Card value="EXONERE" radius="md" p="sm">
-              <Group wrap="nowrap" align="flex-start" gap="sm">
-                <Radio.Indicator mt={2} />
-                <div>
-                  <Text size="sm" fw={500}>Exonérée</Text>
-                  <Text size="xs" c="dimmed">
-                    Aucune TVA annoncée. Le client paiera le montant hors taxe.
-                  </Text>
-                </div>
-              </Group>
-            </Radio.Card>
-          </Stack>
-        </Radio.Group>
-
-        <NumberInput
-          label="Validité de l'offre (jours)"
-          name="validiteJours"
-          min={1}
-          max={365}
-          required
-          value={validiteJours}
-          onChange={setValiditeJours}
-          description={
-            echeance
-              ? `Le prix annoncé engage AEI jusqu'au ${formatDate(echeance)}.`
-              : "Indiquez un nombre de jours entre 1 et 365."
-          }
+        <RegimeTvaFields
+          exonere={exonere}
+          onExonereChange={setExonere}
+          taux={taux}
+          onTauxChange={setTaux}
+          libelleDocument="proforma"
         />
 
-        <Stack gap={6} pt="md" style={{ borderTop: "1px solid var(--mantine-color-dark-4)" }}>
-          <Group justify="space-between">
-            <Text size="sm" c="dimmed">Total HT</Text>
-            <Text size="sm" className="font-mono tabular-nums">{formatMontant(totaux.montantHt)}</Text>
-          </Group>
-          <Group justify="space-between">
-            <Text size="sm" c="dimmed">
-              TVA {totaux.exonereTva ? "(exonérée)" : `(${formatTaux(totaux.tauxTva)})`}
-            </Text>
-            <Text size="sm" className="font-mono tabular-nums">{formatMontant(totaux.montantTva)}</Text>
-          </Group>
-          <Group justify="space-between" pt="xs" style={{ borderTop: "1px solid var(--mantine-color-dark-4)" }}>
-            <Text size="sm" fw={500}>Total TTC</Text>
-            <Text size="xl" fw={600} className="font-mono tabular-nums">
-              {formatMontant(totaux.montantTotal)}
-            </Text>
-          </Group>
-        </Stack>
+        <ConditionsProformaFields validiteJours={validiteJours} onValiditeChange={setValiditeJours} />
+
+        <RecapitulatifTva montantHt={montantHt} exonere={exonere} taux={taux} />
 
         {state.error && <Text size="sm" c="red">{state.error}</Text>}
 

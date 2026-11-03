@@ -1,5 +1,5 @@
 import { auth, signOut } from "@/auth";
-import { getNavItems } from "@/lib/nav";
+import { getNavSections } from "@/lib/nav";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 
 export default async function DashboardLayout({
@@ -8,7 +8,7 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
-  const navItems = getNavItems(session);
+  const navSections = getNavSections(session);
 
   async function signOutAction() {
     "use server";
@@ -17,7 +17,7 @@ export default async function DashboardLayout({
 
   return (
     <DashboardShell
-      navItems={navItems}
+      navSections={navSections}
       userName={session?.user?.name}
       userRole={session?.user?.role}
       signOutAction={signOutAction}

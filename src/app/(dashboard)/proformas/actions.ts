@@ -1,13 +1,17 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { clients, commandesClient, proformas } from "@/db/schema";
+import { articles, clients, commandesClient, lignesCommandeClient, proformas } from "@/db/schema";
 import { requirePermission } from "@/lib/permissions";
-import { annulationSchema, emissionProformaSchema } from "@/lib/validations";
+import {
+  annulationSchema,
+  emissionProformaSchema,
+  modificationProformaSchema,
+} from "@/lib/validations";
 import { tracerActivite } from "@/lib/journal";
 import { genererNumero } from "@/lib/numerotation";
 import { creerFactureDansTransaction } from "@/lib/facturation";
@@ -36,6 +40,9 @@ export async function emettreProforma(
     commandeClientId: formData.get("commandeClientId"),
     regimeTva: formData.get("regimeTva"),
     validiteJours: formData.get("validiteJours"),
+    tauxTva: formData.get("tauxTva"),
+    delaiLivraison: formData.get("delaiLivraison") ?? "",
+    garantie: formData.get("garantie") ?? "",
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0].message, success: false };
@@ -92,6 +99,7 @@ export async function emettreProforma(
 
       const totaux = decomposerTva(commande.montantTotal, {
         exonere: parsed.data.regimeTva === "EXONERE",
+        taux: parsed.data.tauxTva,
       });
 
       const dateProforma = new Date();
@@ -113,6 +121,8 @@ export async function emettreProforma(
           tauxTva: totaux.tauxTva,
           montantTva: totaux.montantTva,
           montantTotal: totaux.montantTotal,
+          delaiLivraison: parsed.data.delaiLivraison,
+          garantie: parsed.data.garantie,
           nifClient: client?.nif ?? null,
           createdBy: Number(session.user.id),
         })
@@ -291,4 +301,208 @@ export async function annulerProforma(
   revalidatePath(`/proformas/${id}`);
   revalidatePath("/commandes-client");
   return { error: null, success: true };
+}
+
+/**
+ * Modifie une proforma encore en circulation : prix ou quantités renégociés,
+ * taux ou régime de TVA, validité, délai de livraison, garantie.
+ *
+ * Les lignes chiffrées d'une proforma sont celles de la vente : les modifier
+ * ici réécrit donc les lignes de la vente, qui n'est pas encore facturée. Les
+ * montants de la proforma sont recalculés et figés à nouveau, si bien que la
+ * conversion produira une facture identique au document modifié.
+ *
+ * La date de validité repart de la date d'origine de la proforma : modifier
+ * une offre ne la prolonge que si l'on augmente explicitement sa durée.
+ */
+export async function modifierProforma(
+  id: number,
+  _prevState: EtatFormulaire,
+  formData: FormData,
+): Promise<EtatFormulaire> {
+  const session = await auth();
+  requirePermission(session, "factures:emettre");
+
+  let lignesBrutes: unknown;
+  try {
+    lignesBrutes = JSON.parse(String(formData.get("lignes") ?? "[]"));
+  } catch {
+    return { error: "Lignes invalides.", success: false };
+  }
+
+  const parsed = modificationProformaSchema.safeParse({
+    regimeTva: formData.get("regimeTva"),
+    validiteJours: formData.get("validiteJours"),
+    tauxTva: formData.get("tauxTva"),
+    delaiLivraison: formData.get("delaiLivraison") ?? "",
+    garantie: formData.get("garantie") ?? "",
+    lignes: lignesBrutes,
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message, success: false };
+  }
+  const { lignes } = parsed.data;
+
+  try {
+    await db.transaction(async (tx) => {
+      const [proforma] = await tx
+        .select()
+        .from(proformas)
+        .where(eq(proformas.id, id))
+        .limit(1)
+        .for("update");
+
+      if (!proforma) throw new ErreurMetier("Proforma introuvable.");
+      if (proforma.statut !== "EMISE") {
+        throw new ErreurMetier(
+          proforma.statut === "CONVERTIE"
+            ? "Cette proforma a déjà été convertie en facture : elle ne peut plus être modifiée."
+            : "Cette proforma est annulée : elle ne peut plus être modifiée.",
+        );
+      }
+
+      const [commande] = await tx
+        .select()
+        .from(commandesClient)
+        .where(eq(commandesClient.id, proforma.commandeClientId))
+        .limit(1)
+        .for("update");
+      if (!commande) throw new ErreurMetier("Vente introuvable.");
+      if (commande.statut !== "VALIDEE") {
+        throw new ErreurMetier("La vente liée n'est plus au statut « Validée » : modification impossible.");
+      }
+
+      const idsArticles = [...new Set(lignes.map((l) => l.articleId).filter((a): a is number => a != null))];
+      const catalogue = idsArticles.length
+        ? await tx
+            .select({ id: articles.id, prixAchatIndicatif: articles.prixAchatIndicatif })
+            .from(articles)
+            .where(inArray(articles.id, idsArticles))
+        : [];
+      const parId = new Map(catalogue.map((a) => [a.id, a]));
+      if (parId.size !== idsArticles.length) {
+        throw new ErreurMetier("Un article de la proforma n'existe plus.");
+      }
+
+      // Prix d'achat des lignes existantes : conservés pour un article déjà
+      // présent, afin que la marge ne bouge pas du seul fait d'une retouche.
+      const anciennes = await tx
+        .select({ articleId: lignesCommandeClient.articleId, prixAchatUnitaire: lignesCommandeClient.prixAchatUnitaire })
+        .from(lignesCommandeClient)
+        .where(eq(lignesCommandeClient.commandeId, commande.id));
+      const prixAchatConnu = new Map(
+        anciennes.filter((l) => l.articleId != null).map((l) => [l.articleId!, l.prixAchatUnitaire]),
+      );
+
+      const montantHt = lignes.reduce((s, l) => s + Math.round(l.quantite * l.prixUnitaire), 0);
+
+      await tx.delete(lignesCommandeClient).where(eq(lignesCommandeClient.commandeId, commande.id));
+      await tx.insert(lignesCommandeClient).values(
+        lignes.map((l) => ({
+          commandeId: commande.id,
+          articleId: l.articleId,
+          designation: l.designation,
+          quantite: l.quantite,
+          prixUnitaire: l.prixUnitaire,
+          montantLigne: Math.round(l.quantite * l.prixUnitaire),
+          prixAchatUnitaire: l.articleId
+            ? (prixAchatConnu.get(l.articleId) ?? parId.get(l.articleId)?.prixAchatIndicatif ?? null)
+            : null,
+        })),
+      );
+      await tx.update(commandesClient).set({ montantTotal: montantHt }).where(eq(commandesClient.id, commande.id));
+
+      const totaux = decomposerTva(montantHt, {
+        exonere: parsed.data.regimeTva === "EXONERE",
+        taux: parsed.data.tauxTva,
+      });
+      const dateValidite = new Date(proforma.dateProforma);
+      dateValidite.setDate(dateValidite.getDate() + parsed.data.validiteJours);
+
+      await tx
+        .update(proformas)
+        .set({
+          dateValidite,
+          montantHt: totaux.montantHt,
+          exonereTva: totaux.exonereTva,
+          tauxTva: totaux.tauxTva,
+          montantTva: totaux.montantTva,
+          montantTotal: totaux.montantTotal,
+          delaiLivraison: parsed.data.delaiLivraison,
+          garantie: parsed.data.garantie,
+        })
+        .where(eq(proformas.id, id));
+
+      await tracerActivite(tx, {
+        userId: Number(session.user.id),
+        action: "modification",
+        entite: "proforma",
+        entiteId: id,
+        details: {
+          numero: proforma.numero,
+          ancienMontantTotal: proforma.montantTotal,
+          montantTotal: totaux.montantTotal,
+          tauxTva: totaux.tauxTva,
+        },
+      });
+    });
+  } catch (e) {
+    if (e instanceof ErreurMetier) return { error: e.message, success: false };
+    const message = messageErreurBase(e);
+    if (message) return { error: message, success: false };
+    throw e;
+  }
+
+  revalidatePath("/proformas");
+  revalidatePath(`/proformas/${id}`);
+  revalidatePath("/commandes-client");
+  redirect(`/proformas/${id}?modifiee=1`);
+}
+
+/**
+ * Supprime définitivement une proforma ANNULÉE. Une proforma n'a produit
+ * aucune écriture : la supprimer ne touche ni la caisse ni les ventes.
+ */
+export async function supprimerProforma(
+  id: number,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _prevState: EtatFormulaire,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _formData: FormData,
+): Promise<EtatFormulaire> {
+  const session = await auth();
+  requirePermission(session, "annulation:effectuer");
+
+  try {
+    await db.transaction(async (tx) => {
+      const [proforma] = await tx
+        .select()
+        .from(proformas)
+        .where(eq(proformas.id, id))
+        .limit(1)
+        .for("update");
+      if (!proforma) throw new ErreurMetier("Proforma introuvable.");
+      if (proforma.statut !== "ANNULEE") {
+        throw new ErreurMetier("Seule une proforma annulée peut être supprimée. Annulez-la d'abord.");
+      }
+
+      await tx.delete(proformas).where(eq(proformas.id, id));
+
+      await tracerActivite(tx, {
+        userId: Number(session.user.id),
+        action: "suppression",
+        entite: "proforma",
+        entiteId: id,
+        details: { numero: proforma.numero, montantTotal: proforma.montantTotal, suppression: true },
+      });
+    });
+  } catch (e) {
+    if (e instanceof ErreurMetier) return { error: e.message, success: false };
+    const message = messageErreurBase(e);
+    if (message) return { error: message, success: false };
+    throw e;
+  }
+
+  revalidatePath("/proformas");
+  redirect("/proformas?supprimee=1");
 }

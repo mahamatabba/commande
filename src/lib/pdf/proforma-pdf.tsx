@@ -3,6 +3,7 @@ import { formatTaux } from "@/lib/tva";
 import { MODE_REGLEMENT_LABEL, libelle } from "@/lib/libelles";
 import {
   Avertissement,
+  BlocConditions,
   BlocTiers,
   BlocTotaux,
   DeuxBoites,
@@ -26,6 +27,8 @@ export type DonneesProforma = {
   montantHt: number;
   montantTva: number;
   montantTotal: number;
+  delaiLivraison: string | null;
+  garantie: string | null;
   nifClient: string | null;
   client: {
     nom: string;
@@ -94,6 +97,14 @@ export function ProformaPdf({ proforma }: { proforma: DonneesProforma }) {
         />
         <TotalPrincipal label="Total TTC" montant={montantTTC} />
       </BlocTotaux>
+
+      <BlocConditions
+        conditions={[
+          { label: "Délai de livraison", valeur: proforma.delaiLivraison },
+          { label: "Garantie", valeur: proforma.garantie },
+          { label: "Validité de l'offre", valeur: `Jusqu'au ${formatDate(proforma.dateValidite)}` },
+        ]}
+      />
 
       <MentionMontant>
         Arrêtée la présente facture proforma à la somme de : {montantEnLettres(montantTTC)}.

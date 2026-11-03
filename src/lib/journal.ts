@@ -20,6 +20,7 @@ export type ActionJournal =
   | "annulation"
   | "reglement"
   | "conversion"
+  | "suppression"
   | "connexion";
 
 /**

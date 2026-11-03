@@ -50,3 +50,14 @@ export function decomposerTva(
 export function formatTaux(taux: number): string {
   return `${taux.toFixed(2).replace(/\.?0+$/, "").replace(".", ",")} %`;
 }
+
+/**
+ * Taux proposé par défaut pour une vente : celui de ses articles s'ils
+ * partagent tous le même, sinon le taux standard. Un taux saisi sur la fiche
+ * article (19,25 % par exemple) se retrouve ainsi pré-rempli à l'émission,
+ * au lieu d'être silencieusement remplacé par le taux standard.
+ */
+export function tauxParDefaut(tauxArticles: (number | null | undefined)[]): number {
+  const connus = [...new Set(tauxArticles.filter((t): t is number => typeof t === "number" && t > 0))];
+  return connus.length === 1 ? connus[0] : TAUX_TVA_STANDARD;
+}

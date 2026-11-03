@@ -21,25 +21,49 @@ const dark: MantineColorsTuple = [
   "#080F17",
 ];
 
+/**
+ * Bleu de marque, construit autour du cyan du papier à en-tête (#00AEEF,
+ * celui du filet et du logo partenaire). Teinte 7 en couleur primaire : assez
+ * soutenue pour porter un texte blanc lisible sur les boutons.
+ */
 const brand: MantineColorsTuple = [
-  "#EAF1F8",
-  "#D3E3F1",
-  "#B6D0E7",
-  "#98BDDD",
-  "#82AED4",
-  "#6E9BC7",
-  "#5C89B5",
-  "#4A729B",
-  "#385880",
-  "#274063",
+  "#E1F6FE",
+  "#B9EAFC",
+  "#8DDCFA",
+  "#5FCDF6",
+  "#36BFF2",
+  "#14B2EE",
+  "#00A0DA",
+  "#008ABF",
+  "#0075A3",
+  "#005E84",
+];
+
+/** Orange AEI (logo, filet du papier à en-tête), pour les accents. */
+const aei: MantineColorsTuple = [
+  "#FFF3E6",
+  "#FFE3C4",
+  "#FDD09C",
+  "#FBBD75",
+  "#FAAF5E",
+  "#FAA755",
+  "#E8913B",
+  "#C9772A",
+  "#A65E1F",
+  "#824815",
 ];
 
 export const theme = createTheme({
-  colors: { dark, brand },
+  colors: { dark, brand, aei },
   primaryColor: "brand",
-  primaryShade: 5,
+  primaryShade: { light: 7, dark: 7 },
   defaultRadius: "md",
   fontFamily: "var(--font-sans)",
   fontFamilyMonospace: "var(--font-mono)",
-  headings: { fontFamily: "var(--font-sans)" },
+  headings: { fontFamily: "var(--font-sans)", fontWeight: "700" },
+  components: {
+    Card: { defaultProps: { shadow: "sm" } },
+    Paper: { defaultProps: { shadow: "xs" } },
+    Button: { defaultProps: { radius: "md" } },
+  },
 });

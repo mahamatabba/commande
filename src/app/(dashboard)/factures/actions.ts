@@ -1,11 +1,11 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { factures, reglements } from "@/db/schema";
+import { commandesClient, factures, mouvementsCaisse, proformas, reglements } from "@/db/schema";
 import { requirePermission } from "@/lib/permissions";
 import {
   annulationSchema,
@@ -28,6 +28,7 @@ export async function emettreFacture(
   const parsed = emissionFactureSchema.safeParse({
     commandeClientId: formData.get("commandeClientId"),
     regimeTva: formData.get("regimeTva"),
+    tauxTva: formData.get("tauxTva"),
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0].message, success: false };
@@ -43,6 +44,7 @@ export async function emettreFacture(
       const facture = await creerFactureDansTransaction(tx, {
         commandeClientId: parsed.data.commandeClientId,
         exonere: parsed.data.regimeTva === "EXONERE",
+        taux: parsed.data.tauxTva,
         userId: Number(session.user.id),
       });
       return facture.id;
@@ -242,4 +244,105 @@ export async function marquerFacturePayee(
   revalidatePath("/caisse");
   revalidatePath("/reglements");
   return { error: null, success: true };
+}
+
+/**
+ * Supprime définitivement une facture ANNULÉE.
+ *
+ * Seule une facture déjà annulée peut l'être : l'annulation a fait le travail
+ * comptable (reprise en caisse de tout ce qui avait été encaissé). Ses
+ * règlements s'équilibrent donc — encaissements et décaissements de reprise
+ * s'annulent — et les effacer avec leurs mouvements de caisse laisse le solde
+ * de caisse inchangé. Le contrôle est refait ici : si la somme ne s'équilibre
+ * pas, rien n'est supprimé.
+ *
+ * La vente d'origine repasse au statut « Validée » : elle peut alors être
+ * refacturée correctement, ou annulée à son tour. La suppression reste tracée
+ * au journal avec le numéro et le montant de la facture.
+ */
+export async function supprimerFacture(
+  id: number,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _prevState: EtatFormulaire,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _formData: FormData,
+): Promise<EtatFormulaire> {
+  const session = await auth();
+  requirePermission(session, "annulation:effectuer");
+
+  try {
+    await db.transaction(async (tx) => {
+      const [facture] = await tx
+        .select()
+        .from(factures)
+        .where(eq(factures.id, id))
+        .limit(1)
+        .for("update");
+
+      if (!facture) throw new ErreurMetier("Facture introuvable.");
+      if (facture.statut !== "ANNULEE") {
+        throw new ErreurMetier("Seule une facture annulée peut être supprimée. Annulez-la d'abord.");
+      }
+
+      const lignesReglement = await tx
+        .select({ id: reglements.id, sens: reglements.sens, montant: reglements.montant })
+        .from(reglements)
+        .where(eq(reglements.factureId, id));
+
+      const solde = lignesReglement.reduce(
+        (s, r) => s + (r.sens === "ENCAISSEMENT" ? r.montant : -r.montant),
+        0,
+      );
+      if (solde !== 0) {
+        throw new ErreurMetier(
+          "Les règlements de cette facture ne s'équilibrent pas : la supprimer modifierait le solde de caisse.",
+        );
+      }
+
+      const idsReglements = lignesReglement.map((r) => r.id);
+      if (idsReglements.length > 0) {
+        await tx.execute(sql`LOCK TABLE mouvements_caisse IN SHARE ROW EXCLUSIVE MODE`);
+        await tx.delete(mouvementsCaisse).where(inArray(mouvementsCaisse.reglementId, idsReglements));
+        await tx.delete(reglements).where(inArray(reglements.id, idsReglements));
+      }
+
+      // Une proforma convertie en cette facture perd son lien : elle est
+      // classée annulée, puisque la facture qu'elle a produite n'existe plus.
+      await tx
+        .update(proformas)
+        .set({ statut: "ANNULEE", factureId: null })
+        .where(eq(proformas.factureId, id));
+
+      await tx.delete(factures).where(eq(factures.id, id));
+
+      await tx
+        .update(commandesClient)
+        .set({ statut: "VALIDEE" })
+        .where(eq(commandesClient.id, facture.commandeClientId));
+
+      await tracerActivite(tx, {
+        userId: Number(session.user.id),
+        action: "suppression",
+        entite: "facture",
+        entiteId: id,
+        details: {
+          numero: facture.numero,
+          montantTotal: facture.montantTotal,
+          reglementsSupprimes: idsReglements.length,
+        },
+      });
+    });
+  } catch (e) {
+    if (e instanceof ErreurMetier) return { error: e.message, success: false };
+    const message = messageErreurBase(e);
+    if (message) return { error: message, success: false };
+    throw e;
+  }
+
+  revalidatePath("/factures");
+  revalidatePath("/commandes-client");
+  revalidatePath("/proformas");
+  revalidatePath("/caisse");
+  revalidatePath("/reglements");
+  redirect("/factures?supprimee=1");
 }

@@ -16,7 +16,7 @@ import {
   lireStatut,
 } from "@/lib/filtres";
 import { PaginationListe } from "@/components/shared/pagination-liste";
-import { Button, Group, Paper, Select, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Alert, Button, Group, Paper, Select, Stack, Text, TextInput, Title } from "@mantine/core";
 import { ProformasTable } from "./proformas-table";
 
 /** Nombre de proformas affichées par page. */
@@ -25,7 +25,7 @@ const PAR_PAGE = 50;
 export default async function PageProformas({
   searchParams,
 }: {
-  searchParams: Promise<{ statut?: string; du?: string; au?: string; page?: string }>;
+  searchParams: Promise<{ statut?: string; du?: string; au?: string; page?: string; supprimee?: string }>;
 }) {
   const session = await auth();
   requirePermission(session, "factures:read");
@@ -87,6 +87,12 @@ export default async function PageProformas({
           chiffre d&apos;affaires, ni dans les impayés, ni en caisse.
         </Text>
       </div>
+
+      {params.supprimee === "1" && (
+        <Alert color="green" variant="light">
+          La proforma annulée a été supprimée définitivement.
+        </Alert>
+      )}
 
       <form>
         <Group align="flex-end" wrap="wrap" gap="sm">

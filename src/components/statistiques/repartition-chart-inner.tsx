@@ -24,7 +24,7 @@ export default function RepartitionChartInner({
 }) {
   const config: ChartConfig = {
     especes: { label: "Espèces", color: couleurEspeces },
-    bonDeCommande: { label: "Bon de commande", color: couleurBonDeCommande },
+    bonDeCommande: { label: "À crédit", color: couleurBonDeCommande },
   };
   const data = [{ categorie: "Commandes", especes, bonDeCommande }];
 

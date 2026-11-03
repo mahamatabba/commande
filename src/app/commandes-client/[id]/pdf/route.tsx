@@ -27,7 +27,7 @@ export async function GET(requete: Request, { params }: { params: Promise<{ id: 
   if (!commande) return introuvable();
 
   return reponsePdf(<CommandeClientPdf commande={commande} />, {
-    nomFichier: `bon-commande-${commande.numero}`,
+    nomFichier: `bon-livraison-${commande.numero}`,
     telecharger: veutTelecharger(requete.url),
   });
 }

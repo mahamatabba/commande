@@ -41,8 +41,8 @@ function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: stri
 export function CommandeClientPdf({ commande }: { commande: DonneesCommandeClient }) {
   return (
     <GabaritDocument
-      titre={`Bon de commande ${commande.numero}`}
-      label="BON DE COMMANDE"
+      titre={`Bon de livraison ${commande.numero}`}
+      label="BON DE LIVRAISON"
       numero={commande.numero}
       date={formatDate(commande.dateCommande)}
     >
@@ -78,10 +78,10 @@ export function CommandeClientPdf({ commande }: { commande: DonneesCommandeClien
       </BlocTotaux>
 
       <MentionMontant>
-        Arrêté le présent bon de commande à la somme de : {montantEnLettres(commande.montantTotal)}.
+        Arrêté le présent bon de livraison à la somme de : {montantEnLettres(commande.montantTotal)}.
       </MentionMontant>
 
-      <Signatures titre="Le Client" />
+      <Signatures titre="Reçu par — Le Client" mention="Date, nom et signature" />
     </GabaritDocument>
   );
 }

@@ -40,6 +40,21 @@ serveur via `requirePermission`/`can` ([`src/lib/permissions.ts`](src/lib/permis
 l'affichage conditionnel du menu n'est qu'un confort, jamais la protection
 réelle.
 
+### Mise à jour de novembre 2026
+
+Appliquer la migration `0004_conditions_proforma_et_suppression_comptes`
+(`npm run db:migrate`) : elle ajoute le délai de livraison et la garantie aux
+proformas, et le marqueur de compte supprimé aux utilisateurs.
+
+- Taux de TVA modifiable à l'émission de chaque facture et proforma (19,25 %
+  par défaut, ou le taux commun des articles de la vente).
+- Proformas : délai de livraison, garantie, et modification tant qu'elles
+  sont en circulation (lignes, TVA, conditions).
+- Suppression définitive des factures et proformas annulées, et des comptes
+  utilisateurs (conservés en base, masqués, s'ils sont auteurs de pièces).
+- Le « bon de commande » est réservé aux achats ; côté ventes, le document
+  imprimé est un bon de livraison et le mode de règlement « À crédit ».
+
 ### Avant une mise en production
 
 - Remplacer les valeurs placeholder de `AEI_INFO` dans

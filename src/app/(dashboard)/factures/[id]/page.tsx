@@ -15,7 +15,8 @@ import { Badge, Button, Group, Paper, Stack, Table, TableTbody, TableTd, TableTh
 import { AnnulationDialog } from "@/components/shared/annulation-dialog";
 import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
 import { MarquerPayeeDialog } from "@/components/factures/marquer-payee-dialog";
-import { annulerFacture, marquerFacturePayee } from "../actions";
+import { SuppressionDialog } from "@/components/shared/suppression-dialog";
+import { annulerFacture, marquerFacturePayee, supprimerFacture } from "../actions";
 import { ReglementsFactureTable } from "./reglements-table";
 
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
@@ -98,6 +99,22 @@ export default async function PageFacture({
               action={annulerFacture.bind(null, facture.id)}
               titre="Annuler la facture"
               description="L'annulation est définitive et tracée. Si la facture est déjà réglée, un mouvement de caisse inverse sera généré automatiquement."
+            />
+          )}
+          {peutAnnuler && facture.statut === "ANNULEE" && (
+            <SuppressionDialog
+              action={supprimerFacture.bind(null, facture.id)}
+              titre={`Supprimer la facture ${facture.numero}`}
+              libelleBouton="Supprimer la facture"
+              messageSucces="Facture supprimée"
+              description={
+                <>
+                  La facture annulée et ses règlements (encaissement et reprise, qui
+                  s&apos;équilibrent) sont effacés : le solde de caisse ne change pas. La vente{" "}
+                  {facture.commandeClient.numero} repasse au statut «&nbsp;Validée&nbsp;» et pourra
+                  être refacturée ou annulée. La suppression reste tracée dans le journal.
+                </>
+              }
             />
           )}
         </Group>
