@@ -39,6 +39,8 @@ export function ClientsTable({
       records={liste}
       idAccessor="id"
       withTableBorder={false}
+      highlightOnHover
+      minHeight={liste.length === 0 ? 160 : undefined}
       noRecordsText="Aucun client."
       columns={[
         {

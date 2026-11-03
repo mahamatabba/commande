@@ -18,6 +18,8 @@ export function ReglementsFactureTable({ reglements }: { reglements: Reglement[]
       records={reglements}
       idAccessor="id"
       withTableBorder={false}
+      highlightOnHover
+      minHeight={reglements.length === 0 ? 160 : undefined}
       noRecordsText="Aucun règlement."
       columns={[
         {

@@ -35,6 +35,8 @@ export function UtilisateursTable({
       records={liste}
       idAccessor="id"
       withTableBorder={false}
+      highlightOnHover
+      minHeight={liste.length === 0 ? 160 : undefined}
       noRecordsText="Aucun utilisateur."
       columns={[
         {

@@ -47,6 +47,8 @@ export function FournisseurDetailTables({
             records={commandes}
             idAccessor="id"
             withTableBorder={false}
+            highlightOnHover
+            minHeight={commandes.length === 0 ? 160 : undefined}
             noRecordsText="Aucune commande."
             columns={[
               {
@@ -101,6 +103,8 @@ export function FournisseurDetailTables({
               records={paiementsFournisseur}
               idAccessor="id"
               withTableBorder={false}
+              highlightOnHover
+              minHeight={paiementsFournisseur.length === 0 ? 160 : undefined}
               noRecordsText="Aucun paiement."
               columns={[
                 {

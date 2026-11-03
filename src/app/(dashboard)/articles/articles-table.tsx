@@ -32,6 +32,8 @@ export function ArticlesTable({
       records={liste}
       idAccessor="id"
       withTableBorder={false}
+      highlightOnHover
+      minHeight={liste.length === 0 ? 160 : undefined}
       noRecordsText="Aucun article."
       columns={[
         { accessor: "code", title: "Code", render: (a) => <span className="font-mono text-xs tabular-nums">{a.code}</span> },

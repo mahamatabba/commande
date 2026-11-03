@@ -479,6 +479,23 @@ export const compteursNumerotation = pgTable("compteurs_numerotation", {
 });
 
 // ---------------------------------------------------------------------------
+// Paramètres de l'entreprise
+//
+// Réglages uniques à l'échelle de l'application, stockés en clé/valeur. Sert
+// d'abord aux visuels de la zone de signature des documents : la signature
+// manuscrite et le cachet, importés en image et conservés en data URI (PNG ou
+// JPEG, quelques dizaines de Ko). Les garder en base plutôt que sur disque :
+// une fonction serverless n'a pas de disque persistant, et le rendu PDF doit
+// les trouver où qu'il s'exécute.
+// ---------------------------------------------------------------------------
+
+export const parametres = pgTable("parametres", {
+  cle: varchar("cle", { length: 50 }).primaryKey(),
+  valeur: text("valeur").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
 // Relations
 // ---------------------------------------------------------------------------
 

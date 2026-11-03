@@ -13,8 +13,10 @@ import {
   lireStatut,
 } from "@/lib/filtres";
 import { PaginationListe } from "@/components/shared/pagination-liste";
-import { Button, Group, Paper, Select, Stack, TextInput, Title } from "@mantine/core";
+import { Button, Group, Paper, Select, Stack, TextInput } from "@mantine/core";
 import { JournalTable } from "./journal-table";
+import { EnTetePage } from "@/components/shared/en-tete-page";
+import { History } from "lucide-react";
 
 const LABEL_ENTITE: Record<string, string> = {
   commande_fournisseur: "Achat",
@@ -85,29 +87,31 @@ export default async function PageJournal({
 
   return (
     <Stack gap="md">
-      <Title order={1} size="h2">Journal d&apos;activité</Title>
+      <EnTetePage icone={History} couleur="gray" titre="Journal d'activité" description={"Trace de toutes les opérations effectuées dans l'application."} />
 
-      <form>
-        <Group align="flex-end" wrap="wrap" gap="sm">
-          <TextInput label="Du" name="du" type="date" defaultValue={du} />
-          <TextInput label="Au" name="au" type="date" defaultValue={au} />
-          <Select
-            label="Entité"
-            name="entite"
-            defaultValue={entiteFiltre ?? "toutes"}
-            w={180}
-            data={[
-              { value: "toutes", label: "Toutes" },
-              ...Object.entries(LABEL_ENTITE).map(([valeur, lib]) => ({ value: valeur, label: lib })),
-            ]}
-          />
-          <Button type="submit" variant="outline">
-            Filtrer
-          </Button>
-        </Group>
-      </form>
+      <Paper withBorder radius="lg" p="md">
+        <form>
+          <Group align="flex-end" wrap="wrap" gap="sm">
+            <TextInput label="Du" name="du" type="date" defaultValue={du} />
+            <TextInput label="Au" name="au" type="date" defaultValue={au} />
+            <Select
+              label="Entité"
+              name="entite"
+              defaultValue={entiteFiltre ?? "toutes"}
+              w={180}
+              data={[
+                { value: "toutes", label: "Toutes" },
+                ...Object.entries(LABEL_ENTITE).map(([valeur, lib]) => ({ value: valeur, label: lib })),
+              ]}
+            />
+            <Button type="submit" variant="outline">
+              Filtrer
+            </Button>
+          </Group>
+        </form>
+      </Paper>
 
-      <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+      <Paper withBorder radius="lg" style={{ overflow: "hidden" }}>
         <JournalTable entrees={entrees} />
       </Paper>
 

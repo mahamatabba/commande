@@ -11,7 +11,8 @@ export type EntiteJournal =
   | "fournisseur"
   | "client"
   | "article"
-  | "utilisateur";
+  | "utilisateur"
+  | "parametres";
 
 export type ActionJournal =
   | "creation"

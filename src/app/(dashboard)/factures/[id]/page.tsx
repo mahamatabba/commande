@@ -11,13 +11,14 @@ import { STATUT_FACTURE_BADGE } from "@/lib/statut-style";
 // (`Table.Thead`) : dans un composant serveur, `Table` n'est qu'une référence
 // vers @mantine/core, et `.Thead` y désigne un export qui n'existe pas. Le
 // composant vaut alors `undefined` au rendu et la page casse.
-import { Badge, Button, Group, Paper, Stack, Table, TableTbody, TableTd, TableTh, TableThead, TableTr, Text, Title } from "@mantine/core";
+import { Badge, Button, Group, Paper, Stack, Table, TableTbody, TableTd, TableTh, TableThead, TableTr, Text, Title, ThemeIcon } from "@mantine/core";
 import { AnnulationDialog } from "@/components/shared/annulation-dialog";
 import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
 import { MarquerPayeeDialog } from "@/components/factures/marquer-payee-dialog";
 import { SuppressionDialog } from "@/components/shared/suppression-dialog";
 import { annulerFacture, marquerFacturePayee, supprimerFacture } from "../actions";
 import { ReglementsFactureTable } from "./reglements-table";
+import { FileText } from "lucide-react";
 
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
   if (c.raisonSociale) return c.raisonSociale;
@@ -63,62 +64,69 @@ export default async function PageFacture({
 
   return (
     <Stack gap="xl">
-      <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
-        <div>
-          <Group gap="xs">
-            <Title order={1} size="h2" className="font-mono tabular-nums">{facture.numero}</Title>
-            {peutVoirImpayes && (
-              <Badge {...STATUT_FACTURE_BADGE[facture.statut]}>
-                {libelle(STATUT_FACTURE_LABEL, facture.statut)}
-              </Badge>
+      <Paper withBorder radius="lg" p="lg">
+        <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
+          <Group gap="md" wrap="nowrap" align="flex-start">
+            <ThemeIcon size={52} radius="lg" variant="light" color="brand" visibleFrom="xs">
+              <FileText size={26} strokeWidth={1.8} />
+            </ThemeIcon>
+            <div>
+              <Group gap="xs">
+                <Title order={1} size="h2" fw={800} className="font-mono tabular-nums">{facture.numero}</Title>
+                {peutVoirImpayes && (
+                  <Badge {...STATUT_FACTURE_BADGE[facture.statut]}>
+                    {libelle(STATUT_FACTURE_LABEL, facture.statut)}
+                  </Badge>
+                )}
+              </Group>
+              <Text size="sm" c="dimmed" mt={4}>
+                <Link href={`/clients/${facture.client.id}`} className="hover:underline">
+                  {nomAffiche(facture.client)}
+                </Link>{" "}
+                · <span className="font-mono tabular-nums">{formatDate(facture.dateFacture)}</span>
+              </Text>
+            </div>
+          </Group>
+          <Group gap="xs" wrap="wrap">
+            <ApercuDocumentDialog
+              href={`/factures/${facture.id}/pdf`}
+              titre={`Facture ${facture.numero}`}
+              nomFichier={`facture-${facture.numero}`}
+              trigger={<Button variant="outline">Voir la facture</Button>}
+              defaultOpen={nouveau === "1"}
+            />
+            {peutRegler && encaissable && (
+              <MarquerPayeeDialog
+                action={marquerFacturePayee.bind(null, facture.id)}
+                resteAPayer={resteAPayer}
+              />
+            )}
+            {peutAnnuler && facture.statut !== "ANNULEE" && (
+              <AnnulationDialog
+                action={annulerFacture.bind(null, facture.id)}
+                titre="Annuler la facture"
+                description="L'annulation est définitive et tracée. Si la facture est déjà réglée, un mouvement de caisse inverse sera généré automatiquement."
+              />
+            )}
+            {peutAnnuler && facture.statut === "ANNULEE" && (
+              <SuppressionDialog
+                action={supprimerFacture.bind(null, facture.id)}
+                titre={`Supprimer la facture ${facture.numero}`}
+                libelleBouton="Supprimer la facture"
+                messageSucces="Facture supprimée"
+                description={
+                  <>
+                    La facture annulée et ses règlements (encaissement et reprise, qui
+                    s&apos;équilibrent) sont effacés : le solde de caisse ne change pas. La vente{" "}
+                    {facture.commandeClient.numero} repasse au statut «&nbsp;Validée&nbsp;» et pourra
+                    être refacturée ou annulée. La suppression reste tracée dans le journal.
+                  </>
+                }
+              />
             )}
           </Group>
-          <Text size="sm" c="dimmed" mt={4}>
-            <Link href={`/clients/${facture.client.id}`} className="hover:underline">
-              {nomAffiche(facture.client)}
-            </Link>{" "}
-            · <span className="font-mono tabular-nums">{formatDate(facture.dateFacture)}</span>
-          </Text>
-        </div>
-        <Group gap="xs" wrap="wrap">
-          <ApercuDocumentDialog
-            href={`/factures/${facture.id}/pdf`}
-            titre={`Facture ${facture.numero}`}
-            nomFichier={`facture-${facture.numero}`}
-            trigger={<Button variant="outline">Voir la facture</Button>}
-            defaultOpen={nouveau === "1"}
-          />
-          {peutRegler && encaissable && (
-            <MarquerPayeeDialog
-              action={marquerFacturePayee.bind(null, facture.id)}
-              resteAPayer={resteAPayer}
-            />
-          )}
-          {peutAnnuler && facture.statut !== "ANNULEE" && (
-            <AnnulationDialog
-              action={annulerFacture.bind(null, facture.id)}
-              titre="Annuler la facture"
-              description="L'annulation est définitive et tracée. Si la facture est déjà réglée, un mouvement de caisse inverse sera généré automatiquement."
-            />
-          )}
-          {peutAnnuler && facture.statut === "ANNULEE" && (
-            <SuppressionDialog
-              action={supprimerFacture.bind(null, facture.id)}
-              titre={`Supprimer la facture ${facture.numero}`}
-              libelleBouton="Supprimer la facture"
-              messageSucces="Facture supprimée"
-              description={
-                <>
-                  La facture annulée et ses règlements (encaissement et reprise, qui
-                  s&apos;équilibrent) sont effacés : le solde de caisse ne change pas. La vente{" "}
-                  {facture.commandeClient.numero} repasse au statut «&nbsp;Validée&nbsp;» et pourra
-                  être refacturée ou annulée. La suppression reste tracée dans le journal.
-                </>
-              }
-            />
-          )}
         </Group>
-      </Group>
+      </Paper>
 
       {facture.proformaOrigine && (
         <Paper withBorder radius="md" p="sm" style={{ backgroundColor: "var(--mantine-color-dark-6)" }}>

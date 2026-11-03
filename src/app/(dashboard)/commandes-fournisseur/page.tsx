@@ -16,8 +16,10 @@ import {
 } from "@/lib/filtres";
 import { PaginationListe } from "@/components/shared/pagination-liste";
 import { STATUT_COMMANDE_FOURNISSEUR_LABEL, libelle } from "@/lib/libelles";
-import { Button, Group, Paper, Select, Stack, TextInput, Title } from "@mantine/core";
+import { Button, Group, Paper, Select, Stack, TextInput } from "@mantine/core";
 import { CommandesFournisseurTable } from "./commandes-fournisseur-table";
+import { EnTetePage } from "@/components/shared/en-tete-page";
+import { ShoppingCart } from "lucide-react";
 
 /** Nombre d'achats affichés par page. */
 const PAR_PAGE = 50;
@@ -81,7 +83,7 @@ export default async function PageCommandesFournisseur({
   return (
     <Stack gap="md">
       <Group justify="space-between" wrap="wrap" gap="sm">
-        <Title order={1} size="h2">Achats — bons de commande</Title>
+        <EnTetePage icone={ShoppingCart} couleur="aei" titre="Achats — bons de commande" description="Commandes passées aux fournisseurs, de la saisie à la réception." />
         {peutEcrire && (
           <Button component={Link} href="/commandes-fournisseur/nouvelle">
             Nouveau bon de commande
@@ -89,34 +91,36 @@ export default async function PageCommandesFournisseur({
         )}
       </Group>
 
-      <form>
-        <Group align="flex-end" wrap="wrap" gap="sm">
-          <Select
-            label="Statut"
-            name="statut"
-            defaultValue={statutFiltre}
-            placeholder="Tous"
-            clearable
-            w={160}
-            data={STATUTS_COMMANDE_FOURNISSEUR.map((s) => ({
-              value: s,
-              label: libelle(STATUT_COMMANDE_FOURNISSEUR_LABEL, s),
-            }))}
-          />
-          <TextInput label="Du" name="du" type="date" defaultValue={du} />
-          <TextInput label="Au" name="au" type="date" defaultValue={au} />
-          <Button type="submit" variant="outline">
-            Filtrer
-          </Button>
-          {(statut || du || au) && (
-            <Button variant="subtle" component={Link} href="/commandes-fournisseur">
-              Réinitialiser
+      <Paper withBorder radius="lg" p="md">
+        <form>
+          <Group align="flex-end" wrap="wrap" gap="sm">
+            <Select
+              label="Statut"
+              name="statut"
+              defaultValue={statutFiltre}
+              placeholder="Tous"
+              clearable
+              w={160}
+              data={STATUTS_COMMANDE_FOURNISSEUR.map((s) => ({
+                value: s,
+                label: libelle(STATUT_COMMANDE_FOURNISSEUR_LABEL, s),
+              }))}
+            />
+            <TextInput label="Du" name="du" type="date" defaultValue={du} />
+            <TextInput label="Au" name="au" type="date" defaultValue={au} />
+            <Button type="submit" variant="outline">
+              Filtrer
             </Button>
-          )}
-        </Group>
-      </form>
+            {(statut || du || au) && (
+              <Button variant="subtle" component={Link} href="/commandes-fournisseur">
+                Réinitialiser
+              </Button>
+            )}
+          </Group>
+        </form>
+      </Paper>
 
-      <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+      <Paper withBorder radius="lg" style={{ overflow: "hidden" }}>
         <CommandesFournisseurTable commandes={commandes} peutVoirDecaissements={peutVoirDecaissements} />
       </Paper>
 

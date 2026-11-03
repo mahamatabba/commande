@@ -17,6 +17,7 @@ import {
   TotalSecondaire,
   TotalSimple,
   type LignePdf,
+  type VisuelsPdf,
 } from "./gabarit";
 
 export type DonneesFacture = {
@@ -40,7 +41,7 @@ function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: stri
   return c.prenom ? `${c.nom} ${c.prenom}` : c.nom;
 }
 
-export function FacturePdf({ facture }: { facture: DonneesFacture }) {
+export function FacturePdf({ facture, visuels }: { facture: DonneesFacture; visuels?: VisuelsPdf }) {
   // Les montants sont lus tels qu'ils ont été figés à l'émission — jamais
   // recalculés : une facture déjà remise au client ne doit plus changer, même
   // si le taux de TVA évolue ensuite.
@@ -104,7 +105,7 @@ export function FacturePdf({ facture }: { facture: DonneesFacture }) {
         Arrêtée la présente facture à la somme de : {montantEnLettres(montantTTC)}.
       </MentionMontant>
 
-      <Signatures titre="Le Client" />
+      <Signatures titre="Le Client" visuels={visuels} />
     </GabaritDocument>
   );
 }

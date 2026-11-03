@@ -15,11 +15,12 @@ import { STATUT_COMMANDE_CLIENT_BADGE } from "@/lib/statut-style";
 // (`Table.Thead`) : dans un composant serveur, `Table` n'est qu'une référence
 // vers @mantine/core, et `.Thead` y désigne un export qui n'existe pas. Le
 // composant vaut alors `undefined` au rendu et la page casse.
-import { Badge, Button, Group, Paper, Stack, Table, TableTbody, TableTd, TableTh, TableThead, TableTr, Text, Title } from "@mantine/core";
+import { Badge, Button, Group, Paper, Stack, Table, TableTbody, TableTd, TableTh, TableThead, TableTr, Text, Title, ThemeIcon } from "@mantine/core";
 import { AnnulationDialog } from "@/components/shared/annulation-dialog";
 import { CorrectionModeReglementDialog } from "@/components/commandes/correction-mode-reglement-dialog";
 import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
 import { annulerCommandeClient, corrigerCommandeClient, validerCommandeClient } from "../actions";
+import { ShoppingBag } from "lucide-react";
 
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
   if (c.raisonSociale) return c.raisonSociale;
@@ -58,59 +59,66 @@ export default async function PageCommandeClient({
 
   return (
     <Stack gap="xl">
-      <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
-        <div>
-          <Group gap="xs">
-            <Title order={1} size="h2" className="font-mono tabular-nums">{commande.numero}</Title>
-            <Badge {...STATUT_COMMANDE_CLIENT_BADGE[commande.statut]}>
-              {libelle(STATUT_COMMANDE_CLIENT_LABEL, commande.statut)}
-            </Badge>
+      <Paper withBorder radius="lg" p="lg">
+        <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
+          <Group gap="md" wrap="nowrap" align="flex-start">
+            <ThemeIcon size={52} radius="lg" variant="light" color="brand" visibleFrom="xs">
+              <ShoppingBag size={26} strokeWidth={1.8} />
+            </ThemeIcon>
+            <div>
+              <Group gap="xs">
+                <Title order={1} size="h2" fw={800} className="font-mono tabular-nums">{commande.numero}</Title>
+                <Badge {...STATUT_COMMANDE_CLIENT_BADGE[commande.statut]}>
+                  {libelle(STATUT_COMMANDE_CLIENT_LABEL, commande.statut)}
+                </Badge>
+              </Group>
+              <Text size="sm" c="dimmed" mt={4}>
+                <Link href={`/clients/${commande.client.id}`} className="hover:underline">
+                  {nomAffiche(commande.client)}
+                </Link>{" "}
+                · <span className="font-mono tabular-nums">{formatDate(commande.dateCommande)}</span> ·{" "}
+                {libelle(MODE_REGLEMENT_LABEL, commande.modeReglement)}
+              </Text>
+            </div>
           </Group>
-          <Text size="sm" c="dimmed" mt={4}>
-            <Link href={`/clients/${commande.client.id}`} className="hover:underline">
-              {nomAffiche(commande.client)}
-            </Link>{" "}
-            · <span className="font-mono tabular-nums">{formatDate(commande.dateCommande)}</span> ·{" "}
-            {libelle(MODE_REGLEMENT_LABEL, commande.modeReglement)}
-          </Text>
-        </div>
-        <Group gap="xs" wrap="wrap">
-          <ApercuDocumentDialog
-            href={`/commandes-client/${commande.id}/pdf`}
-            titre={`Bon de livraison ${commande.numero}`}
-            nomFichier={`bon-livraison-${commande.numero}`}
-            trigger={<Button variant="outline">Voir le bon de livraison</Button>}
-            defaultOpen={nouveau === "1"}
-          />
-          {peutEcrire && commande.statut === "BROUILLON" && (
-            <form action={validerCommandeClient.bind(null, commande.id)}>
-              <Button type="submit">Valider</Button>
-            </form>
-          )}
-          {peutFacturer && commande.statut === "VALIDEE" && !proformaEnCours && (
-            <Button variant="outline" component={Link} href={`/proformas/nouvelle?commandeClientId=${commande.id}`}>
-              Établir une proforma
-            </Button>
-          )}
-          {peutFacturer && commande.statut === "VALIDEE" && (
-            <Button component={Link} href={`/factures/nouvelle?commandeClientId=${commande.id}`}>
-              Émettre la facture
-            </Button>
-          )}
-          {peutCorriger && commande.statut !== "ANNULEE" && (
-            <CorrectionModeReglementDialog
-              action={corrigerCommandeClient.bind(null, commande.id)}
-              modeReglementActuel={commande.modeReglement}
+          <Group gap="xs" wrap="wrap">
+            <ApercuDocumentDialog
+              href={`/commandes-client/${commande.id}/pdf`}
+              titre={`Bon de livraison ${commande.numero}`}
+              nomFichier={`bon-livraison-${commande.numero}`}
+              trigger={<Button variant="outline">Voir le bon de livraison</Button>}
+              defaultOpen={nouveau === "1"}
             />
-          )}
-          {peutAnnuler && commande.statut !== "ANNULEE" && commande.statut !== "FACTUREE" && (
-            <AnnulationDialog
-              action={annulerCommandeClient.bind(null, commande.id)}
-              titre="Annuler la commande"
-            />
-          )}
+            {peutEcrire && commande.statut === "BROUILLON" && (
+              <form action={validerCommandeClient.bind(null, commande.id)}>
+                <Button type="submit">Valider</Button>
+              </form>
+            )}
+            {peutFacturer && commande.statut === "VALIDEE" && !proformaEnCours && (
+              <Button variant="outline" component={Link} href={`/proformas/nouvelle?commandeClientId=${commande.id}`}>
+                Établir une proforma
+              </Button>
+            )}
+            {peutFacturer && commande.statut === "VALIDEE" && (
+              <Button component={Link} href={`/factures/nouvelle?commandeClientId=${commande.id}`}>
+                Émettre la facture
+              </Button>
+            )}
+            {peutCorriger && commande.statut !== "ANNULEE" && (
+              <CorrectionModeReglementDialog
+                action={corrigerCommandeClient.bind(null, commande.id)}
+                modeReglementActuel={commande.modeReglement}
+              />
+            )}
+            {peutAnnuler && commande.statut !== "ANNULEE" && commande.statut !== "FACTUREE" && (
+              <AnnulationDialog
+                action={annulerCommandeClient.bind(null, commande.id)}
+                titre="Annuler la commande"
+              />
+            )}
+          </Group>
         </Group>
-      </Group>
+      </Paper>
 
       {commande.proformas.length > 0 && (
         <Paper withBorder radius="md" p="sm" style={{ backgroundColor: "var(--mantine-color-dark-6)" }}>

@@ -1,8 +1,9 @@
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { requirePermission } from "@/lib/permissions";
-import { Stack, Text, Title } from "@mantine/core";
+import { Stack, Text, Title, ThemeIcon, Group } from "@mantine/core";
 import { CommandeClientForm } from "@/components/commandes/commande-client-form";
+import { ShoppingBag } from "lucide-react";
 
 export default async function PageNouvelleCommandeClient() {
   const session = await auth();
@@ -30,8 +31,13 @@ export default async function PageNouvelleCommandeClient() {
   return (
     <Stack gap="xl" maw={1320}>
       <div>
-        <Title order={1} size="h2">Nouvelle vente</Title>
-        <Text size="sm" c="dimmed" mt={4}>
+        <Group gap="md" wrap="nowrap">
+          <ThemeIcon size={52} radius="lg" variant="light" color="brand" visibleFrom="xs">
+            <ShoppingBag size={26} strokeWidth={1.8} />
+          </ThemeIcon>
+          <Title order={1} size="h2" fw={800}>Nouvelle vente</Title>
+        </Group>
+        <Text size="sm" c="dimmed" mt={4} ml={{ base: 0, xs: 68 }}>
           Sélectionnez le client, ajoutez les articles puis validez pour créer la commande.
         </Text>
       </div>

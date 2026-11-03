@@ -8,9 +8,10 @@ import { formatMontant } from "@/lib/format";
 // (`Table.Thead`) : dans un composant serveur, `Table` n'est qu'une référence
 // vers @mantine/core, et `.Thead` y désigne un export qui n'existe pas. Le
 // composant vaut alors `undefined` au rendu et la page casse.
-import { Alert, Button, Card, Grid, GridCol, Stack, Table, TableTbody, TableTd, TableTh, TableThead, TableTr, Text, Title } from "@mantine/core";
+import { Alert, Button, Card, Grid, GridCol, Stack, Table, TableTbody, TableTd, TableTh, TableThead, TableTr, Text, Title, ThemeIcon, Group } from "@mantine/core";
 import Link from "next/link";
 import { EmettreFactureForm } from "@/components/factures/emettre-facture-form";
+import { FileText } from "lucide-react";
 
 const MODE_LABEL: Record<string, string> = {
   ESPECES: "Espèces (comptant)",
@@ -43,7 +44,12 @@ export default async function PageNouvelleFacture({
   if (commande.statut !== "VALIDEE") {
     return (
       <Stack gap="md" maw={640}>
-        <Title order={1} size="h2">Émission de facture</Title>
+        <Group gap="md" wrap="nowrap">
+          <ThemeIcon size={52} radius="lg" variant="light" color="brand" visibleFrom="xs">
+            <FileText size={26} strokeWidth={1.8} />
+          </ThemeIcon>
+          <Title order={1} size="h2" fw={800}>Émission de facture</Title>
+        </Group>
         <Card withBorder radius="md">
           <Stack gap="md">
             <Text size="sm" c="red">
@@ -62,8 +68,13 @@ export default async function PageNouvelleFacture({
   return (
     <Stack gap="xl" maw={1152}>
       <div>
-        <Title order={1} size="h2">Émission de facture</Title>
-        <Text size="sm" c="dimmed" mt={4}>
+        <Group gap="md" wrap="nowrap">
+          <ThemeIcon size={52} radius="lg" variant="light" color="brand" visibleFrom="xs">
+            <FileText size={26} strokeWidth={1.8} />
+          </ThemeIcon>
+          <Title order={1} size="h2" fw={800}>Émission de facture</Title>
+        </Group>
+        <Text size="sm" c="dimmed" mt={4} ml={{ base: 0, xs: 68 }}>
           Vente {commande.numero} · {nomAffiche(commande.client)} · {MODE_LABEL[commande.modeReglement]}
         </Text>
       </div>

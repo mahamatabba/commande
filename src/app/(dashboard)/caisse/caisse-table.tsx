@@ -39,6 +39,8 @@ export function CaisseTable({ mouvements }: { mouvements: Mouvement[] }) {
       records={mouvements}
       idAccessor="id"
       withTableBorder={false}
+      highlightOnHover
+      minHeight={mouvements.length === 0 ? 160 : undefined}
       noRecordsText="Aucun mouvement de caisse."
       columns={[
         {

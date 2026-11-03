@@ -64,6 +64,10 @@ facultatifs.)
 - Le « bon de commande » est réservé aux achats ; côté ventes, le document
   imprimé est un bon de livraison et le mode de règlement « À crédit ».
 
+Migration `0005_parametres_signature` : table `parametres`, qui conserve la
+signature et le cachet importés depuis la page **Paramètres** (réservée à
+l'administrateur) et imprimés dans la zone de signature AEI de tous les PDF.
+
 ### Avant une mise en production
 
 - Remplacer les valeurs placeholder de `AEI_INFO` dans

@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { db } from "@/db";
+import { lireVisuelsSignature } from "@/lib/parametres";
 import { can } from "@/lib/permissions";
 import { ProformaPdf } from "@/lib/pdf/proforma-pdf";
 import {
@@ -26,7 +27,9 @@ export async function GET(requete: Request, { params }: { params: Promise<{ id: 
   });
   if (!proforma) return introuvable();
 
-  return reponsePdf(<ProformaPdf proforma={proforma} />, {
+  const visuels = await lireVisuelsSignature();
+
+  return reponsePdf(<ProformaPdf proforma={proforma} visuels={visuels} />, {
     nomFichier: `proforma-${proforma.numero}`,
     telecharger: veutTelecharger(requete.url),
   });

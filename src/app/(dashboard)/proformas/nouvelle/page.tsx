@@ -10,8 +10,9 @@ import { MODE_REGLEMENT_LABEL, libelle } from "@/lib/libelles";
 // (`Table.Thead`) : dans un composant serveur, `Table` n'est qu'une référence
 // vers @mantine/core, et `.Thead` y désigne un export qui n'existe pas. Le
 // composant vaut alors `undefined` au rendu et la page casse.
-import { Alert, Button, Card, Grid, GridCol, Stack, Table, TableTbody, TableTd, TableTh, TableThead, TableTr, Text, Title } from "@mantine/core";
+import { Alert, Button, Card, Grid, GridCol, Stack, Table, TableTbody, TableTd, TableTh, TableThead, TableTr, Text, Title, ThemeIcon, Group } from "@mantine/core";
 import { EmettreProformaForm } from "@/components/proformas/emettre-proforma-form";
+import { FileSignature } from "lucide-react";
 
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
   if (c.raisonSociale) return c.raisonSociale;
@@ -41,7 +42,12 @@ export default async function PageNouvelleProforma({
   if (commande.statut !== "VALIDEE" || proformaEnCours) {
     return (
       <Stack gap="md" maw={640}>
-        <Title order={1} size="h2">Établir une proforma</Title>
+        <Group gap="md" wrap="nowrap">
+          <ThemeIcon size={52} radius="lg" variant="light" color="violet" visibleFrom="xs">
+            <FileSignature size={26} strokeWidth={1.8} />
+          </ThemeIcon>
+          <Title order={1} size="h2" fw={800}>Établir une proforma</Title>
+        </Group>
         <Card withBorder radius="md">
           <Stack gap="md">
             {proformaEnCours ? (
@@ -71,8 +77,13 @@ export default async function PageNouvelleProforma({
   return (
     <Stack gap="xl" maw={1152}>
       <div>
-        <Title order={1} size="h2">Établir une proforma</Title>
-        <Text size="sm" c="dimmed" mt={4}>
+        <Group gap="md" wrap="nowrap">
+          <ThemeIcon size={52} radius="lg" variant="light" color="violet" visibleFrom="xs">
+            <FileSignature size={26} strokeWidth={1.8} />
+          </ThemeIcon>
+          <Title order={1} size="h2" fw={800}>Établir une proforma</Title>
+        </Group>
+        <Text size="sm" c="dimmed" mt={4} ml={{ base: 0, xs: 68 }}>
           Vente {commande.numero} · {nomAffiche(commande.client)} ·{" "}
           {libelle(MODE_REGLEMENT_LABEL, commande.modeReglement)}
         </Text>

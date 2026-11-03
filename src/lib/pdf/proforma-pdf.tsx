@@ -16,6 +16,7 @@ import {
   TotalPrincipal,
   TotalSimple,
   type LignePdf,
+  type VisuelsPdf,
 } from "./gabarit";
 
 export type DonneesProforma = {
@@ -45,7 +46,7 @@ function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: stri
   return c.prenom ? `${c.nom} ${c.prenom}` : c.nom;
 }
 
-export function ProformaPdf({ proforma }: { proforma: DonneesProforma }) {
+export function ProformaPdf({ proforma, visuels }: { proforma: DonneesProforma; visuels?: VisuelsPdf }) {
   // Comme pour une facture, les montants sont lus tels qu'ils ont été figés :
   // le document remis au client ne doit plus bouger, même si le taux de TVA
   // ou le tarif évoluent ensuite.
@@ -119,7 +120,7 @@ export function ProformaPdf({ proforma }: { proforma: DonneesProforma }) {
         jusqu&apos;au {formatDate(proforma.dateValidite)}.
       </Avertissement>
 
-      <Signatures titre="Bon pour accord — Le Client" mention="Date et signature" />
+      <Signatures titre="Bon pour accord — Le Client" mention="Date et signature" visuels={visuels} />
     </GabaritDocument>
   );
 }

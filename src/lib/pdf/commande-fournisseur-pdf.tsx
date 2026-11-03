@@ -14,6 +14,7 @@ import {
   TitreBoite,
   TotalPrincipal,
   type LignePdf,
+  type VisuelsPdf,
 } from "./gabarit";
 
 export type DonneesCommandeFournisseur = {
@@ -27,8 +28,10 @@ export type DonneesCommandeFournisseur = {
 
 export function CommandeFournisseurPdf({
   commande,
+  visuels,
 }: {
   commande: DonneesCommandeFournisseur;
+  visuels?: VisuelsPdf;
 }) {
   return (
     <GabaritDocument
@@ -70,7 +73,7 @@ export function CommandeFournisseurPdf({
         Arrêté le présent bon de commande à la somme de : {montantEnLettres(commande.montantTotal)}.
       </MentionMontant>
 
-      <Signatures titre="Le Fournisseur" mention="Signature et cachet" />
+      <Signatures titre="Le Fournisseur" mention="Signature et cachet" visuels={visuels} />
     </GabaritDocument>
   );
 }

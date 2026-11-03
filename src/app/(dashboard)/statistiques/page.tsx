@@ -23,6 +23,8 @@ import { EvolutionChart } from "@/components/statistiques/evolution-chart";
 import { ClassementChart } from "@/components/statistiques/classement-chart";
 import { RepartitionChart } from "@/components/statistiques/repartition-chart";
 import { StatTile } from "@/components/statistiques/stat-tile";
+import { EnTetePage } from "@/components/shared/en-tete-page";
+import { ChartColumn } from "lucide-react";
 
 const NB_MOIS = 6;
 
@@ -155,7 +157,7 @@ export default async function PageStatistiques() {
 
   return (
     <Stack gap="xl">
-      <Title order={1} size="h2">Statistiques</Title>
+      <EnTetePage icone={ChartColumn} couleur="violet" titre="Statistiques" description="Achats, ventes et marges sur les derniers mois." />
 
       {peutVoirAchats && (
         <Stack gap="md">

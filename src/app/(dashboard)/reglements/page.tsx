@@ -5,10 +5,12 @@ import { db } from "@/db";
 import { commandesFournisseur, factures, clients, fournisseurs, reglements } from "@/db/schema";
 import { requirePermission } from "@/lib/permissions";
 import { bornerPagination, lienPagination, lirePage } from "@/lib/filtres";
-import { Group, Paper, Stack, Title } from "@mantine/core";
+import { Group, Paper, Stack } from "@mantine/core";
 import { ReglementForm } from "@/components/reglements/reglement-form";
 import { PaginationListe } from "@/components/shared/pagination-liste";
 import { ReglementsTable } from "./reglements-table";
+import { EnTetePage } from "@/components/shared/en-tete-page";
+import { HandCoins } from "lucide-react";
 
 /** Nombre de règlements affichés par page dans l'historique. */
 const PAR_PAGE = 50;
@@ -90,7 +92,7 @@ export default async function PageReglements({
   return (
     <Stack gap="md">
       <Group justify="space-between" wrap="wrap" gap="sm">
-        <Title order={1} size="h2">Règlements</Title>
+        <EnTetePage icone={HandCoins} couleur="green" titre="Règlements" description="Encaissements clients et paiements fournisseurs." />
         <ReglementForm
           factures={facturesEligibles.map((f) => ({
             id: f.id,
@@ -111,7 +113,7 @@ export default async function PageReglements({
         />
       </Group>
 
-      <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+      <Paper withBorder radius="lg" style={{ overflow: "hidden" }}>
         <ReglementsTable historique={historique} />
       </Paper>
 

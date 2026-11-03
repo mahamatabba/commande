@@ -25,6 +25,7 @@ const LABEL_ENTITE: Record<string, string> = {
   client: "Client",
   article: "Article",
   utilisateur: "Utilisateur",
+  parametres: "Paramètres",
 };
 
 type EntreeJournal = {
@@ -43,6 +44,8 @@ export function JournalTable({ entrees }: { entrees: EntreeJournal[] }) {
       records={entrees}
       idAccessor="id"
       withTableBorder={false}
+      highlightOnHover
+      minHeight={entrees.length === 0 ? 160 : undefined}
       noRecordsText="Aucune activité enregistrée."
       columns={[
         {

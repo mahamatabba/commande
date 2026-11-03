@@ -6,10 +6,12 @@ import { mouvementsCaisse } from "@/db/schema";
 import { requirePermission } from "@/lib/permissions";
 import { calculerSoldeCaisse } from "@/lib/caisse";
 import { bornerDebut, bornerFin, bornerPagination, lienPagination, lirePage } from "@/lib/filtres";
-import { Button, Group, Paper, SimpleGrid, Stack, TextInput, Title } from "@mantine/core";
+import { Button, Group, Paper, SimpleGrid, Stack, TextInput } from "@mantine/core";
 import { StatTile } from "@/components/statistiques/stat-tile";
 import { PaginationListe } from "@/components/shared/pagination-liste";
 import { CaisseTable } from "./caisse-table";
+import { EnTetePage } from "@/components/shared/en-tete-page";
+import { Wallet } from "lucide-react";
 
 /** Nombre de mouvements affichés par page. */
 const PAR_PAGE = 100;
@@ -110,7 +112,7 @@ export default async function PageCaisse({
 
   return (
     <Stack gap="md">
-      <Title order={1} size="h2">Caisse</Title>
+      <EnTetePage icone={Wallet} couleur="green" titre="Caisse" description="Solde et mouvements de la caisse sur la période." />
 
       <SimpleGrid cols={{ base: 1, sm: 3 }}>
         <StatTile label="Solde actuel" montant={solde} highlight />
@@ -118,15 +120,17 @@ export default async function PageCaisse({
         <StatTile label="Décaissements de la période" montant={totalDecaissements} />
       </SimpleGrid>
 
-      <form>
-        <Group align="flex-end" wrap="wrap" gap="sm">
-          <TextInput label="Du" name="du" type="date" defaultValue={du} />
-          <TextInput label="Au" name="au" type="date" defaultValue={au} />
-          <Button type="submit" variant="outline">Filtrer</Button>
-        </Group>
-      </form>
+      <Paper withBorder radius="lg" p="md">
+        <form>
+          <Group align="flex-end" wrap="wrap" gap="sm">
+            <TextInput label="Du" name="du" type="date" defaultValue={du} />
+            <TextInput label="Au" name="au" type="date" defaultValue={au} />
+            <Button type="submit" variant="outline">Filtrer</Button>
+          </Group>
+        </form>
+      </Paper>
 
-      <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+      <Paper withBorder radius="lg" style={{ overflow: "hidden" }}>
         <CaisseTable mouvements={mouvementsAffiches} />
       </Paper>
 

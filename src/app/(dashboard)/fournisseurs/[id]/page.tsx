@@ -4,10 +4,11 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { commandesFournisseur, fournisseurs } from "@/db/schema";
 import { can, requirePermission } from "@/lib/permissions";
-import { Badge, Button, Group, Stack, Text, Title } from "@mantine/core";
+import { Badge, Button, Group, Stack, Text, Title, ThemeIcon, Paper } from "@mantine/core";
 import { FournisseurFormDialog } from "@/components/fournisseurs/fournisseur-form-dialog";
 import { modifierFournisseur } from "../actions";
 import { FournisseurDetailTables } from "./fournisseur-detail-tables";
+import { Building2 } from "lucide-react";
 
 export default async function PageFournisseur({
   params,
@@ -53,33 +54,40 @@ export default async function PageFournisseur({
 
   return (
     <Stack gap="xl">
-      <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
-        <div>
-          <Title order={1} size="h2">{fournisseur.nom}</Title>
-          <Group gap="xs" mt={4} wrap="wrap">
-            <Text size="sm" c="dimmed" className="font-mono tabular-nums">{fournisseur.telephone}</Text>
-            {fournisseur.email && <Text size="sm" c="dimmed">· {fournisseur.email}</Text>}
-            {fournisseur.nif && (
-              <Badge color="gray" variant="light" className="font-mono tabular-nums">
-                NIF {fournisseur.nif}
-              </Badge>
-            )}
-            <Badge color={fournisseur.actif ? "green" : "gray"} variant="light">
-              {fournisseur.actif ? "Actif" : "Inactif"}
-            </Badge>
+      <Paper withBorder radius="lg" p="lg">
+        <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
+          <Group gap="md" wrap="nowrap" align="flex-start">
+            <ThemeIcon size={52} radius="lg" variant="light" color="aei" visibleFrom="xs">
+              <Building2 size={26} strokeWidth={1.8} />
+            </ThemeIcon>
+            <div>
+              <Title order={1} size="h2" fw={800}>{fournisseur.nom}</Title>
+              <Group gap="xs" mt={4} wrap="wrap">
+                <Text size="sm" c="dimmed" className="font-mono tabular-nums">{fournisseur.telephone}</Text>
+                {fournisseur.email && <Text size="sm" c="dimmed">· {fournisseur.email}</Text>}
+                {fournisseur.nif && (
+                  <Badge color="gray" variant="light" className="font-mono tabular-nums">
+                    NIF {fournisseur.nif}
+                  </Badge>
+                )}
+                <Badge color={fournisseur.actif ? "green" : "gray"} variant="light">
+                  {fournisseur.actif ? "Actif" : "Inactif"}
+                </Badge>
+              </Group>
+              {fournisseur.adresse && (
+                <Text size="sm" c="dimmed" mt={4}>{fournisseur.adresse}</Text>
+              )}
+            </div>
           </Group>
-          {fournisseur.adresse && (
-            <Text size="sm" c="dimmed" mt={4}>{fournisseur.adresse}</Text>
+          {peutEcrire && (
+            <FournisseurFormDialog
+              action={modifierFournisseur.bind(null, fournisseur.id)}
+              fournisseur={fournisseur}
+              trigger={<Button variant="outline">Modifier</Button>}
+            />
           )}
-        </div>
-        {peutEcrire && (
-          <FournisseurFormDialog
-            action={modifierFournisseur.bind(null, fournisseur.id)}
-            fournisseur={fournisseur}
-            trigger={<Button variant="outline">Modifier</Button>}
-          />
-        )}
-      </Group>
+        </Group>
+      </Paper>
 
       <FournisseurDetailTables
         commandes={commandes}

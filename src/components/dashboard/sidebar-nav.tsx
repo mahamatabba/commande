@@ -12,6 +12,7 @@ import {
   History,
   LayoutDashboard,
   Package,
+  Settings,
   ShoppingBag,
   ShoppingCart,
   UserCog,
@@ -36,6 +37,7 @@ const ICONES: Record<NavIcone, LucideIcon> = {
   caisse: Wallet,
   utilisateurs: UserCog,
   journal: History,
+  parametres: Settings,
 };
 
 export function SidebarNav({
@@ -48,10 +50,10 @@ export function SidebarNav({
   const pathname = usePathname();
 
   return (
-    <Stack gap="md">
+    <Stack gap="sm">
       {sections.map((section) => (
         <div key={section.titre}>
-          <Text size="11px" fw={700} c="dimmed" tt="uppercase" px="sm" mb={4} style={{ letterSpacing: 0.8 }}>
+          <Text size="11px" fw={700} c="dimmed" tt="uppercase" px="sm" mb={2} style={{ letterSpacing: 0.8 }}>
             {section.titre}
           </Text>
           {section.items.map((item) => {
@@ -70,6 +72,7 @@ export function SidebarNav({
                 active={actif}
                 variant="light"
                 onClick={onNavigate}
+                py={7}
                 style={{ borderRadius: "var(--mantine-radius-md)" }}
                 fw={actif ? 600 : 500}
               />

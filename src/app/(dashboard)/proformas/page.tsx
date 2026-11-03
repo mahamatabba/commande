@@ -16,8 +16,10 @@ import {
   lireStatut,
 } from "@/lib/filtres";
 import { PaginationListe } from "@/components/shared/pagination-liste";
-import { Alert, Button, Group, Paper, Select, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Alert, Button, Group, Paper, Select, Stack, Text, TextInput } from "@mantine/core";
 import { ProformasTable } from "./proformas-table";
+import { EnTetePage } from "@/components/shared/en-tete-page";
+import { FileSignature } from "lucide-react";
 
 /** Nombre de proformas affichées par page. */
 const PAR_PAGE = 50;
@@ -81,7 +83,7 @@ export default async function PageProformas({
   return (
     <Stack gap="md">
       <div>
-        <Title order={1} size="h2">Proformas</Title>
+        <EnTetePage icone={FileSignature} couleur="violet" titre="Proformas" />
         <Text size="sm" c="dimmed" mt={4}>
           Chiffrages remis aux clients avant facturation. Une proforma n&apos;entre ni dans le
           chiffre d&apos;affaires, ni dans les impayés, ni en caisse.
@@ -94,31 +96,33 @@ export default async function PageProformas({
         </Alert>
       )}
 
-      <form>
-        <Group align="flex-end" wrap="wrap" gap="sm">
-          <Select
-            label="Statut"
-            name="statut"
-            defaultValue={statutFiltre}
-            placeholder="Tous"
-            clearable
-            w={160}
-            data={STATUTS_PROFORMA.map((s) => ({ value: s, label: libelle(STATUT_PROFORMA_LABEL, s) }))}
-          />
-          <TextInput label="Du" name="du" type="date" defaultValue={du} />
-          <TextInput label="Au" name="au" type="date" defaultValue={au} />
-          <Button type="submit" variant="outline">
-            Filtrer
-          </Button>
-          {(statut || du || au) && (
-            <Button variant="subtle" component={Link} href="/proformas">
-              Réinitialiser
+      <Paper withBorder radius="lg" p="md">
+        <form>
+          <Group align="flex-end" wrap="wrap" gap="sm">
+            <Select
+              label="Statut"
+              name="statut"
+              defaultValue={statutFiltre}
+              placeholder="Tous"
+              clearable
+              w={160}
+              data={STATUTS_PROFORMA.map((s) => ({ value: s, label: libelle(STATUT_PROFORMA_LABEL, s) }))}
+            />
+            <TextInput label="Du" name="du" type="date" defaultValue={du} />
+            <TextInput label="Au" name="au" type="date" defaultValue={au} />
+            <Button type="submit" variant="outline">
+              Filtrer
             </Button>
-          )}
-        </Group>
-      </form>
+            {(statut || du || au) && (
+              <Button variant="subtle" component={Link} href="/proformas">
+                Réinitialiser
+              </Button>
+            )}
+          </Group>
+        </form>
+      </Paper>
 
-      <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+      <Paper withBorder radius="lg" style={{ overflow: "hidden" }}>
         <ProformasTable liste={liste} />
       </Paper>
 

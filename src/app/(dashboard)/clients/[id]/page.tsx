@@ -5,10 +5,11 @@ import { db } from "@/db";
 import { clients, commandesClient, factures, proformas } from "@/db/schema";
 import { can, requirePermission } from "@/lib/permissions";
 import { formatMontant } from "@/lib/format";
-import { Alert, Badge, Button, Group, Stack, Text, Title } from "@mantine/core";
+import { Alert, Badge, Button, Group, Stack, Text, Title, ThemeIcon, Paper } from "@mantine/core";
 import { ClientFormDialog } from "@/components/clients/client-form-dialog";
 import { modifierClient } from "../actions";
 import { ClientDetailTables } from "./client-detail-tables";
+import { Users } from "lucide-react";
 
 export default async function PageClient({
   params,
@@ -67,52 +68,59 @@ export default async function PageClient({
 
   return (
     <Stack gap="xl">
-      <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
-        <div>
-          <Title order={1} size="h2">
-            {client.raisonSociale || `${client.nom} ${client.prenom ?? ""}`.trim()}
-          </Title>
-          <Group gap="xs" mt={4} wrap="wrap">
-            <Text size="sm" c="dimmed" className="font-mono tabular-nums">{client.telephone}</Text>
-            {client.email && <Text size="sm" c="dimmed">· {client.email}</Text>}
-            {client.nif && (
-              <Badge color="gray" variant="light" className="font-mono tabular-nums">
-                NIF {client.nif}
-              </Badge>
-            )}
-            <Badge color={client.actif ? "green" : "gray"} variant="light">
-              {client.actif ? "Actif" : "Inactif"}
-            </Badge>
+      <Paper withBorder radius="lg" p="lg">
+        <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
+          <Group gap="md" wrap="nowrap" align="flex-start">
+            <ThemeIcon size={52} radius="lg" variant="light" color="brand" visibleFrom="xs">
+              <Users size={26} strokeWidth={1.8} />
+            </ThemeIcon>
+            <div>
+              <Title order={1} size="h2" fw={800}>
+                {client.raisonSociale || `${client.nom} ${client.prenom ?? ""}`.trim()}
+              </Title>
+              <Group gap="xs" mt={4} wrap="wrap">
+                <Text size="sm" c="dimmed" className="font-mono tabular-nums">{client.telephone}</Text>
+                {client.email && <Text size="sm" c="dimmed">· {client.email}</Text>}
+                {client.nif && (
+                  <Badge color="gray" variant="light" className="font-mono tabular-nums">
+                    NIF {client.nif}
+                  </Badge>
+                )}
+                <Badge color={client.actif ? "green" : "gray"} variant="light">
+                  {client.actif ? "Actif" : "Inactif"}
+                </Badge>
+              </Group>
+              {client.adresse && (
+                <Text size="sm" c="dimmed" mt={4}>{client.adresse}</Text>
+              )}
+              {peutVoirSolde && (
+                soldeDu > 0 ? (
+                  <Alert color="red" variant="light" mt="sm" p="xs" className="inline-block">
+                    <Group gap="xs">
+                      <span>Solde dû :</span>
+                      <span className="font-mono text-base font-semibold tabular-nums">{formatMontant(soldeDu)}</span>
+                    </Group>
+                  </Alert>
+                ) : (
+                  <Text size="sm" c="dimmed" mt="xs">
+                    Solde dû :{" "}
+                    <span className="font-mono font-semibold tabular-nums text-[var(--mantine-color-text)]">
+                      {formatMontant(soldeDu)}
+                    </span>
+                  </Text>
+                )
+              )}
+            </div>
           </Group>
-          {client.adresse && (
-            <Text size="sm" c="dimmed" mt={4}>{client.adresse}</Text>
+          {peutEcrire && (
+            <ClientFormDialog
+              action={modifierClient.bind(null, client.id)}
+              client={client}
+              trigger={<Button variant="outline">Modifier</Button>}
+            />
           )}
-          {peutVoirSolde && (
-            soldeDu > 0 ? (
-              <Alert color="red" variant="light" mt="sm" p="xs" className="inline-block">
-                <Group gap="xs">
-                  <span>Solde dû :</span>
-                  <span className="font-mono text-base font-semibold tabular-nums">{formatMontant(soldeDu)}</span>
-                </Group>
-              </Alert>
-            ) : (
-              <Text size="sm" c="dimmed" mt="xs">
-                Solde dû :{" "}
-                <span className="font-mono font-semibold tabular-nums text-[var(--mantine-color-text)]">
-                  {formatMontant(soldeDu)}
-                </span>
-              </Text>
-            )
-          )}
-        </div>
-        {peutEcrire && (
-          <ClientFormDialog
-            action={modifierClient.bind(null, client.id)}
-            client={client}
-            trigger={<Button variant="outline">Modifier</Button>}
-          />
-        )}
-      </Group>
+        </Group>
+      </Paper>
 
       <ClientDetailTables
         commandes={commandes}

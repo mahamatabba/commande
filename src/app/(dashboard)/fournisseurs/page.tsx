@@ -5,11 +5,14 @@ import { db } from "@/db";
 import { fournisseurs } from "@/db/schema";
 import { can, requirePermission } from "@/lib/permissions";
 import { bornerPagination, lienPagination, lirePage } from "@/lib/filtres";
-import { Group, Paper, Stack, TextInput, Title } from "@mantine/core";
+import { Group, Paper, Stack, TextInput } from "@mantine/core";
 import { FournisseurFormDialog } from "@/components/fournisseurs/fournisseur-form-dialog";
 import { PaginationListe } from "@/components/shared/pagination-liste";
 import { FournisseursTable } from "./fournisseurs-table";
 import { creerFournisseur, modifierFournisseur, basculerActifFournisseur } from "./actions";
+import { EnTetePage } from "@/components/shared/en-tete-page";
+import { Search } from "lucide-react";
+import { Building2 } from "lucide-react";
 
 /** Nombre de fournisseurs affichés par page. */
 const PAR_PAGE = 50;
@@ -52,15 +55,17 @@ export default async function PageFournisseurs({
   return (
     <Stack gap="md">
       <Group justify="space-between" wrap="wrap" gap="sm">
-        <Title order={1} size="h2">Fournisseurs</Title>
+        <EnTetePage icone={Building2} couleur="aei" titre="Fournisseurs" description="Carnet des fournisseurs et de leurs coordonnées." />
         {peutEcrire && <FournisseurFormDialog action={creerFournisseur} />}
       </Group>
 
-      <form className="max-w-sm">
-        <TextInput name="q" placeholder="Rechercher un fournisseur..." defaultValue={q} />
-      </form>
+      <Paper withBorder radius="lg" p="md">
+        <form className="max-w-md">
+          <TextInput name="q" placeholder="Rechercher un fournisseur..." defaultValue={q} leftSection={<Search size={16} />} />
+        </form>
+      </Paper>
 
-      <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+      <Paper withBorder radius="lg" style={{ overflow: "hidden" }}>
         <FournisseursTable
           liste={liste}
           peutEcrire={peutEcrire}

@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { db } from "@/db";
+import { lireVisuelsSignature } from "@/lib/parametres";
 import { can } from "@/lib/permissions";
 import { FacturePdf } from "@/lib/pdf/facture-pdf";
 import {
@@ -28,7 +29,9 @@ export async function GET(requete: Request, { params }: { params: Promise<{ id: 
   });
   if (!facture) return introuvable();
 
-  return reponsePdf(<FacturePdf facture={facture} />, {
+  const visuels = await lireVisuelsSignature();
+
+  return reponsePdf(<FacturePdf facture={facture} visuels={visuels} />, {
     nomFichier: `facture-${facture.numero}`,
     telecharger: veutTelecharger(requete.url),
   });

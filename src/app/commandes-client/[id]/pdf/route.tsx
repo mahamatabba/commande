@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { db } from "@/db";
+import { lireVisuelsSignature } from "@/lib/parametres";
 import { can } from "@/lib/permissions";
 import { CommandeClientPdf } from "@/lib/pdf/commande-client-pdf";
 import {
@@ -26,7 +27,9 @@ export async function GET(requete: Request, { params }: { params: Promise<{ id: 
   });
   if (!commande) return introuvable();
 
-  return reponsePdf(<CommandeClientPdf commande={commande} />, {
+  const visuels = await lireVisuelsSignature();
+
+  return reponsePdf(<CommandeClientPdf commande={commande} visuels={visuels} />, {
     nomFichier: `bon-livraison-${commande.numero}`,
     telecharger: veutTelecharger(requete.url),
   });

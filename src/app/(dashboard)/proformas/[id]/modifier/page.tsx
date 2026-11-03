@@ -3,9 +3,10 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { requirePermission } from "@/lib/permissions";
-import { Alert, Button, Stack, Text, Title } from "@mantine/core";
+import { Alert, Button, Stack, Text, Title, ThemeIcon, Group } from "@mantine/core";
 import { ModifierProformaForm } from "@/components/proformas/modifier-proforma-form";
 import { TAUX_TVA_STANDARD } from "@/lib/constants";
+import { FilePen } from "lucide-react";
 
 const JOUR_MS = 24 * 60 * 60 * 1000;
 
@@ -31,7 +32,12 @@ export default async function PageModifierProforma({ params }: { params: Promise
   if (proforma.statut !== "EMISE" || proforma.commandeClient.statut !== "VALIDEE") {
     return (
       <Stack gap="md" maw={640}>
-        <Title order={1} size="h2">Modifier la proforma {proforma.numero}</Title>
+        <Group gap="md" wrap="nowrap">
+          <ThemeIcon size={52} radius="lg" variant="light" color="violet" visibleFrom="xs">
+            <FilePen size={26} strokeWidth={1.8} />
+          </ThemeIcon>
+          <Title order={1} size="h2" fw={800}>Modifier la proforma {proforma.numero}</Title>
+        </Group>
         <Alert color="yellow" variant="light">
           Seule une proforma en circulation, sur une vente encore validée, peut être modifiée.
         </Alert>
@@ -58,10 +64,15 @@ export default async function PageModifierProforma({ params }: { params: Promise
   return (
     <Stack gap="xl" maw={1152}>
       <div>
-        <Title order={1} size="h2">
+        <Group gap="md" wrap="nowrap">
+          <ThemeIcon size={52} radius="lg" variant="light" color="violet" visibleFrom="xs">
+            <FilePen size={26} strokeWidth={1.8} />
+          </ThemeIcon>
+          <Title order={1} size="h2" fw={800}>
           Modifier la proforma <span className="font-mono tabular-nums">{proforma.numero}</span>
         </Title>
-        <Text size="sm" c="dimmed" mt={4}>
+        </Group>
+        <Text size="sm" c="dimmed" mt={4} ml={{ base: 0, xs: 68 }}>
           {nomAffiche(proforma.client)} · vente {proforma.commandeClient.numero}. Les lignes modifiées
           ici remplacent celles de la vente, qui n&apos;est pas encore facturée.
         </Text>

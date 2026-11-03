@@ -35,6 +35,8 @@ export function FacturesTable({ liste, peutVoirImpayes }: { liste: Facture[]; pe
       records={liste}
       idAccessor="id"
       withTableBorder={false}
+      highlightOnHover
+      minHeight={liste.length === 0 ? 160 : undefined}
       noRecordsText="Aucune facture."
       columns={[
         {

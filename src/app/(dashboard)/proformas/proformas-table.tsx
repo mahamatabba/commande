@@ -36,6 +36,8 @@ export function ProformasTable({ liste }: { liste: Proforma[] }) {
       records={liste}
       idAccessor="id"
       withTableBorder={false}
+      highlightOnHover
+      minHeight={liste.length === 0 ? 160 : undefined}
       noRecordsText="Aucune proforma. Elles s'établissent depuis la fiche d'une vente validée."
       columns={[
         {

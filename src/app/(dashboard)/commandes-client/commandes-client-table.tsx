@@ -32,6 +32,8 @@ export function CommandesClientTable({ commandes }: { commandes: CommandeClient[
       records={commandes}
       idAccessor="id"
       withTableBorder={false}
+      highlightOnHover
+      minHeight={commandes.length === 0 ? 160 : undefined}
       noRecordsText="Aucune commande."
       columns={[
         {

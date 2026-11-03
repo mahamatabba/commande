@@ -9,7 +9,7 @@ import { STATUT_COMMANDE_FOURNISSEUR_BADGE } from "@/lib/statut-style";
 // (`Table.Thead`) : dans un composant serveur, `Table` n'est qu'une référence
 // vers @mantine/core, et `.Thead` y désigne un export qui n'existe pas. Le
 // composant vaut alors `undefined` au rendu et la page casse.
-import { Badge, Button, Group, Paper, Stack, Table, TableTbody, TableTd, TableTh, TableThead, TableTr, Text, Title } from "@mantine/core";
+import { Badge, Button, Group, Paper, Stack, Table, TableTbody, TableTd, TableTh, TableThead, TableTr, Text, Title, ThemeIcon } from "@mantine/core";
 import { AnnulationDialog } from "@/components/shared/annulation-dialog";
 import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
 import {
@@ -17,6 +17,7 @@ import {
   recevoirCommandeFournisseur,
   validerCommandeFournisseur,
 } from "../actions";
+import { ShoppingCart } from "lucide-react";
 
 const STATUT_LABEL: Record<string, string> = {
   BROUILLON: "Brouillon",
@@ -50,47 +51,54 @@ export default async function PageCommandeFournisseur({
 
   return (
     <Stack gap="xl">
-      <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
-        <div>
-          <Group gap="xs">
-            <Title order={1} size="h2" className="font-mono tabular-nums">{commande.numero}</Title>
-            <Badge {...STATUT_COMMANDE_FOURNISSEUR_BADGE[commande.statut]}>
-              {STATUT_LABEL[commande.statut]}
-            </Badge>
+      <Paper withBorder radius="lg" p="lg">
+        <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
+          <Group gap="md" wrap="nowrap" align="flex-start">
+            <ThemeIcon size={52} radius="lg" variant="light" color="aei" visibleFrom="xs">
+              <ShoppingCart size={26} strokeWidth={1.8} />
+            </ThemeIcon>
+            <div>
+              <Group gap="xs">
+                <Title order={1} size="h2" fw={800} className="font-mono tabular-nums">{commande.numero}</Title>
+                <Badge {...STATUT_COMMANDE_FOURNISSEUR_BADGE[commande.statut]}>
+                  {STATUT_LABEL[commande.statut]}
+                </Badge>
+              </Group>
+              <Text size="sm" c="dimmed" mt={4}>
+                <Link href={`/fournisseurs/${commande.fournisseur.id}`} className="hover:underline">
+                  {commande.fournisseur.nom}
+                </Link>{" "}
+                · <span className="font-mono tabular-nums">{formatDate(commande.dateCommande)}</span>
+              </Text>
+            </div>
           </Group>
-          <Text size="sm" c="dimmed" mt={4}>
-            <Link href={`/fournisseurs/${commande.fournisseur.id}`} className="hover:underline">
-              {commande.fournisseur.nom}
-            </Link>{" "}
-            · <span className="font-mono tabular-nums">{formatDate(commande.dateCommande)}</span>
-          </Text>
-        </div>
-        <Group gap="xs" wrap="wrap">
-          <ApercuDocumentDialog
-            href={`/commandes-fournisseur/${commande.id}/pdf`}
-            titre={`Bon de commande ${commande.numero}`}
-            nomFichier={`bon-commande-${commande.numero}`}
-            trigger={<Button variant="outline">Voir le bon de commande</Button>}
-            defaultOpen={nouveau === "1"}
-          />
-          {peutEcrire && commande.statut === "BROUILLON" && (
-            <form action={validerCommandeFournisseur.bind(null, commande.id)}>
-              <Button type="submit">Valider</Button>
-            </form>
-          )}
-          {peutEcrire && commande.statut === "VALIDEE" && (
-            <form action={recevoirCommandeFournisseur.bind(null, commande.id)}>
-              <Button type="submit">Marquer reçue</Button>
-            </form>
-          )}
-          {peutAnnuler && commande.statut !== "ANNULEE" && commande.statut !== "RECUE" && (
-            <AnnulationDialog
-              action={annulerCommandeFournisseur.bind(null, commande.id)}
-              titre="Annuler la commande"
+          <Group gap="xs" wrap="wrap">
+            <ApercuDocumentDialog
+              href={`/commandes-fournisseur/${commande.id}/pdf`}
+              titre={`Bon de commande ${commande.numero}`}
+              nomFichier={`bon-commande-${commande.numero}`}
+              trigger={<Button variant="outline">Voir le bon de commande</Button>}
+              defaultOpen={nouveau === "1"}
             />
-          )}
+            {peutEcrire && commande.statut === "BROUILLON" && (
+              <form action={validerCommandeFournisseur.bind(null, commande.id)}>
+                <Button type="submit">Valider</Button>
+              </form>
+            )}
+            {peutEcrire && commande.statut === "VALIDEE" && (
+              <form action={recevoirCommandeFournisseur.bind(null, commande.id)}>
+                <Button type="submit">Marquer reçue</Button>
+              </form>
+            )}
+            {peutAnnuler && commande.statut !== "ANNULEE" && commande.statut !== "RECUE" && (
+              <AnnulationDialog
+                action={annulerCommandeFournisseur.bind(null, commande.id)}
+                titre="Annuler la commande"
+              />
+            )}
+          </Group>
         </Group>
-      </Group>
+      </Paper>
 
       <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
         <Table>

@@ -16,8 +16,10 @@ import {
   lireStatut,
 } from "@/lib/filtres";
 import { PaginationListe } from "@/components/shared/pagination-liste";
-import { Alert, Button, Group, Paper, Select, Stack, TextInput, Title } from "@mantine/core";
+import { Alert, Button, Group, Paper, Select, Stack, TextInput } from "@mantine/core";
 import { FacturesTable } from "./factures-table";
+import { EnTetePage } from "@/components/shared/en-tete-page";
+import { FileText } from "lucide-react";
 
 /** Nombre de factures affichées par page. */
 const PAR_PAGE = 50;
@@ -94,40 +96,42 @@ export default async function PageFactures({
 
   return (
     <Stack gap="md">
-      <Title order={1} size="h2">Factures</Title>
+      <EnTetePage icone={FileText} couleur="brand" titre="Factures" description="Factures émises, leur statut de paiement et le reste à encaisser." />
       {params.supprimee === "1" && (
         <Alert color="green" variant="light">
           La facture annulée a été supprimée définitivement.
         </Alert>
       )}
 
-      <form>
-        <Group align="flex-end" wrap="wrap" gap="sm">
-          {peutVoirImpayes && (
-            <Select
-              label="Statut"
-              name="statut"
-              defaultValue={statutFiltre}
-              placeholder="Tous"
-              clearable
-              w={160}
-              data={STATUTS_FACTURE.map((s) => ({ value: s, label: libelle(STATUT_FACTURE_LABEL, s) }))}
-            />
-          )}
-          <TextInput label="Du" name="du" type="date" defaultValue={du} />
-          <TextInput label="Au" name="au" type="date" defaultValue={au} />
-          <Button type="submit" variant="outline">
-            Filtrer
-          </Button>
-          {(statut || du || au) && (
-            <Button variant="subtle" component={Link} href="/factures">
-              Réinitialiser
+      <Paper withBorder radius="lg" p="md">
+        <form>
+          <Group align="flex-end" wrap="wrap" gap="sm">
+            {peutVoirImpayes && (
+              <Select
+                label="Statut"
+                name="statut"
+                defaultValue={statutFiltre}
+                placeholder="Tous"
+                clearable
+                w={160}
+                data={STATUTS_FACTURE.map((s) => ({ value: s, label: libelle(STATUT_FACTURE_LABEL, s) }))}
+              />
+            )}
+            <TextInput label="Du" name="du" type="date" defaultValue={du} />
+            <TextInput label="Au" name="au" type="date" defaultValue={au} />
+            <Button type="submit" variant="outline">
+              Filtrer
             </Button>
-          )}
-        </Group>
-      </form>
+            {(statut || du || au) && (
+              <Button variant="subtle" component={Link} href="/factures">
+                Réinitialiser
+              </Button>
+            )}
+          </Group>
+        </form>
+      </Paper>
 
-      <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+      <Paper withBorder radius="lg" style={{ overflow: "hidden" }}>
         <FacturesTable liste={liste} peutVoirImpayes={peutVoirImpayes} />
       </Paper>
 

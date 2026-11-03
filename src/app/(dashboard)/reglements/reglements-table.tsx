@@ -31,6 +31,8 @@ export function ReglementsTable({ historique }: { historique: Reglement[] }) {
       records={historique}
       idAccessor="id"
       withTableBorder={false}
+      highlightOnHover
+      minHeight={historique.length === 0 ? 160 : undefined}
       noRecordsText="Aucun règlement enregistré."
       columns={[
         {

@@ -39,6 +39,11 @@ export function formaterDetailsJournal(entite: string, details: unknown): string
   const texte = (v: unknown) => (typeof v === "string" ? v : undefined);
   const nombre = (v: unknown) => (typeof v === "number" ? v : undefined);
 
+  if (entite === "parametres") {
+    const parametre = texte(d.parametre);
+    if (parametre) return d.operation === "retrait" ? `Retrait : ${parametre}` : `Import : ${parametre}`;
+  }
+
   if (entite === "utilisateur") {
     if (d.motDePasseReinitialise) return "Mot de passe réinitialisé";
     if (typeof d.supprimeDefinitivement === "boolean") {

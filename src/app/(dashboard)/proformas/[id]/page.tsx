@@ -11,12 +11,13 @@ import { STATUT_PROFORMA_BADGE } from "@/lib/statut-style";
 // (`Table.Thead`) : dans un composant serveur, `Table` n'est qu'une référence
 // vers @mantine/core, et `.Thead` y désigne un export qui n'existe pas. Le
 // composant vaut alors `undefined` au rendu et la page casse.
-import { Alert, Badge, Button, Group, Paper, Stack, Table, TableTbody, TableTd, TableTh, TableThead, TableTr, Text, Title } from "@mantine/core";
+import { Alert, Badge, Button, Group, Paper, Stack, Table, TableTbody, TableTd, TableTh, TableThead, TableTr, Text, Title, ThemeIcon } from "@mantine/core";
 import { AnnulationDialog } from "@/components/shared/annulation-dialog";
 import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
 import { ConversionProformaDialog } from "@/components/proformas/conversion-dialog";
 import { SuppressionDialog } from "@/components/shared/suppression-dialog";
 import { annulerProforma, convertirProformaEnFacture, supprimerProforma } from "../actions";
+import { FileSignature } from "lucide-react";
 
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
   if (c.raisonSociale) return c.raisonSociale;
@@ -53,62 +54,69 @@ export default async function PageProforma({
 
   return (
     <Stack gap="xl">
-      <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
-        <div>
-          <Group gap="xs">
-            <Title order={1} size="h2" className="font-mono tabular-nums">{proforma.numero}</Title>
-            <Badge {...STATUT_PROFORMA_BADGE[proforma.statut]}>
-              {libelle(STATUT_PROFORMA_LABEL, proforma.statut)}
-            </Badge>
+      <Paper withBorder radius="lg" p="lg">
+        <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
+          <Group gap="md" wrap="nowrap" align="flex-start">
+            <ThemeIcon size={52} radius="lg" variant="light" color="violet" visibleFrom="xs">
+              <FileSignature size={26} strokeWidth={1.8} />
+            </ThemeIcon>
+            <div>
+              <Group gap="xs">
+                <Title order={1} size="h2" fw={800} className="font-mono tabular-nums">{proforma.numero}</Title>
+                <Badge {...STATUT_PROFORMA_BADGE[proforma.statut]}>
+                  {libelle(STATUT_PROFORMA_LABEL, proforma.statut)}
+                </Badge>
+              </Group>
+              <Text size="sm" c="dimmed" mt={4}>
+                <Link href={`/clients/${proforma.client.id}`} className="hover:underline">
+                  {nomAffiche(proforma.client)}
+                </Link>{" "}
+                · <span className="font-mono tabular-nums">{formatDate(proforma.dateProforma)}</span> · vente{" "}
+                <Link href={`/commandes-client/${proforma.commandeClient.id}`} className="font-mono tabular-nums hover:underline">
+                  {proforma.commandeClient.numero}
+                </Link>
+              </Text>
+            </div>
           </Group>
-          <Text size="sm" c="dimmed" mt={4}>
-            <Link href={`/clients/${proforma.client.id}`} className="hover:underline">
-              {nomAffiche(proforma.client)}
-            </Link>{" "}
-            · <span className="font-mono tabular-nums">{formatDate(proforma.dateProforma)}</span> · vente{" "}
-            <Link href={`/commandes-client/${proforma.commandeClient.id}`} className="font-mono tabular-nums hover:underline">
-              {proforma.commandeClient.numero}
-            </Link>
-          </Text>
-        </div>
-        <Group gap="xs" wrap="wrap">
-          <ApercuDocumentDialog
-            href={`/proformas/${proforma.id}/pdf`}
-            titre={`Proforma ${proforma.numero}`}
-            nomFichier={`proforma-${proforma.numero}`}
-            trigger={<Button variant="outline">Voir la proforma</Button>}
-            defaultOpen={nouveau === "1" || modifiee === "1"}
-          />
-          {peutConvertir && proforma.statut === "EMISE" && (
-            <Button variant="default" component={Link} href={`/proformas/${proforma.id}/modifier`}>
-              Modifier
-            </Button>
-          )}
-          {peutConvertir && proforma.statut === "EMISE" && (
-            <ConversionProformaDialog
-              action={convertirProformaEnFacture.bind(null, proforma.id)}
-              montantTotal={proforma.montantTotal}
-              auComptant={proforma.commandeClient.modeReglement === "ESPECES"}
+          <Group gap="xs" wrap="wrap">
+            <ApercuDocumentDialog
+              href={`/proformas/${proforma.id}/pdf`}
+              titre={`Proforma ${proforma.numero}`}
+              nomFichier={`proforma-${proforma.numero}`}
+              trigger={<Button variant="outline">Voir la proforma</Button>}
+              defaultOpen={nouveau === "1" || modifiee === "1"}
             />
-          )}
-          {peutAnnuler && proforma.statut === "EMISE" && (
-            <AnnulationDialog
-              action={annulerProforma.bind(null, proforma.id)}
-              titre="Annuler la proforma"
-              description="Aucune écriture comptable n'est reprise : une proforma n'en a généré aucune. L'annulation libère la vente pour un nouveau chiffrage."
-            />
-          )}
-          {peutAnnuler && proforma.statut === "ANNULEE" && (
-            <SuppressionDialog
-              action={supprimerProforma.bind(null, proforma.id)}
-              titre={`Supprimer la proforma ${proforma.numero}`}
-              libelleBouton="Supprimer la proforma"
-              messageSucces="Proforma supprimée"
-              description="Une proforma n'a généré aucune écriture : la supprimer ne touche ni la caisse ni la vente. La suppression reste tracée dans le journal."
-            />
-          )}
+            {peutConvertir && proforma.statut === "EMISE" && (
+              <Button variant="default" component={Link} href={`/proformas/${proforma.id}/modifier`}>
+                Modifier
+              </Button>
+            )}
+            {peutConvertir && proforma.statut === "EMISE" && (
+              <ConversionProformaDialog
+                action={convertirProformaEnFacture.bind(null, proforma.id)}
+                montantTotal={proforma.montantTotal}
+                auComptant={proforma.commandeClient.modeReglement === "ESPECES"}
+              />
+            )}
+            {peutAnnuler && proforma.statut === "EMISE" && (
+              <AnnulationDialog
+                action={annulerProforma.bind(null, proforma.id)}
+                titre="Annuler la proforma"
+                description="Aucune écriture comptable n'est reprise : une proforma n'en a généré aucune. L'annulation libère la vente pour un nouveau chiffrage."
+              />
+            )}
+            {peutAnnuler && proforma.statut === "ANNULEE" && (
+              <SuppressionDialog
+                action={supprimerProforma.bind(null, proforma.id)}
+                titre={`Supprimer la proforma ${proforma.numero}`}
+                libelleBouton="Supprimer la proforma"
+                messageSucces="Proforma supprimée"
+                description="Une proforma n'a généré aucune écriture : la supprimer ne touche ni la caisse ni la vente. La suppression reste tracée dans le journal."
+              />
+            )}
+          </Group>
         </Group>
-      </Group>
+      </Paper>
 
       {proforma.statut === "CONVERTIE" && proforma.facture && (
         <Alert color="green" variant="light">

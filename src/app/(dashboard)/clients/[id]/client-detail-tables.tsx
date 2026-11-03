@@ -74,6 +74,8 @@ export function ClientDetailTables({
             records={commandes}
             idAccessor="id"
             withTableBorder={false}
+            highlightOnHover
+            minHeight={commandes.length === 0 ? 160 : undefined}
             noRecordsText="Aucune commande."
             columns={[
               {
@@ -124,6 +126,8 @@ export function ClientDetailTables({
               records={proformasClient}
               idAccessor="id"
               withTableBorder={false}
+              highlightOnHover
+              minHeight={proformasClient.length === 0 ? 160 : undefined}
               columns={[
                 {
                   accessor: "numero",
@@ -180,6 +184,8 @@ export function ClientDetailTables({
             records={facturesClient}
             idAccessor="id"
             withTableBorder={false}
+            highlightOnHover
+            minHeight={facturesClient.length === 0 ? 160 : undefined}
             noRecordsText="Aucune facture."
             columns={[
               {

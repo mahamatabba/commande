@@ -32,6 +32,8 @@ export function FournisseursTable({
       records={liste}
       idAccessor="id"
       withTableBorder={false}
+      highlightOnHover
+      minHeight={liste.length === 0 ? 160 : undefined}
       noRecordsText="Aucun fournisseur."
       columns={[
         {

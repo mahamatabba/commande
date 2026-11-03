@@ -2,9 +2,47 @@
 @import "tailwindcss";
 @import "@mantine/core/styles.layer.css";
 @import "@mantine/notifications/styles.layer.css";
+@import "mantine-datatable/styles.layer.css";
 
 @theme inline {
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
   --font-heading: var(--font-sans);
+}
+
+/*
+ * Tableaux (mantine-datatable) : en-tête discret en petites capitales, lignes
+ * aérées, survol visible. Appliqué à toutes les listes de l'application.
+ */
+@layer components {
+  .mantine-datatable thead tr th,
+  .mantine-AppShell-main .mantine-Table-thead .mantine-Table-th {
+    background-color: var(--mantine-color-dark-6);
+    color: var(--mantine-color-dark-1);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .mantine-datatable tbody tr td {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .mantine-AppShell-main .mantine-Table-tbody .mantine-Table-td {
+    padding-top: 11px;
+    padding-bottom: 11px;
+  }
+
+  .mantine-datatable tbody tr:hover td,
+  .mantine-AppShell-main .mantine-Table-tbody .mantine-Table-tr:hover .mantine-Table-td {
+    background-color: rgba(0, 160, 218, 0.07);
+  }
+
+  .mantine-datatable-empty-state {
+    color: var(--mantine-color-dimmed);
+  }
 }

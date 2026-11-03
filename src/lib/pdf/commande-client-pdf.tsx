@@ -14,6 +14,7 @@ import {
   TitreBoite,
   TotalPrincipal,
   type LignePdf,
+  type VisuelsPdf,
 } from "./gabarit";
 
 export type DonneesCommandeClient = {
@@ -38,7 +39,7 @@ function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: stri
   return c.prenom ? `${c.nom} ${c.prenom}` : c.nom;
 }
 
-export function CommandeClientPdf({ commande }: { commande: DonneesCommandeClient }) {
+export function CommandeClientPdf({ commande, visuels }: { commande: DonneesCommandeClient; visuels?: VisuelsPdf }) {
   return (
     <GabaritDocument
       titre={`Bon de livraison ${commande.numero}`}
@@ -81,7 +82,7 @@ export function CommandeClientPdf({ commande }: { commande: DonneesCommandeClien
         Arrêté le présent bon de livraison à la somme de : {montantEnLettres(commande.montantTotal)}.
       </MentionMontant>
 
-      <Signatures titre="Reçu par — Le Client" mention="Date, nom et signature" />
+      <Signatures titre="Reçu par — Le Client" mention="Date, nom et signature" visuels={visuels} />
     </GabaritDocument>
   );
 }

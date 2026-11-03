@@ -19,7 +19,8 @@ export type NavIcone =
   | "reglements"
   | "caisse"
   | "utilisateurs"
-  | "journal";
+  | "journal"
+  | "parametres";
 
 export type NavItem = {
   href: string;
@@ -87,6 +88,7 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { href: "/utilisateurs", label: "Utilisateurs", icone: "utilisateurs", permissions: ["utilisateurs:gerer"] },
       { href: "/journal", label: "Journal d'activité", icone: "journal", permissions: ["journal:consulter"] },
+      { href: "/parametres", label: "Paramètres", icone: "parametres", permissions: ["utilisateurs:gerer"] },
     ],
   },
 ];

@@ -16,8 +16,10 @@ import {
 } from "@/lib/filtres";
 import { PaginationListe } from "@/components/shared/pagination-liste";
 import { STATUT_COMMANDE_CLIENT_LABEL, libelle } from "@/lib/libelles";
-import { Button, Group, Paper, Select, Stack, TextInput, Title } from "@mantine/core";
+import { Button, Group, Paper, Select, Stack, TextInput } from "@mantine/core";
 import { CommandesClientTable } from "./commandes-client-table";
+import { EnTetePage } from "@/components/shared/en-tete-page";
+import { ShoppingBag } from "lucide-react";
 
 /** Nombre de ventes affichées par page. */
 const PAR_PAGE = 50;
@@ -82,7 +84,7 @@ export default async function PageCommandesClient({
   return (
     <Stack gap="md">
       <Group justify="space-between" wrap="wrap" gap="sm">
-        <Title order={1} size="h2">Ventes</Title>
+        <EnTetePage icone={ShoppingBag} couleur="brand" titre="Ventes" description="Ventes aux clients, à facturer ou à chiffrer en proforma." />
         {peutEcrire && (
           <Button component={Link} href="/commandes-client/nouvelle">
             Nouvelle vente
@@ -90,34 +92,36 @@ export default async function PageCommandesClient({
         )}
       </Group>
 
-      <form>
-        <Group align="flex-end" wrap="wrap" gap="sm">
-          <Select
-            label="Statut"
-            name="statut"
-            defaultValue={statutFiltre}
-            placeholder="Tous"
-            clearable
-            w={160}
-            data={STATUTS_COMMANDE_CLIENT.map((s) => ({
-              value: s,
-              label: libelle(STATUT_COMMANDE_CLIENT_LABEL, s),
-            }))}
-          />
-          <TextInput label="Du" name="du" type="date" defaultValue={du} />
-          <TextInput label="Au" name="au" type="date" defaultValue={au} />
-          <Button type="submit" variant="outline">
-            Filtrer
-          </Button>
-          {(statut || du || au) && (
-            <Button variant="subtle" component={Link} href="/commandes-client">
-              Réinitialiser
+      <Paper withBorder radius="lg" p="md">
+        <form>
+          <Group align="flex-end" wrap="wrap" gap="sm">
+            <Select
+              label="Statut"
+              name="statut"
+              defaultValue={statutFiltre}
+              placeholder="Tous"
+              clearable
+              w={160}
+              data={STATUTS_COMMANDE_CLIENT.map((s) => ({
+                value: s,
+                label: libelle(STATUT_COMMANDE_CLIENT_LABEL, s),
+              }))}
+            />
+            <TextInput label="Du" name="du" type="date" defaultValue={du} />
+            <TextInput label="Au" name="au" type="date" defaultValue={au} />
+            <Button type="submit" variant="outline">
+              Filtrer
             </Button>
-          )}
-        </Group>
-      </form>
+            {(statut || du || au) && (
+              <Button variant="subtle" component={Link} href="/commandes-client">
+                Réinitialiser
+              </Button>
+            )}
+          </Group>
+        </form>
+      </Paper>
 
-      <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+      <Paper withBorder radius="lg" style={{ overflow: "hidden" }}>
         <CommandesClientTable commandes={commandes} />
       </Paper>
 

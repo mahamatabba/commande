@@ -5,11 +5,14 @@ import { db } from "@/db";
 import { clients } from "@/db/schema";
 import { can, requirePermission } from "@/lib/permissions";
 import { bornerPagination, lienPagination, lirePage } from "@/lib/filtres";
-import { Group, Paper, Stack, TextInput, Title } from "@mantine/core";
+import { Group, Paper, Stack, TextInput } from "@mantine/core";
 import { ClientFormDialog } from "@/components/clients/client-form-dialog";
 import { PaginationListe } from "@/components/shared/pagination-liste";
 import { ClientsTable } from "./clients-table";
 import { creerClient, modifierClient, basculerActifClient } from "./actions";
+import { EnTetePage } from "@/components/shared/en-tete-page";
+import { Search } from "lucide-react";
+import { Users } from "lucide-react";
 
 /** Nombre de clients affichés par page. */
 const PAR_PAGE = 50;
@@ -57,15 +60,17 @@ export default async function PageClients({
   return (
     <Stack gap="md">
       <Group justify="space-between" wrap="wrap" gap="sm">
-        <Title order={1} size="h2">Clients</Title>
+        <EnTetePage icone={Users} couleur="brand" titre="Clients" description="Carnet des clients, particuliers et organisations." />
         {peutEcrire && <ClientFormDialog action={creerClient} />}
       </Group>
 
-      <form className="max-w-sm">
-        <TextInput name="q" placeholder="Rechercher un client..." defaultValue={q} />
-      </form>
+      <Paper withBorder radius="lg" p="md">
+        <form className="max-w-md">
+          <TextInput name="q" placeholder="Rechercher un client..." defaultValue={q} leftSection={<Search size={16} />} />
+        </form>
+      </Paper>
 
-      <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+      <Paper withBorder radius="lg" style={{ overflow: "hidden" }}>
         <ClientsTable
           liste={liste}
           peutEcrire={peutEcrire}

@@ -36,6 +36,13 @@
       "when": 1793720245387,
       "tag": "0004_conditions_proforma_et_suppression_comptes",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793722284378,
+      "tag": "0005_parametres_signature",
+      "breakpoints": true
     }
   ]
 }
