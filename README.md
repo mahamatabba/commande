@@ -46,6 +46,15 @@ Appliquer la migration `0004_conditions_proforma_et_suppression_comptes`
 (`npm run db:migrate`) : elle ajoute le délai de livraison et la garantie aux
 proformas, et le marqueur de compte supprimé aux utilisateurs.
 
+Compte « superadmin » (rôle ADMIN), créé ou rétabli par :
+
+```bash
+SUPERADMIN_PASSWORD="mot-de-passe-fort" npm run db:superadmin
+```
+
+(`SUPERADMIN_EMAIL`, par défaut `superadmin@aei.td`, et `SUPERADMIN_NOM` sont
+facultatifs.)
+
 - Taux de TVA modifiable à l'émission de chaque facture et proforma (19,25 %
   par défaut, ou le taux commun des articles de la vente).
 - Proformas : délai de livraison, garantie, et modification tant qu'elles
