@@ -18,26 +18,21 @@ export default async function PageParametres() {
         icone={Settings}
         couleur="gray"
         titre="Paramètres"
-        description="Signature et cachet imprimés sur les factures, proformas et bons."
+        description="Cachet signé imprimé sur les factures, proformas et bons."
       />
 
       <Alert color="brand" variant="light">
-        Les images importées apparaissent dans la zone « Pour ABDELDJELIL ETUDE INFORMATIQUE —
-        Signature et cachet » de tous les documents PDF. Pour un rendu net, utilisez un PNG à fond
-        transparent (scan recadré au plus près de la signature).
+        Le cachet importé — qui porte déjà la signature du responsable — apparaît dans la zone
+        «&nbsp;Pour ABDELDJELIL ETUDE INFORMATIQUE — Signature et cachet&nbsp;» de toutes les
+        factures, proformas et bons. Pour un rendu net, utilisez un PNG à fond transparent, recadré
+        au plus près du cachet.
       </Alert>
 
-      <SimpleGrid cols={{ base: 1, md: 2 }}>
-        <VisuelSignatureCard
-          cle="signature"
-          titre="Signature"
-          description="Signature manuscrite du responsable, scannée ou photographiée."
-          imageActuelle={visuels.signature}
-        />
+      <SimpleGrid cols={1} maw={560}>
         <VisuelSignatureCard
           cle="cachet"
-          titre="Cachet"
-          description="Cachet de l'entreprise, superposé à côté de la signature."
+          titre="Cachet signé"
+          description="Cachet de l'entreprise avec la signature, scanné ou photographié."
           imageActuelle={visuels.cachet}
         />
       </SimpleGrid>

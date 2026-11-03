@@ -10,7 +10,7 @@ import type { EtatFormulaire } from "@/lib/action-state";
 const TAILLE_MAX = 600 * 1024;
 
 /**
- * Import d'une image (signature ou cachet) : le fichier est lu dans le
+ * Import du cachet signé : le fichier est lu dans le
  * navigateur, prévisualisé sur fond blanc — comme sur le papier — puis envoyé
  * au serveur sous forme de data URI.
  */
@@ -20,7 +20,7 @@ export function VisuelSignatureCard({
   description,
   imageActuelle,
 }: {
-  cle: "signature" | "cachet";
+  cle: "cachet";
   titre: string;
   description: string;
   imageActuelle: string | null;
@@ -35,12 +35,12 @@ export function VisuelSignatureCard({
   useEffect(() => {
     if (etatEnvoi.success) {
       setApercu(null);
-      notifications.show({ message: `${titre} enregistré(e)`, color: "green" });
+      notifications.show({ message: `${titre} enregistré`, color: "green" });
     }
   }, [etatEnvoi, titre]);
 
   useEffect(() => {
-    if (etatRetrait.success) notifications.show({ message: `${titre} retiré(e)`, color: "green" });
+    if (etatRetrait.success) notifications.show({ message: `${titre} retiré`, color: "green" });
   }, [etatRetrait, titre]);
 
   function choisirFichier(e: React.ChangeEvent<HTMLInputElement>) {

@@ -22,11 +22,11 @@ const visuelSchema = z.object({
     .regex(DATA_URI_IMAGE, "Format non pris en charge : utilisez une image PNG ou JPEG."),
 });
 
-const LIBELLE = { signature: "signature", cachet: "cachet" } as const;
+const LIBELLE = { cachet: "cachet signé" } as const;
 
 /**
- * Enregistre (ou remplace) la signature ou le cachet imprimés dans la zone
- * de signature AEI de tous les documents. Réservé à l'administrateur.
+ * Enregistre (ou remplace) le cachet signé imprimé dans la zone de signature
+ * AEI de tous les documents. Réservé à l'administrateur.
  */
 export async function enregistrerVisuel(
   _prevState: EtatFormulaire,

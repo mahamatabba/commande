@@ -648,17 +648,17 @@ export function Avertissement({ ton, children }: { ton: TonStatut; children: Rea
   );
 }
 
-/** Images de signature et de cachet importées dans les Paramètres. */
-export type VisuelsPdf = { signature: string | null; cachet: string | null };
+/** Cachet signé importé dans les Paramètres. */
+export type VisuelsPdf = { cachet: string | null };
 
 /**
  * Blocs de signature. Le côté droit est toujours AEI ; seul le cosignataire
  * change. L'espace au-dessus du trait doit rester suffisant pour une
  * signature manuscrite.
  *
- * Quand une signature et/ou un cachet ont été importés (Paramètres), ils sont
- * incrustés dans la zone AEI, au-dessus du trait ; sinon la zone reste vide
- * pour une signature à la main.
+ * Quand un cachet signé a été importé (Paramètres), il est incrusté dans la
+ * zone AEI, au-dessus du trait ; sinon la zone reste vide pour un cachet et
+ * une signature à la main.
  */
 export function Signatures({
   titre,
@@ -669,29 +669,21 @@ export function Signatures({
   mention?: string;
   visuels?: VisuelsPdf;
 }) {
-  const avecVisuels = Boolean(visuels?.signature || visuels?.cachet);
+  const cachet = visuels?.cachet ?? null;
   return (
     <View style={styles.signatures} wrap={false}>
       <View style={[styles.signature, { marginRight: 32 }]}>
         <Text style={{ fontSize: 8, fontFamily: "Helvetica-Bold", color: "#4A4844" }}>{titre}</Text>
-        <View style={{ height: avecVisuels ? 70 : 34 }} />
+        <View style={{ height: cachet ? 84 : 34 }} />
         <Text style={styles.signatureTrait}>{mention}</Text>
       </View>
       <View style={styles.signature}>
         <Text style={{ fontSize: 8, fontFamily: "Helvetica-Bold", color: "#4A4844" }}>
           Pour {AEI_INFO.nom}
         </Text>
-        {avecVisuels ? (
-          <View style={{ height: 70, flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
-            {visuels?.signature ? (
-              <ImagePdf src={visuels.signature} style={{ maxHeight: 62, maxWidth: 130, objectFit: "contain" }} />
-            ) : null}
-            {visuels?.cachet ? (
-              <ImagePdf
-                src={visuels.cachet}
-                style={{ maxHeight: 66, maxWidth: 90, objectFit: "contain", marginLeft: visuels.signature ? 10 : 0 }}
-              />
-            ) : null}
+        {cachet ? (
+          <View style={{ height: 84, alignItems: "center", justifyContent: "center" }}>
+            <ImagePdf src={cachet} style={{ maxHeight: 80, maxWidth: 200, objectFit: "contain" }} />
           </View>
         ) : (
           <View style={{ height: 34 }} />

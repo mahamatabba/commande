@@ -65,7 +65,7 @@ facultatifs.)
   imprimé est un bon de livraison et le mode de règlement « À crédit ».
 
 Migration `0005_parametres_signature` : table `parametres`, qui conserve la
-signature et le cachet importés depuis la page **Paramètres** (réservée à
+cachet signé importé depuis la page **Paramètres** (réservée à
 l'administrateur) et imprimés dans la zone de signature AEI de tous les PDF.
 
 ### Avant une mise en production
