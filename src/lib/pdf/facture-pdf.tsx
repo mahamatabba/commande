@@ -11,6 +11,7 @@ import {
   MentionMontant,
   Rang,
   Signatures,
+  Tampon,
   TableauLignes,
   TitreBoite,
   TotalPrincipal,
@@ -54,6 +55,7 @@ export function FacturePdf({ facture, visuels }: { facture: DonneesFacture; visu
       label="FACTURE"
       numero={facture.numero}
       date={formatDate(facture.dateFacture)}
+      filigrane={facture.statut === "ANNULEE" ? { texte: "ANNULÉE", couleur: "#C6564C", opacite: 0.12 } : undefined}
     >
       <DeuxBoites
         gauche={
@@ -90,7 +92,13 @@ export function FacturePdf({ facture, visuels }: { facture: DonneesFacture; visu
         libelleMontant="Montant HT"
       />
 
-      <BlocTotaux>
+      <BlocTotaux
+        tampon={
+          facture.statut === "SOLDEE" ? (
+            <Tampon texte="PAYÉE" couleur="#1E8A5A" detail="Facture intégralement réglée" />
+          ) : undefined
+        }
+      >
         <TotalSimple label="Total HT" montant={facture.montantHt} />
         <TotalSimple
           label={facture.exonereTva ? "TVA — exonérée" : `TVA (${formatTaux(facture.tauxTva)})`}

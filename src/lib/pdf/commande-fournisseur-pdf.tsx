@@ -39,6 +39,7 @@ export function CommandeFournisseurPdf({
       label="BON DE COMMANDE"
       numero={commande.numero}
       date={formatDate(commande.dateCommande)}
+      filigrane={commande.statut === "ANNULEE" ? { texte: "ANNULÉ", couleur: "#C6564C", opacite: 0.12 } : undefined}
     >
       <DeuxBoites
         gauche={

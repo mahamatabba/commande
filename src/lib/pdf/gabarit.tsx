@@ -164,14 +164,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COULEURS.bordure,
     borderStyle: "solid",
+    borderRadius: 4,
+    borderTopWidth: 3,
+    borderTopColor: COULEURS.navy,
     padding: 10,
+    backgroundColor: COULEURS.blanc,
   },
   boiteTitre: {
     fontSize: 7,
     fontFamily: "Helvetica-Bold",
-    color: COULEURS.gris,
-    letterSpacing: 0.6,
-    marginBottom: 6,
+    color: COULEURS.navy,
+    letterSpacing: 0.8,
+    marginBottom: 7,
   },
   rang: {
     flexDirection: "row",
@@ -183,27 +187,29 @@ const styles = StyleSheet.create({
   // — Tableau des lignes —————————————————————————————————————
   tableauEntete: {
     flexDirection: "row",
-    backgroundColor: COULEURS.fond,
-    borderBottomWidth: 1,
-    borderBottomColor: COULEURS.navy,
-    borderBottomStyle: "solid",
-    paddingVertical: 5,
-    paddingHorizontal: 6,
+    backgroundColor: COULEURS.navy,
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
+    paddingVertical: 7,
+    paddingHorizontal: 8,
   },
   tableauCellule: {
     fontSize: 7,
     fontFamily: "Helvetica-Bold",
-    color: COULEURS.gris,
-    letterSpacing: 0.5,
+    color: COULEURS.blanc,
+    letterSpacing: 0.6,
   },
   tableauLigne: {
     flexDirection: "row",
+    alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: COULEURS.filet,
+    borderBottomColor: COULEURS.filetFonce,
     borderBottomStyle: "solid",
-    paddingVertical: 5,
-    paddingHorizontal: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
   },
+  tableauLigneAlternee: { backgroundColor: "#F7F8FA" },
+  colNumero: { width: 20, color: COULEURS.grisClair },
   colQuantite: { width: 42, textAlign: "right" },
   colPrix: { width: 88, textAlign: "right" },
   colMontant: { width: 96, textAlign: "right" },
@@ -222,8 +228,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: COULEURS.navy,
+    borderRadius: 4,
+    borderLeftWidth: 4,
+    borderLeftColor: COULEURS.orange,
     paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingVertical: 9,
   },
   totalSecondaire: {
     flexDirection: "row",
@@ -231,30 +240,58 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     borderWidth: 1,
     borderStyle: "solid",
+    borderRadius: 4,
     paddingHorizontal: 10,
     paddingVertical: 6,
     marginTop: 5,
   },
 
   // — Bas de document ————————————————————————————————————————
-  mention: { fontSize: 9, fontStyle: "italic", marginBottom: 20 },
+  mention: {
+    flexDirection: "row",
+    borderWidth: 1,
+    borderColor: COULEURS.bordure,
+    borderStyle: "solid",
+    borderRadius: 4,
+    backgroundColor: COULEURS.fond,
+    marginBottom: 16,
+  },
   avertissement: {
     borderWidth: 1,
     borderStyle: "solid",
+    borderRadius: 4,
     padding: 8,
     marginBottom: 20,
     fontSize: 7.5,
     lineHeight: 1.4,
   },
   signatures: { flexDirection: "row" },
-  signature: { flex: 1 },
+  signature: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: COULEURS.bordure,
+    borderStyle: "solid",
+    borderRadius: 4,
+    padding: 9,
+  },
   signatureTrait: {
     borderTopWidth: 1,
     borderTopColor: COULEURS.bordure,
-    borderTopStyle: "solid",
+    borderTopStyle: "dashed",
     paddingTop: 3,
-    fontSize: 7.5,
+    fontSize: 7,
     color: COULEURS.grisClair,
+    textAlign: "center",
+  },
+  filigrane: {
+    position: "absolute",
+    top: 380,
+    left: 0,
+    right: 0,
+    textAlign: "center",
+    fontFamily: "Helvetica-Bold",
+    letterSpacing: 4,
+    transform: "rotate(-32deg)",
   },
 });
 
@@ -277,6 +314,7 @@ export function GabaritDocument({
   label,
   numero,
   date,
+  filigrane,
   children,
 }: {
   /** Titre inscrit dans les propriétés du fichier PDF. */
@@ -284,11 +322,33 @@ export function GabaritDocument({
   label: string;
   numero: string;
   date: string;
+  /**
+   * Mention en filigrane, en travers de chaque feuille (« ANNULÉE »,
+   * « PROFORMA »…) : impossible à recadrer hors d'une photo ou d'un scan.
+   */
+  filigrane?: { texte: string; couleur: string; opacite?: number };
   children: React.ReactNode;
 }) {
   return (
     <Document title={titre} author={AEI_INFO.nom} creator={AEI_INFO.nom} producer={AEI_INFO.nom}>
       <Page size="A4" style={styles.page}>
+        {filigrane ? (
+          <Text
+            fixed
+            style={[
+              styles.filigrane,
+              {
+                color: filigrane.couleur,
+                opacity: filigrane.opacite ?? 0.07,
+                // Taille adaptée à la longueur du mot : il doit tenir sur une
+                // seule ligne en travers de la feuille.
+                fontSize: Math.min(92, Math.floor(470 / (filigrane.texte.length * 0.72))),
+              },
+            ]}
+          >
+            {filigrane.texte}
+          </Text>
+        ) : null}
         <EnTete label={label} numero={numero} date={date} />
         <View style={styles.corps}>{children}</View>
         <Text
@@ -299,6 +359,11 @@ export function GabaritDocument({
           render={({ pageNumber, totalPages }) =>
             totalPages > 1 ? `Page ${pageNumber} / ${totalPages}` : ""
           }
+        />
+        <Text
+          fixed
+          style={{ position: "absolute", bottom: HAUTEUR_PIED + 4, left: MARGE, fontSize: 7, fontStyle: "italic", color: COULEURS.gris }}
+          render={({ pageNumber, totalPages }) => (pageNumber === totalPages ? "Merci pour votre confiance." : "")}
         />
         <PiedDePage />
       </Page>
@@ -507,27 +572,37 @@ export function TableauLignes({
           lui se répète sur toutes les feuilles : c'est ce qui fait l'en-tête
           et le pied de page.) */}
       <View style={styles.tableauEntete} fixed>
+        <Text style={[styles.tableauCellule, styles.colNumero, { color: "#C7D2DE" }]}>N°</Text>
         <Text style={[styles.tableauCellule, { flex: 1 }]}>DÉSIGNATION</Text>
         <Text style={[styles.tableauCellule, styles.colQuantite]}>QTÉ</Text>
         <Text style={[styles.tableauCellule, styles.colPrix]}>{libellePrix.toUpperCase()}</Text>
         <Text style={[styles.tableauCellule, styles.colMontant]}>{libelleMontant.toUpperCase()}</Text>
       </View>
-      {lignes.map((ligne) => (
-        <View key={ligne.id} style={styles.tableauLigne} wrap={false}>
+      {lignes.map((ligne, i) => (
+        <View
+          key={ligne.id}
+          style={i % 2 === 1 ? [styles.tableauLigne, styles.tableauLigneAlternee] : styles.tableauLigne}
+          wrap={false}
+        >
+          <Text style={styles.colNumero}>{i + 1}</Text>
           <Text style={{ flex: 1, paddingRight: 8 }}>{ligne.designation}</Text>
           <Text style={styles.colQuantite}>{ligne.quantite}</Text>
           <Text style={styles.colPrix}>{formatMontant(ligne.prixUnitaire)}</Text>
-          <Text style={styles.colMontant}>{formatMontant(ligne.montantLigne)}</Text>
+          <Text style={[styles.colMontant, { fontFamily: "Helvetica-Bold" }]}>{formatMontant(ligne.montantLigne)}</Text>
         </View>
       ))}
+      <View
+        style={{ borderTopWidth: 1.5, borderTopColor: COULEURS.navy, borderTopStyle: "solid", marginTop: -1 }}
+      />
     </View>
   );
 }
 
 /** Colonne des totaux, alignée à droite sous le tableau. */
-export function BlocTotaux({ children }: { children: React.ReactNode }) {
+export function BlocTotaux({ children, tampon }: { children: React.ReactNode; tampon?: React.ReactNode }) {
   return (
-    <View style={styles.totaux} wrap={false}>
+    <View style={[styles.totaux, { position: "relative" }]} wrap={false}>
+      {tampon}
       <View style={styles.colonneTotaux}>{children}</View>
     </View>
   );
@@ -626,9 +701,50 @@ export function BlocConditions({ conditions }: { conditions: { label: string; va
 /** La phrase « Arrêtée la présente facture à la somme de… ». */
 export function MentionMontant({ children }: { children: React.ReactNode }) {
   return (
-    <Text style={styles.mention} wrap={false}>
-      {children}
-    </Text>
+    <View style={styles.mention} wrap={false}>
+      <View style={{ width: 4, backgroundColor: COULEURS.orange, borderTopLeftRadius: 4, borderBottomLeftRadius: 4 }} />
+      <Text style={{ flex: 1, fontSize: 8.5, fontStyle: "italic", paddingVertical: 8, paddingHorizontal: 10, lineHeight: 1.4 }}>
+        {children}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * Tampon incliné, posé à côté des totaux (« PAYÉE »…). Comme un tampon
+ * encreur : cadre double, couleur franche, légère rotation.
+ */
+export function Tampon({ texte, couleur, detail }: { texte: string; couleur: string; detail?: string }) {
+  return (
+    <View
+      style={{
+        position: "absolute",
+        left: 30,
+        top: 6,
+        transform: "rotate(-12deg)",
+        borderWidth: 2.5,
+        borderColor: couleur,
+        borderStyle: "solid",
+        borderRadius: 6,
+        padding: 2,
+        opacity: 0.85,
+      }}
+    >
+      <View
+        style={{
+          borderWidth: 1,
+          borderColor: couleur,
+          borderStyle: "solid",
+          borderRadius: 4,
+          paddingHorizontal: 14,
+          paddingVertical: 5,
+          alignItems: "center",
+        }}
+      >
+        <Text style={{ fontSize: 20, fontFamily: "Helvetica-Bold", color: couleur, letterSpacing: 3 }}>{texte}</Text>
+        {detail ? <Text style={{ fontSize: 7, fontFamily: "Helvetica-Bold", color: couleur, marginTop: 1 }}>{detail}</Text> : null}
+      </View>
+    </View>
   );
 }
 
@@ -672,21 +788,23 @@ export function Signatures({
   const cachet = visuels?.cachet ?? null;
   return (
     <View style={styles.signatures} wrap={false}>
-      <View style={[styles.signature, { marginRight: 32 }]}>
-        <Text style={{ fontSize: 8, fontFamily: "Helvetica-Bold", color: "#4A4844" }}>{titre}</Text>
-        <View style={{ height: cachet ? 84 : 34 }} />
+      <View style={[styles.signature, { marginRight: 16 }]}>
+        <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold", color: COULEURS.navy, letterSpacing: 0.4 }}>
+          {titre.toUpperCase()}
+        </Text>
+        <View style={{ height: cachet ? 84 : 46 }} />
         <Text style={styles.signatureTrait}>{mention}</Text>
       </View>
       <View style={styles.signature}>
-        <Text style={{ fontSize: 8, fontFamily: "Helvetica-Bold", color: "#4A4844" }}>
-          Pour {AEI_INFO.nom}
+        <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold", color: COULEURS.navy, letterSpacing: 0.4 }}>
+          POUR {AEI_INFO.nom}
         </Text>
         {cachet ? (
           <View style={{ height: 84, alignItems: "center", justifyContent: "center" }}>
             <ImagePdf src={cachet} style={{ maxHeight: 80, maxWidth: 200, objectFit: "contain" }} />
           </View>
         ) : (
-          <View style={{ height: 34 }} />
+          <View style={{ height: 46 }} />
         )}
         <Text style={styles.signatureTrait}>Signature et cachet</Text>
       </View>

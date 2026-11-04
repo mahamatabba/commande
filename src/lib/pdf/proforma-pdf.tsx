@@ -31,6 +31,7 @@ export type DonneesProforma = {
   delaiLivraison: string | null;
   garantie: string | null;
   nifClient: string | null;
+  statut?: string;
   client: {
     nom: string;
     prenom: string | null;
@@ -58,6 +59,11 @@ export function ProformaPdf({ proforma, visuels }: { proforma: DonneesProforma; 
       label="FACTURE PROFORMA"
       numero={proforma.numero}
       date={formatDate(proforma.dateProforma)}
+      filigrane={
+        proforma.statut === "ANNULEE"
+          ? { texte: "ANNULÉE", couleur: "#C6564C", opacite: 0.12 }
+          : { texte: "PROFORMA", couleur: "#1E3A5F", opacite: 0.05 }
+      }
     >
       <DeuxBoites
         gauche={

@@ -46,6 +46,7 @@ export function CommandeClientPdf({ commande, visuels }: { commande: DonneesComm
       label="BON DE LIVRAISON"
       numero={commande.numero}
       date={formatDate(commande.dateCommande)}
+      filigrane={commande.statut === "ANNULEE" ? { texte: "ANNULÉ", couleur: "#C6564C", opacite: 0.12 } : undefined}
     >
       <DeuxBoites
         gauche={
