@@ -4,6 +4,7 @@ import { requirePermission } from "@/lib/permissions";
 import { Stack, Text, Title, ThemeIcon, Group } from "@mantine/core";
 import { CommandeFournisseurForm } from "@/components/commandes/commande-fournisseur-form";
 import { ShoppingCart } from "lucide-react";
+import { LienRetour } from "@/components/shared/lien-retour";
 
 export default async function PageNouvelleCommandeFournisseur() {
   const session = await auth();
@@ -30,6 +31,7 @@ export default async function PageNouvelleCommandeFournisseur() {
 
   return (
     <Stack gap="xl" maw={1320}>
+      <LienRetour href="/commandes-fournisseur" libelle="Bons de commande" />
       <div>
         <Group gap="md" wrap="nowrap">
           <ThemeIcon size={52} radius="lg" variant="light" color="aei" visibleFrom="xs">

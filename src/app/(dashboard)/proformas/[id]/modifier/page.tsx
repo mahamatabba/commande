@@ -7,6 +7,7 @@ import { Alert, Button, Stack, Text, Title, ThemeIcon, Group } from "@mantine/co
 import { ModifierProformaForm } from "@/components/proformas/modifier-proforma-form";
 import { TAUX_TVA_STANDARD } from "@/lib/constants";
 import { FilePen } from "lucide-react";
+import { LienRetour } from "@/components/shared/lien-retour";
 
 const JOUR_MS = 24 * 60 * 60 * 1000;
 
@@ -63,6 +64,7 @@ export default async function PageModifierProforma({ params }: { params: Promise
 
   return (
     <Stack gap="xl" maw={1152}>
+      <LienRetour href={`/proformas/${proforma.id}`} libelle="Retour à la proforma" />
       <div>
         <Group gap="md" wrap="nowrap">
           <ThemeIcon size={52} radius="lg" variant="light" color="violet" visibleFrom="xs">

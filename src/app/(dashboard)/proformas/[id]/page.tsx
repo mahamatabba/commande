@@ -18,6 +18,8 @@ import { ConversionProformaDialog } from "@/components/proformas/conversion-dial
 import { SuppressionDialog } from "@/components/shared/suppression-dialog";
 import { annulerProforma, convertirProformaEnFacture, supprimerProforma } from "../actions";
 import { FileSignature } from "lucide-react";
+import { BandeauConfirmation } from "@/components/documents/bandeau-confirmation";
+import { LienRetour } from "@/components/shared/lien-retour";
 
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
   if (c.raisonSociale) return c.raisonSociale;
@@ -54,6 +56,7 @@ export default async function PageProforma({
 
   return (
     <Stack gap="xl">
+      <LienRetour href="/proformas" libelle="Proformas" />
       <Paper withBorder radius="lg" p="lg">
         <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
           <Group gap="md" wrap="nowrap" align="flex-start">
@@ -84,7 +87,6 @@ export default async function PageProforma({
               titre={`Proforma ${proforma.numero}`}
               nomFichier={`proforma-${proforma.numero}`}
               trigger={<Button variant="outline">Voir la proforma</Button>}
-              defaultOpen={nouveau === "1" || modifiee === "1"}
             />
             {peutConvertir && proforma.statut === "EMISE" && (
               <Button variant="default" component={Link} href={`/proformas/${proforma.id}/modifier`}>
@@ -117,6 +119,15 @@ export default async function PageProforma({
           </Group>
         </Group>
       </Paper>
+
+      {(nouveau === "1" || modifiee === "1") && (
+        <BandeauConfirmation
+          message={modifiee === "1" ? `Proforma ${proforma.numero} modifiée.` : `Proforma ${proforma.numero} établie.`}
+          href={`/proformas/${proforma.id}/pdf`}
+          titre={`Proforma ${proforma.numero}`}
+          nomFichier={`proforma-${proforma.numero}`}
+        />
+      )}
 
       {proforma.statut === "CONVERTIE" && proforma.facture && (
         <Alert color="green" variant="light">

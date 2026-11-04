@@ -13,6 +13,7 @@ import { MODE_REGLEMENT_LABEL, libelle } from "@/lib/libelles";
 import { Alert, Button, Card, Grid, GridCol, Stack, Table, TableTbody, TableTd, TableTh, TableThead, TableTr, Text, Title, ThemeIcon, Group } from "@mantine/core";
 import { EmettreProformaForm } from "@/components/proformas/emettre-proforma-form";
 import { FileSignature } from "lucide-react";
+import { LienRetour } from "@/components/shared/lien-retour";
 
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
   if (c.raisonSociale) return c.raisonSociale;
@@ -76,6 +77,7 @@ export default async function PageNouvelleProforma({
 
   return (
     <Stack gap="xl" maw={1152}>
+      <LienRetour href={`/commandes-client/${commande.id}`} libelle="Retour à la vente" />
       <div>
         <Group gap="md" wrap="nowrap">
           <ThemeIcon size={52} radius="lg" variant="light" color="violet" visibleFrom="xs">

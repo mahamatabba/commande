@@ -18,6 +18,8 @@ import {
   validerCommandeFournisseur,
 } from "../actions";
 import { ShoppingCart } from "lucide-react";
+import { BandeauConfirmation } from "@/components/documents/bandeau-confirmation";
+import { LienRetour } from "@/components/shared/lien-retour";
 
 const STATUT_LABEL: Record<string, string> = {
   BROUILLON: "Brouillon",
@@ -51,6 +53,7 @@ export default async function PageCommandeFournisseur({
 
   return (
     <Stack gap="xl">
+      <LienRetour href="/commandes-fournisseur" libelle="Bons de commande" />
       <Paper withBorder radius="lg" p="lg">
         <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
           <Group gap="md" wrap="nowrap" align="flex-start">
@@ -78,7 +81,6 @@ export default async function PageCommandeFournisseur({
               titre={`Bon de commande ${commande.numero}`}
               nomFichier={`bon-commande-${commande.numero}`}
               trigger={<Button variant="outline">Voir le bon de commande</Button>}
-              defaultOpen={nouveau === "1"}
             />
             {peutEcrire && commande.statut === "BROUILLON" && (
               <form action={validerCommandeFournisseur.bind(null, commande.id)}>
@@ -99,6 +101,15 @@ export default async function PageCommandeFournisseur({
           </Group>
         </Group>
       </Paper>
+
+      {(nouveau === "1") && (
+        <BandeauConfirmation
+          message={`Bon de commande ${commande.numero} créé.`}
+          href={`/commandes-fournisseur/${commande.id}/pdf`}
+          titre={`Bon de commande ${commande.numero}`}
+          nomFichier={`bon-commande-${commande.numero}`}
+        />
+      )}
 
       <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
         <Table>

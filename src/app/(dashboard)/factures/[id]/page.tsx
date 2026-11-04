@@ -19,6 +19,8 @@ import { SuppressionDialog } from "@/components/shared/suppression-dialog";
 import { annulerFacture, marquerFacturePayee, supprimerFacture } from "../actions";
 import { ReglementsFactureTable } from "./reglements-table";
 import { FileText } from "lucide-react";
+import { BandeauConfirmation } from "@/components/documents/bandeau-confirmation";
+import { LienRetour } from "@/components/shared/lien-retour";
 
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
   if (c.raisonSociale) return c.raisonSociale;
@@ -64,6 +66,7 @@ export default async function PageFacture({
 
   return (
     <Stack gap="xl">
+      <LienRetour href="/factures" libelle="Factures" />
       <Paper withBorder radius="lg" p="lg">
         <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
           <Group gap="md" wrap="nowrap" align="flex-start">
@@ -93,7 +96,6 @@ export default async function PageFacture({
               titre={`Facture ${facture.numero}`}
               nomFichier={`facture-${facture.numero}`}
               trigger={<Button variant="outline">Voir la facture</Button>}
-              defaultOpen={nouveau === "1"}
             />
             {peutRegler && encaissable && (
               <MarquerPayeeDialog
@@ -127,6 +129,15 @@ export default async function PageFacture({
           </Group>
         </Group>
       </Paper>
+
+      {(nouveau === "1") && (
+        <BandeauConfirmation
+          message={`Facture ${facture.numero} émise.`}
+          href={`/factures/${facture.id}/pdf`}
+          titre={`Facture ${facture.numero}`}
+          nomFichier={`facture-${facture.numero}`}
+        />
+      )}
 
       {facture.proformaOrigine && (
         <Paper withBorder radius="md" p="sm" style={{ backgroundColor: "var(--mantine-color-dark-6)" }}>

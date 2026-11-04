@@ -2,12 +2,13 @@
 
 import { useActionState, useState } from "react";
 import { Plus } from "lucide-react";
-import { ActionIcon, Button, Card, Group, SimpleGrid, Stack, Select, Text, TextInput } from "@mantine/core";
+import { ActionIcon, Button, Card, Group, SimpleGrid, Stack, Select, Text } from "@mantine/core";
 import { LignesEditor, type ArticleCatalogue } from "@/components/commandes/lignes-editor";
 import { ClientFormDialog } from "@/components/clients/client-form-dialog";
 import { creerClient } from "@/app/(dashboard)/clients/actions";
 import { creerCommandeClient } from "@/app/(dashboard)/commandes-client/actions";
 import { formatMontant } from "@/lib/format";
+import { ChampDate } from "@/components/shared/champ-date";
 
 type ClientOption = { id: number; nom: string; prenom: string | null; raisonSociale: string | null };
 
@@ -61,13 +62,7 @@ export function CommandeClientForm({
                 }
               />
             </Group>
-            <TextInput
-              label="Date de commande"
-              name="dateCommande"
-              type="date"
-              required
-              defaultValue={new Date().toISOString().slice(0, 10)}
-            />
+            <ChampDate label="Date de commande" name="dateCommande" required w="100%" defaultValue={new Date().toISOString().slice(0, 10)} maxDate={new Date().toISOString().slice(0, 10)} />
             <Select
               label="Mode de règlement"
               name="modeReglement"

@@ -2,9 +2,10 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { notifications } from "@mantine/notifications";
-import { Button, Group, Modal, SimpleGrid, Stack, Select, Text, Textarea, TextInput } from "@mantine/core";
+import { Button, Group, Modal, SimpleGrid, Stack, Select, Text, Textarea } from "@mantine/core";
 import { formatMontant } from "@/lib/format";
 import type { EtatFormulaire } from "@/lib/action-state";
+import { ChampDate } from "@/components/shared/champ-date";
 
 /**
  * Passage rapide d'une facture à « Payée » depuis son propre écran, sans
@@ -46,13 +47,7 @@ export function MarquerPayeeDialog({
           <form action={formAction}>
             <Stack gap="md">
               <SimpleGrid cols={2}>
-                <TextInput
-                  label="Date du règlement"
-                  name="dateReglement"
-                  type="date"
-                  required
-                  defaultValue={new Date().toISOString().slice(0, 10)}
-                />
+                <ChampDate label="Date du règlement" name="dateReglement" required w="100%" defaultValue={new Date().toISOString().slice(0, 10)} maxDate={new Date().toISOString().slice(0, 10)} />
                 <Select
                   label="Moyen"
                   name="moyen"

@@ -12,6 +12,7 @@ import { Alert, Button, Card, Grid, GridCol, Stack, Table, TableTbody, TableTd, 
 import Link from "next/link";
 import { EmettreFactureForm } from "@/components/factures/emettre-facture-form";
 import { FileText } from "lucide-react";
+import { LienRetour } from "@/components/shared/lien-retour";
 
 const MODE_LABEL: Record<string, string> = {
   ESPECES: "Espèces (comptant)",
@@ -67,6 +68,7 @@ export default async function PageNouvelleFacture({
 
   return (
     <Stack gap="xl" maw={1152}>
+      <LienRetour href={`/commandes-client/${commande.id}`} libelle="Retour à la vente" />
       <div>
         <Group gap="md" wrap="nowrap">
           <ThemeIcon size={52} radius="lg" variant="light" color="brand" visibleFrom="xs">

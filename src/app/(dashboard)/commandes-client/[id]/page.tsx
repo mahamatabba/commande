@@ -21,6 +21,8 @@ import { CorrectionModeReglementDialog } from "@/components/commandes/correction
 import { ApercuDocumentDialog } from "@/components/documents/apercu-document-dialog";
 import { annulerCommandeClient, corrigerCommandeClient, validerCommandeClient } from "../actions";
 import { ShoppingBag } from "lucide-react";
+import { BandeauConfirmation } from "@/components/documents/bandeau-confirmation";
+import { LienRetour } from "@/components/shared/lien-retour";
 
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
   if (c.raisonSociale) return c.raisonSociale;
@@ -59,6 +61,7 @@ export default async function PageCommandeClient({
 
   return (
     <Stack gap="xl">
+      <LienRetour href="/commandes-client" libelle="Ventes" />
       <Paper withBorder radius="lg" p="lg">
         <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
           <Group gap="md" wrap="nowrap" align="flex-start">
@@ -87,7 +90,6 @@ export default async function PageCommandeClient({
               titre={`Bon de livraison ${commande.numero}`}
               nomFichier={`bon-livraison-${commande.numero}`}
               trigger={<Button variant="outline">Voir le bon de livraison</Button>}
-              defaultOpen={nouveau === "1"}
             />
             {peutEcrire && commande.statut === "BROUILLON" && (
               <form action={validerCommandeClient.bind(null, commande.id)}>
@@ -119,6 +121,15 @@ export default async function PageCommandeClient({
           </Group>
         </Group>
       </Paper>
+
+      {(nouveau === "1") && (
+        <BandeauConfirmation
+          message={`Vente ${commande.numero} enregistrée.`}
+          href={`/commandes-client/${commande.id}/pdf`}
+          titre={`Bon de livraison ${commande.numero}`}
+          nomFichier={`bon-livraison-${commande.numero}`}
+        />
+      )}
 
       {commande.proformas.length > 0 && (
         <Paper withBorder radius="md" p="sm" style={{ backgroundColor: "var(--mantine-color-dark-6)" }}>

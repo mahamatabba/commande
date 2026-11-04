@@ -13,10 +13,11 @@ import {
   lireStatut,
 } from "@/lib/filtres";
 import { PaginationListe } from "@/components/shared/pagination-liste";
-import { Button, Group, Paper, Select, Stack, TextInput } from "@mantine/core";
+import { Button, Group, Paper, Select, Stack } from "@mantine/core";
 import { JournalTable } from "./journal-table";
 import { EnTetePage } from "@/components/shared/en-tete-page";
 import { History } from "lucide-react";
+import { ChampDate } from "@/components/shared/champ-date";
 
 const LABEL_ENTITE: Record<string, string> = {
   commande_fournisseur: "Achat",
@@ -92,8 +93,8 @@ export default async function PageJournal({
       <Paper withBorder radius="lg" p="md">
         <form>
           <Group align="flex-end" wrap="wrap" gap="sm">
-            <TextInput label="Du" name="du" type="date" defaultValue={du} />
-            <TextInput label="Au" name="au" type="date" defaultValue={au} />
+            <ChampDate label="Du" name="du" defaultValue={du} />
+            <ChampDate label="Au" name="au" defaultValue={au} />
             <Select
               label="Entité"
               name="entite"

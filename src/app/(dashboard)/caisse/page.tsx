@@ -6,12 +6,13 @@ import { mouvementsCaisse } from "@/db/schema";
 import { requirePermission } from "@/lib/permissions";
 import { calculerSoldeCaisse } from "@/lib/caisse";
 import { bornerDebut, bornerFin, bornerPagination, lienPagination, lirePage } from "@/lib/filtres";
-import { Button, Group, Paper, SimpleGrid, Stack, TextInput } from "@mantine/core";
+import { Button, Group, Paper, SimpleGrid, Stack } from "@mantine/core";
 import { StatTile } from "@/components/statistiques/stat-tile";
 import { PaginationListe } from "@/components/shared/pagination-liste";
 import { CaisseTable } from "./caisse-table";
 import { EnTetePage } from "@/components/shared/en-tete-page";
 import { Wallet } from "lucide-react";
+import { ChampDate } from "@/components/shared/champ-date";
 
 /** Nombre de mouvements affichés par page. */
 const PAR_PAGE = 100;
@@ -123,8 +124,8 @@ export default async function PageCaisse({
       <Paper withBorder radius="lg" p="md">
         <form>
           <Group align="flex-end" wrap="wrap" gap="sm">
-            <TextInput label="Du" name="du" type="date" defaultValue={du} />
-            <TextInput label="Au" name="au" type="date" defaultValue={au} />
+            <ChampDate label="Du" name="du" defaultValue={du} />
+            <ChampDate label="Au" name="au" defaultValue={au} />
             <Button type="submit" variant="outline">Filtrer</Button>
           </Group>
         </form>

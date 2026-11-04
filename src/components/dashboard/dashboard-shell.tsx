@@ -2,11 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { LogOut } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronDown, LogOut, PanelLeftClose, PanelLeftOpen, Plus } from "lucide-react";
 import {
+  ActionIcon,
   AppShell,
   Avatar,
   Burger,
+  Button,
+  Tooltip,
   Group,
   Menu,
   ScrollArea,
@@ -37,26 +41,55 @@ function initiales(nom?: string | null): string {
 /** Hauteur de l'en-tête de l'application, en pixels. */
 export const HAUTEUR_ENTETE = 76;
 
+/** Clé de mémorisation (par navigateur) du menu replié. */
+const CLE_MENU_REPLIE = "aei:menu-replie";
+
 export function DashboardShell({
   navSections,
+  compteurs,
+  raccourcis,
   userName,
   userRole,
   signOutAction,
   children,
 }: {
   navSections: NavSection[];
+  compteurs: Record<string, number>;
+  raccourcis: { href: string; label: string }[];
   userName?: string | null;
   userRole?: string | null;
   signOutAction: () => Promise<void>;
   children: React.ReactNode;
 }) {
   const [opened, { toggle, close }] = useDisclosure();
+  const [replie, setReplie] = useState(false);
+
+  // Préférence relue après le montage : le rendu serveur ne la connaît pas,
+  // et la lire pendant le rendu provoquerait un écart d'hydratation.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(CLE_MENU_REPLIE) === "1") setReplie(true);
+    } catch {
+      /* stockage indisponible (navigation privée) : menu déplié */
+    }
+  }, []);
+
+  function basculerMenu() {
+    setReplie((r) => {
+      try {
+        localStorage.setItem(CLE_MENU_REPLIE, r ? "0" : "1");
+      } catch {
+        /* sans effet si le stockage est indisponible */
+      }
+      return !r;
+    });
+  }
   const role = userRole ? (LIBELLE_ROLE[userRole] ?? userRole) : null;
 
   return (
     <AppShell
       header={{ height: HAUTEUR_ENTETE }}
-      navbar={{ width: 256, breakpoint: "sm", collapsed: { mobile: !opened } }}
+      navbar={{ width: { base: 256, sm: replie ? 76 : 256 }, breakpoint: "sm", collapsed: { mobile: !opened } }}
       padding="lg"
     >
       <AppShell.Header
@@ -70,6 +103,18 @@ export function DashboardShell({
         <Group h="100%" px="md" justify="space-between" wrap="nowrap">
           <Group gap="sm" wrap="nowrap">
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" aria-label="Menu" />
+            <Tooltip label={replie ? "Déplier le menu" : "Replier le menu"}>
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="lg"
+                visibleFrom="sm"
+                onClick={basculerMenu}
+                aria-label={replie ? "Déplier le menu" : "Replier le menu"}
+              >
+                {replie ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
+              </ActionIcon>
+            </Tooltip>
             <Link href="/dashboard" className="flex items-center gap-3" aria-label="Tableau de bord">
               <span className="flex h-[58px] w-[66px] shrink-0 items-center justify-center rounded-lg bg-white p-1 shadow-sm">
                 <Image
@@ -136,42 +181,91 @@ export function DashboardShell({
         </Group>
       </AppShell.Header>
 
-      <AppShell.Navbar p="sm">
+      <AppShell.Navbar p="sm" style={{ transition: "width 150ms ease" }}>
+        {raccourcis.length > 0 && (
+          <AppShell.Section mb="sm">
+            <Menu position={replie ? "right-start" : "bottom-start"} width={230} shadow="md" withinPortal>
+              <Menu.Target>
+                {replie ? (
+                  <Tooltip label="Nouveau…" position="right">
+                    <ActionIcon size={44} radius="md" mx="auto" display="flex" aria-label="Nouveau">
+                      <Plus size={20} />
+                    </ActionIcon>
+                  </Tooltip>
+                ) : (
+                  <Button fullWidth leftSection={<Plus size={16} />} rightSection={<ChevronDown size={14} />} justify="space-between">
+                    Nouveau
+                  </Button>
+                )}
+              </Menu.Target>
+              <Menu.Dropdown>
+                {raccourcis.map((r) => (
+                  <Menu.Item key={r.href} component={Link} href={r.href} onClick={close}>
+                    {r.label}
+                  </Menu.Item>
+                ))}
+              </Menu.Dropdown>
+            </Menu>
+          </AppShell.Section>
+        )}
+
         <AppShell.Section grow component={ScrollArea} pt="xs">
-          <SidebarNav sections={navSections} onNavigate={close} />
+          <SidebarNav sections={navSections} compteurs={compteurs} replie={replie} onNavigate={close} />
         </AppShell.Section>
 
         <AppShell.Section>
-          <Stack
-            gap={6}
-            pt="sm"
-            px="xs"
-            style={{ borderTop: "1px solid var(--mantine-color-dark-4)" }}
-          >
-            <Group gap="sm" wrap="nowrap">
-              <Avatar color="brand" radius="xl" size={34}>
-                {initiales(userName)}
-              </Avatar>
-              <div className="min-w-0">
-                <Text size="sm" fw={600} truncate>
-                  {userName}
-                </Text>
-                {role && (
-                  <Text size="xs" c="dimmed">
-                    {role}
+          {replie ? (
+            <Stack
+              gap={6}
+              pt="sm"
+              align="center"
+              style={{ borderTop: "1px solid var(--mantine-color-dark-4)" }}
+            >
+              <Tooltip label={`${userName ?? ""}${role ? ` — ${role}` : ""}`} position="right">
+                <Avatar color="brand" radius="xl" size={34}>
+                  {initiales(userName)}
+                </Avatar>
+              </Tooltip>
+              <form action={signOutAction}>
+                <Tooltip label="Se déconnecter" position="right">
+                  <ActionIcon type="submit" variant="subtle" color="red" aria-label="Se déconnecter">
+                    <LogOut size={16} />
+                  </ActionIcon>
+                </Tooltip>
+              </form>
+            </Stack>
+          ) : (
+            <Stack
+              gap={6}
+              pt="sm"
+              px="xs"
+              style={{ borderTop: "1px solid var(--mantine-color-dark-4)" }}
+            >
+              <Group gap="sm" wrap="nowrap">
+                <Avatar color="brand" radius="xl" size={34}>
+                  {initiales(userName)}
+                </Avatar>
+                <div className="min-w-0">
+                  <Text size="sm" fw={600} truncate>
+                    {userName}
                   </Text>
-                )}
-              </div>
-            </Group>
-            <form action={signOutAction}>
-              <button
-                type="submit"
-                className="flex items-center gap-2 text-[13px] text-[var(--mantine-color-dark-2)] transition-colors hover:text-[var(--mantine-color-red-5)]"
-              >
-                <LogOut size={14} /> Se déconnecter
-              </button>
-            </form>
-          </Stack>
+                  {role && (
+                    <Text size="xs" c="dimmed">
+                      {role}
+                    </Text>
+                  )}
+                </div>
+              </Group>
+              <form action={signOutAction}>
+                <button
+                  type="submit"
+                  className="flex items-center gap-2 text-[13px] text-[var(--mantine-color-dark-2)] transition-colors hover:text-[var(--mantine-color-red-5)]"
+                >
+                  <LogOut size={14} /> Se déconnecter
+                </button>
+              </form>
+            </Stack>
+          )}
         </AppShell.Section>
       </AppShell.Navbar>
 

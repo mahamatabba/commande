@@ -16,10 +16,11 @@ import {
 } from "@/lib/filtres";
 import { PaginationListe } from "@/components/shared/pagination-liste";
 import { STATUT_COMMANDE_FOURNISSEUR_LABEL, libelle } from "@/lib/libelles";
-import { Button, Group, Paper, Select, Stack, TextInput } from "@mantine/core";
+import { Button, Group, Paper, Select, Stack } from "@mantine/core";
 import { CommandesFournisseurTable } from "./commandes-fournisseur-table";
 import { EnTetePage } from "@/components/shared/en-tete-page";
 import { ShoppingCart } from "lucide-react";
+import { ChampDate } from "@/components/shared/champ-date";
 
 /** Nombre d'achats affichés par page. */
 const PAR_PAGE = 50;
@@ -106,8 +107,8 @@ export default async function PageCommandesFournisseur({
                 label: libelle(STATUT_COMMANDE_FOURNISSEUR_LABEL, s),
               }))}
             />
-            <TextInput label="Du" name="du" type="date" defaultValue={du} />
-            <TextInput label="Au" name="au" type="date" defaultValue={au} />
+            <ChampDate label="Du" name="du" defaultValue={du} />
+            <ChampDate label="Au" name="au" defaultValue={au} />
             <Button type="submit" variant="outline">
               Filtrer
             </Button>

@@ -1,7 +1,6 @@
 "use client";
 
-import { cloneElement, useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { cloneElement, useState } from "react";
 import { Download, ExternalLink, Eye, Loader2 } from "lucide-react";
 import { Button, Group, Modal, Text } from "@mantine/core";
 
@@ -23,25 +22,13 @@ export function ApercuDocumentDialog({
   titre,
   nomFichier,
   trigger,
-  defaultOpen = false,
 }: {
   href: string;
   titre: string;
   nomFichier: string;
   trigger?: React.ReactElement;
-  defaultOpen?: boolean;
 }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const [open, setOpen] = useState(defaultOpen);
-
-  useEffect(() => {
-    if (defaultOpen) {
-      router.replace(pathname, { scroll: false });
-    }
-    // Nettoyage du "?nouveau=1" une seule fois, au montage.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const [open, setOpen] = useState(false);
 
   const lienTelechargement = `${href}${href.includes("?") ? "&" : "?"}telecharger`;
   const triggerNode = trigger ?? (

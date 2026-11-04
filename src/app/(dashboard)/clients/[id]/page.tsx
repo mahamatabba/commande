@@ -10,6 +10,7 @@ import { ClientFormDialog } from "@/components/clients/client-form-dialog";
 import { modifierClient } from "../actions";
 import { ClientDetailTables } from "./client-detail-tables";
 import { Users } from "lucide-react";
+import { LienRetour } from "@/components/shared/lien-retour";
 
 export default async function PageClient({
   params,
@@ -68,6 +69,7 @@ export default async function PageClient({
 
   return (
     <Stack gap="xl">
+      <LienRetour href="/clients" libelle="Clients" />
       <Paper withBorder radius="lg" p="lg">
         <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
           <Group gap="md" wrap="nowrap" align="flex-start">

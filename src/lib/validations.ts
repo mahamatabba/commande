@@ -41,6 +41,13 @@ export const tauxTvaSaisi = z.preprocess(
     .transform((n) => Math.round(n * 100) / 100),
 );
 
+/**
+ * Montant saisi en francs, éventuellement avec des espaces de milliers
+ * (« 450 000 ») : les champs de montant les affichent pour la lisibilité, et
+ * c'est cette forme qui arrive dans le FormData.
+ */
+const sansEspaces = (v: unknown) => (typeof v === "string" ? v.replace(/[\s\u00a0\u202f]/g, "") : v);
+
 /** Texte libre facultatif borné à la taille de la colonne (255). */
 const optionalCourt = z
   .string()
@@ -90,8 +97,8 @@ export type ClientInput = z.infer<typeof clientSchema>;
 export const articleSchema = z.object({
   code: z.string().min(1, "Le code est requis"),
   designation: z.string().min(1, "La désignation est requise"),
-  prixAchatIndicatif: z.coerce.number().int().min(0),
-  prixVente: z.coerce.number().int().min(0),
+  prixAchatIndicatif: z.preprocess(sansEspaces, z.coerce.number().int().min(0)),
+  prixVente: z.preprocess(sansEspaces, z.coerce.number().int().min(0)),
   tauxTva: z.preprocess(
     (v) => (v === "" || v == null ? TAUX_TVA_STANDARD : v),
     tauxTvaSaisi,
@@ -181,7 +188,7 @@ export type MarquagePaiementInput = z.infer<typeof marquagePaiementSchema>;
 export const reglementSchema = z.object({
   cible: z.enum(["facture", "commande_fournisseur"]),
   cibleId: z.coerce.number().int().positive(),
-  montant: z.coerce.number().int().positive("Le montant doit être positif"),
+  montant: z.preprocess(sansEspaces, z.coerce.number().int().positive("Le montant doit être positif")),
   dateReglement: dateMetier,
   moyen: z.enum(["ESPECES", "VIREMENT", "MOBILE_MONEY"]),
   commentaire: optionalTexte,

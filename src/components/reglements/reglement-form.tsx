@@ -2,19 +2,10 @@
 
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { notifications } from "@mantine/notifications";
-import {
-  Button,
-  Group,
-  Modal,
-  Select,
-  SimpleGrid,
-  Stack,
-  Text,
-  Textarea,
-  TextInput,
-} from "@mantine/core";
+import { Button, Group, Modal, Select, SimpleGrid, Stack, Text, Textarea, NumberInput } from "@mantine/core";
 import { formatMontant } from "@/lib/format";
 import { saisirReglement } from "@/app/(dashboard)/reglements/actions";
+import { ChampDate } from "@/components/shared/champ-date";
 
 export type FactureEligible = { id: number; numero: string; nomAffiche: string; resteAPayer: number };
 export type CommandeFournisseurEligible = {
@@ -103,12 +94,15 @@ export function ReglementForm({
 
             <SimpleGrid cols={2}>
               <Stack gap={4}>
-                <TextInput
+                <NumberInput
                   label="Montant (FCFA)"
                   name="montant"
-                  type="number"
                   min={1}
                   max={resteAPayer ?? undefined}
+                  thousandSeparator=" "
+                  decimalScale={0}
+                  allowNegative={false}
+                  hideControls
                   required
                 />
                 {resteAPayer !== null && (
@@ -117,13 +111,7 @@ export function ReglementForm({
                   </Text>
                 )}
               </Stack>
-              <TextInput
-                label="Date"
-                name="dateReglement"
-                type="date"
-                required
-                defaultValue={new Date().toISOString().slice(0, 10)}
-              />
+              <ChampDate label="Date" name="dateReglement" required w="100%" defaultValue={new Date().toISOString().slice(0, 10)} maxDate={new Date().toISOString().slice(0, 10)} />
             </SimpleGrid>
 
             <Select

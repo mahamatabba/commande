@@ -9,6 +9,7 @@ import { FournisseurFormDialog } from "@/components/fournisseurs/fournisseur-for
 import { modifierFournisseur } from "../actions";
 import { FournisseurDetailTables } from "./fournisseur-detail-tables";
 import { Building2 } from "lucide-react";
+import { LienRetour } from "@/components/shared/lien-retour";
 
 export default async function PageFournisseur({
   params,
@@ -54,6 +55,7 @@ export default async function PageFournisseur({
 
   return (
     <Stack gap="xl">
+      <LienRetour href="/fournisseurs" libelle="Fournisseurs" />
       <Paper withBorder radius="lg" p="lg">
         <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
           <Group gap="md" wrap="nowrap" align="flex-start">

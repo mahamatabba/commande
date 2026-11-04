@@ -206,7 +206,10 @@ export function LignesEditor({
                       onChange={(v) => majLigne(index, { prixUnitaire: lireNombre(v) })}
                       required
                       hideControls
-                      classNames={{ input: "font-mono tabular-nums" }}
+                      thousandSeparator=" "
+                      decimalScale={0}
+                      allowNegative={false}
+                      classNames={{ input: "text-right font-mono tabular-nums" }}
                     />
                   </Table.Td>
                   <Table.Td className="text-right font-mono font-medium tabular-nums">

@@ -16,10 +16,11 @@ import {
   lireStatut,
 } from "@/lib/filtres";
 import { PaginationListe } from "@/components/shared/pagination-liste";
-import { Alert, Button, Group, Paper, Select, Stack, TextInput } from "@mantine/core";
+import { Alert, Button, Group, Paper, Select, Stack } from "@mantine/core";
 import { FacturesTable } from "./factures-table";
 import { EnTetePage } from "@/components/shared/en-tete-page";
 import { FileText } from "lucide-react";
+import { ChampDate } from "@/components/shared/champ-date";
 
 /** Nombre de factures affichées par page. */
 const PAR_PAGE = 50;
@@ -117,8 +118,8 @@ export default async function PageFactures({
                 data={STATUTS_FACTURE.map((s) => ({ value: s, label: libelle(STATUT_FACTURE_LABEL, s) }))}
               />
             )}
-            <TextInput label="Du" name="du" type="date" defaultValue={du} />
-            <TextInput label="Au" name="au" type="date" defaultValue={au} />
+            <ChampDate label="Du" name="du" defaultValue={du} />
+            <ChampDate label="Au" name="au" defaultValue={au} />
             <Button type="submit" variant="outline">
               Filtrer
             </Button>

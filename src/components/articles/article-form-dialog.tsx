@@ -77,6 +77,9 @@ export function ArticleFormDialog({
                 label="Prix d'achat indicatif (FCFA)"
                 name="prixAchatIndicatif"
                 min={0}
+                thousandSeparator=" "
+                decimalScale={0}
+                allowNegative={false}
                 step={1}
                 required
                 defaultValue={article?.prixAchatIndicatif}
@@ -85,6 +88,9 @@ export function ArticleFormDialog({
                 label="Prix de vente (FCFA)"
                 name="prixVente"
                 min={0}
+                thousandSeparator=" "
+                decimalScale={0}
+                allowNegative={false}
                 step={1}
                 required
                 defaultValue={article?.prixVente}

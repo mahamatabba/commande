@@ -16,10 +16,11 @@ import {
   lireStatut,
 } from "@/lib/filtres";
 import { PaginationListe } from "@/components/shared/pagination-liste";
-import { Alert, Button, Group, Paper, Select, Stack, Text, TextInput } from "@mantine/core";
+import { Alert, Button, Group, Paper, Select, Stack, Text } from "@mantine/core";
 import { ProformasTable } from "./proformas-table";
 import { EnTetePage } from "@/components/shared/en-tete-page";
 import { FileSignature } from "lucide-react";
+import { ChampDate } from "@/components/shared/champ-date";
 
 /** Nombre de proformas affichées par page. */
 const PAR_PAGE = 50;
@@ -108,8 +109,8 @@ export default async function PageProformas({
               w={160}
               data={STATUTS_PROFORMA.map((s) => ({ value: s, label: libelle(STATUT_PROFORMA_LABEL, s) }))}
             />
-            <TextInput label="Du" name="du" type="date" defaultValue={du} />
-            <TextInput label="Au" name="au" type="date" defaultValue={au} />
+            <ChampDate label="Du" name="du" defaultValue={du} />
+            <ChampDate label="Au" name="au" defaultValue={au} />
             <Button type="submit" variant="outline">
               Filtrer
             </Button>

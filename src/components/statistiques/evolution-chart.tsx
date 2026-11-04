@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { Skeleton } from "@mantine/core";
+import { GraphiqueVide } from "./graphique-vide";
 
 export type PointEvolution = { cle: string; label: string; valeur: number };
 
@@ -29,5 +30,8 @@ export function EvolutionChart({
   couleur: string;
   libelleSerie: string;
 }) {
+  if (data.every((p) => p.valeur === 0)) {
+    return <GraphiqueVide message={`Pas encore de ${libelleSerie.toLowerCase()} sur la période.`} />;
+  }
   return <EvolutionChartInner data={data} couleur={couleur} libelleSerie={libelleSerie} />;
 }
