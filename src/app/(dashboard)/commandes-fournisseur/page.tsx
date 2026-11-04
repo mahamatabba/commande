@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { and, eq, gte, lte, sql } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { commandesFournisseur, fournisseurs } from "@/db/schema";
@@ -16,11 +16,13 @@ import {
 } from "@/lib/filtres";
 import { PaginationListe } from "@/components/shared/pagination-liste";
 import { STATUT_COMMANDE_FOURNISSEUR_LABEL, libelle } from "@/lib/libelles";
-import { Button, Group, Paper, Select, Stack } from "@mantine/core";
+import { Button, Group, Paper, Stack } from "@mantine/core";
 import { CommandesFournisseurTable } from "./commandes-fournisseur-table";
 import { EnTetePage } from "@/components/shared/en-tete-page";
 import { ShoppingCart } from "lucide-react";
 import { ChampDate } from "@/components/shared/champ-date";
+import { OngletsStatut } from "@/components/shared/onglets-statut";
+import { lireTri } from "@/lib/tri";
 
 /** Nombre d'achats affichés par page. */
 const PAR_PAGE = 50;
@@ -28,7 +30,7 @@ const PAR_PAGE = 50;
 export default async function PageCommandesFournisseur({
   searchParams,
 }: {
-  searchParams: Promise<{ statut?: string; du?: string; au?: string; page?: string }>;
+  searchParams: Promise<{ statut?: string; du?: string; au?: string; page?: string; tri?: string; ordre?: string }>;
 }) {
   const session = await auth();
   requirePermission(session, "commandes_fournisseur:read");
@@ -48,6 +50,32 @@ export default async function PageCommandesFournisseur({
     fin ? lte(commandesFournisseur.dateCommande, fin) : undefined,
   ].filter(Boolean);
   const filtre = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const tri = lireTri(
+    {
+      numero: commandesFournisseur.numero,
+      fournisseurNom: fournisseurs.nom,
+      dateCommande: commandesFournisseur.dateCommande,
+      statut: commandesFournisseur.statut,
+      montantTotal: commandesFournisseur.montantTotal,
+      montantRegle: commandesFournisseur.montantRegle,
+    },
+    params,
+    { colonne: "dateCommande", ordre: "desc" },
+    commandesFournisseur.id,
+  );
+
+  // Compteurs des onglets de statut : même période, tous statuts confondus.
+  const conditionsPeriode = [
+    debut ? gte(commandesFournisseur.dateCommande, debut) : undefined,
+    fin ? lte(commandesFournisseur.dateCommande, fin) : undefined,
+  ].filter(Boolean);
+  const repartitionStatuts = await db
+    .select({ statut: commandesFournisseur.statut, n: sql<number>`count(*)::int` })
+    .from(commandesFournisseur)
+    .where(conditionsPeriode.length > 0 ? and(...conditionsPeriode) : undefined)
+    .groupBy(commandesFournisseur.statut);
+  const compteursStatuts = Object.fromEntries(repartitionStatuts.map((r) => [r.statut, r.n]));
 
   const [comptes, commandes] = await Promise.all([
     db
@@ -70,7 +98,7 @@ export default async function PageCommandesFournisseur({
       .where(filtre)
       // L'`id` départage deux achats du même jour, sinon l'ordre peut varier
       // d'une page à l'autre et une ligne se répéter.
-      .orderBy(desc(commandesFournisseur.dateCommande), desc(commandesFournisseur.id))
+      .orderBy(...tri.orderBy)
       .limit(PAR_PAGE)
       .offset((pageDemandee - 1) * PAR_PAGE),
   ]);
@@ -92,21 +120,18 @@ export default async function PageCommandesFournisseur({
         )}
       </Group>
 
+      <OngletsStatut
+        base="/commandes-fournisseur"
+        params={params}
+        statuts={STATUTS_COMMANDE_FOURNISSEUR.map((s) => ({ valeur: s, libelle: libelle(STATUT_COMMANDE_FOURNISSEUR_LABEL, s) }))}
+        compteurs={compteursStatuts}
+        actif={statutFiltre}
+      />
+
       <Paper withBorder radius="lg" p="md">
         <form>
           <Group align="flex-end" wrap="wrap" gap="sm">
-            <Select
-              label="Statut"
-              name="statut"
-              defaultValue={statutFiltre}
-              placeholder="Tous"
-              clearable
-              w={160}
-              data={STATUTS_COMMANDE_FOURNISSEUR.map((s) => ({
-                value: s,
-                label: libelle(STATUT_COMMANDE_FOURNISSEUR_LABEL, s),
-              }))}
-            />
+            <input type="hidden" name="statut" value={statutFiltre ?? ""} />
             <ChampDate label="Du" name="du" defaultValue={du} />
             <ChampDate label="Au" name="au" defaultValue={au} />
             <Button type="submit" variant="outline">
@@ -122,7 +147,7 @@ export default async function PageCommandesFournisseur({
       </Paper>
 
       <Paper withBorder radius="lg" style={{ overflow: "hidden" }}>
-        <CommandesFournisseurTable commandes={commandes} peutVoirDecaissements={peutVoirDecaissements} />
+        <CommandesFournisseurTable tri={{ colonne: tri.colonne, ordre: tri.ordre }} commandes={commandes} peutVoirDecaissements={peutVoirDecaissements} />
       </Paper>
 
       <PaginationListe

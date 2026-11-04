@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ActionIcon, Badge, Group } from "@mantine/core";
 import { DataTable } from "mantine-datatable";
+import { useTriUrl } from "@/components/shared/use-tri-url";
 import { Eye, FileText } from "lucide-react";
 import { formatDate, formatMontant } from "@/lib/format";
 import { STATUT_FACTURE_LABEL, libelle } from "@/lib/libelles";
@@ -29,18 +30,22 @@ type Facture = {
   clientRaisonSociale: string | null;
 };
 
-export function FacturesTable({ liste, peutVoirImpayes }: { liste: Facture[]; peutVoirImpayes: boolean }) {
+export function FacturesTable({ liste, peutVoirImpayes, tri }: { liste: Facture[]; peutVoirImpayes: boolean; tri: { colonne: string; ordre: "asc" | "desc" } }) {
+  const { sortStatus, onSortStatusChange } = useTriUrl<Facture>(tri);
   return (
     <DataTable
       records={liste}
       idAccessor="id"
       withTableBorder={false}
       highlightOnHover
+      sortStatus={sortStatus}
+      onSortStatusChange={onSortStatusChange}
       minHeight={liste.length === 0 ? 160 : undefined}
       noRecordsText="Aucune facture."
       columns={[
         {
           accessor: "numero",
+          sortable: true,
           title: "Numéro",
           render: (f) => (
             <Link href={`/factures/${f.id}`} className="font-mono font-medium tabular-nums hover:underline">
@@ -50,11 +55,13 @@ export function FacturesTable({ liste, peutVoirImpayes }: { liste: Facture[]; pe
         },
         {
           accessor: "client",
+          sortable: true,
           title: "Client",
           render: (f) => nomAffiche({ nom: f.clientNom, prenom: f.clientPrenom, raisonSociale: f.clientRaisonSociale }),
         },
         {
           accessor: "dateFacture",
+          sortable: true,
           title: "Date",
           render: (f) => <span className="font-mono tabular-nums">{formatDate(f.dateFacture)}</span>,
         },
@@ -62,6 +69,7 @@ export function FacturesTable({ liste, peutVoirImpayes }: { liste: Facture[]; pe
           ? [
               {
                 accessor: "statut",
+          sortable: true,
                 title: "Statut",
                 render: (f: Facture) => (
                   <Badge {...STATUT_FACTURE_BADGE[f.statut!]}>{libelle(STATUT_FACTURE_LABEL, f.statut)}</Badge>
@@ -71,6 +79,7 @@ export function FacturesTable({ liste, peutVoirImpayes }: { liste: Facture[]; pe
           : []),
         {
           accessor: "montantTotal",
+          sortable: true,
           title: "Montant",
           textAlign: "right",
           render: (f) => <span className="font-mono tabular-nums">{formatMontant(f.montantTotal)}</span>,
@@ -79,6 +88,7 @@ export function FacturesTable({ liste, peutVoirImpayes }: { liste: Facture[]; pe
           ? [
               {
                 accessor: "resteAPayer",
+          sortable: true,
                 title: "Reste à payer",
                 textAlign: "right" as const,
                 render: (f: Facture) => (

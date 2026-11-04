@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ActionIcon, Badge, Group } from "@mantine/core";
 import { DataTable } from "mantine-datatable";
+import { useTriUrl } from "@/components/shared/use-tri-url";
 import { Eye, FileText } from "lucide-react";
 import { formatDate, formatMontant } from "@/lib/format";
 import { MODE_REGLEMENT_LABEL, STATUT_COMMANDE_CLIENT_LABEL, libelle } from "@/lib/libelles";
@@ -26,18 +27,22 @@ type CommandeClient = {
   clientRaisonSociale: string | null;
 };
 
-export function CommandesClientTable({ commandes }: { commandes: CommandeClient[] }) {
+export function CommandesClientTable({ commandes, tri }: { commandes: CommandeClient[]; tri: { colonne: string; ordre: "asc" | "desc" } }) {
+  const { sortStatus, onSortStatusChange } = useTriUrl<CommandeClient>(tri);
   return (
     <DataTable
       records={commandes}
       idAccessor="id"
       withTableBorder={false}
       highlightOnHover
+      sortStatus={sortStatus}
+      onSortStatusChange={onSortStatusChange}
       minHeight={commandes.length === 0 ? 160 : undefined}
       noRecordsText="Aucune commande."
       columns={[
         {
           accessor: "numero",
+          sortable: true,
           title: "Numéro",
           render: (c) => (
             <Link href={`/commandes-client/${c.id}`} className="font-mono font-medium tabular-nums hover:underline">
@@ -47,21 +52,25 @@ export function CommandesClientTable({ commandes }: { commandes: CommandeClient[
         },
         {
           accessor: "client",
+          sortable: true,
           title: "Client",
           render: (c) => nomAffiche({ nom: c.clientNom, prenom: c.clientPrenom, raisonSociale: c.clientRaisonSociale }),
         },
         {
           accessor: "dateCommande",
+          sortable: true,
           title: "Date",
           render: (c) => <span className="font-mono tabular-nums">{formatDate(c.dateCommande)}</span>,
         },
         {
           accessor: "modeReglement",
+          sortable: true,
           title: "Mode",
           render: (c) => libelle(MODE_REGLEMENT_LABEL, c.modeReglement),
         },
         {
           accessor: "statut",
+          sortable: true,
           title: "Statut",
           render: (c) => (
             <Badge {...STATUT_COMMANDE_CLIENT_BADGE[c.statut]}>
@@ -71,6 +80,7 @@ export function CommandesClientTable({ commandes }: { commandes: CommandeClient[
         },
         {
           accessor: "montantTotal",
+          sortable: true,
           title: "Montant",
           textAlign: "right",
           render: (c) => <span className="font-mono tabular-nums">{formatMontant(c.montantTotal)}</span>,

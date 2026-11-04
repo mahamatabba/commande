@@ -20,6 +20,8 @@ import {
 import { ShoppingCart } from "lucide-react";
 import { BandeauConfirmation } from "@/components/documents/bandeau-confirmation";
 import { LienRetour } from "@/components/shared/lien-retour";
+import { Copy } from "lucide-react";
+import { PartagerDocument } from "@/components/documents/partager-document";
 
 const STATUT_LABEL: Record<string, string> = {
   BROUILLON: "Brouillon",
@@ -82,6 +84,18 @@ export default async function PageCommandeFournisseur({
               nomFichier={`bon-commande-${commande.numero}`}
               trigger={<Button variant="outline">Voir le bon de commande</Button>}
             />
+            <PartagerDocument
+              href={`/commandes-fournisseur/${commande.id}/pdf`}
+              nomFichier={`bon-commande-${commande.numero}`}
+              libelleDocument={`le bon de commande ${commande.numero}`}
+              telephone={commande.fournisseur.telephone}
+              email={commande.fournisseur.email}
+            />
+            {peutEcrire && (
+              <Button variant="default" component={Link} href={`/commandes-fournisseur/nouvelle?depuis=${commande.id}`} leftSection={<Copy size={16} />}>
+                Dupliquer
+              </Button>
+            )}
             {peutEcrire && commande.statut === "BROUILLON" && (
               <form action={validerCommandeFournisseur.bind(null, commande.id)}>
                 <Button type="submit">Valider</Button>

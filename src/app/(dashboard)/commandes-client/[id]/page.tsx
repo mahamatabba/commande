@@ -23,6 +23,8 @@ import { annulerCommandeClient, corrigerCommandeClient, validerCommandeClient } 
 import { ShoppingBag } from "lucide-react";
 import { BandeauConfirmation } from "@/components/documents/bandeau-confirmation";
 import { LienRetour } from "@/components/shared/lien-retour";
+import { Copy } from "lucide-react";
+import { PartagerDocument } from "@/components/documents/partager-document";
 
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
   if (c.raisonSociale) return c.raisonSociale;
@@ -91,6 +93,18 @@ export default async function PageCommandeClient({
               nomFichier={`bon-livraison-${commande.numero}`}
               trigger={<Button variant="outline">Voir le bon de livraison</Button>}
             />
+            <PartagerDocument
+              href={`/commandes-client/${commande.id}/pdf`}
+              nomFichier={`bon-livraison-${commande.numero}`}
+              libelleDocument={`le bon de livraison ${commande.numero}`}
+              telephone={commande.client.telephone}
+              email={commande.client.email}
+            />
+            {peutEcrire && (
+              <Button variant="default" component={Link} href={`/commandes-client/nouvelle?depuis=${commande.id}`} leftSection={<Copy size={16} />}>
+                Dupliquer
+              </Button>
+            )}
             {peutEcrire && commande.statut === "BROUILLON" && (
               <form action={validerCommandeClient.bind(null, commande.id)}>
                 <Button type="submit">Valider</Button>

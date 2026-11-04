@@ -21,6 +21,7 @@ import { ReglementsFactureTable } from "./reglements-table";
 import { FileText } from "lucide-react";
 import { BandeauConfirmation } from "@/components/documents/bandeau-confirmation";
 import { LienRetour } from "@/components/shared/lien-retour";
+import { PartagerDocument } from "@/components/documents/partager-document";
 
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
   if (c.raisonSociale) return c.raisonSociale;
@@ -96,6 +97,13 @@ export default async function PageFacture({
               titre={`Facture ${facture.numero}`}
               nomFichier={`facture-${facture.numero}`}
               trigger={<Button variant="outline">Voir la facture</Button>}
+            />
+            <PartagerDocument
+              href={`/factures/${facture.id}/pdf`}
+              nomFichier={`facture-${facture.numero}`}
+              libelleDocument={`la facture ${facture.numero}`}
+              telephone={facture.client.telephone}
+              email={facture.client.email}
             />
             {peutRegler && encaissable && (
               <MarquerPayeeDialog

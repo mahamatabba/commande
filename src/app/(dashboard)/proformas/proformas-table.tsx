@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ActionIcon, Badge, Group } from "@mantine/core";
 import { DataTable } from "mantine-datatable";
+import { useTriUrl } from "@/components/shared/use-tri-url";
 import { Eye, FileText } from "lucide-react";
 import { formatDate, formatMontant } from "@/lib/format";
 import { STATUT_PROFORMA_LABEL, libelle } from "@/lib/libelles";
@@ -26,7 +27,8 @@ type Proforma = {
   clientRaisonSociale: string | null;
 };
 
-export function ProformasTable({ liste }: { liste: Proforma[] }) {
+export function ProformasTable({ liste, tri }: { liste: Proforma[]; tri: { colonne: string; ordre: "asc" | "desc" } }) {
+  const { sortStatus, onSortStatusChange } = useTriUrl<Proforma>(tri);
   // Recalculée côté client à l'affichage — la page serveur ne doit pas
   // transmettre un `Date` figé au moment du rendu.
   const aujourdHui = new Date();
@@ -37,11 +39,14 @@ export function ProformasTable({ liste }: { liste: Proforma[] }) {
       idAccessor="id"
       withTableBorder={false}
       highlightOnHover
+      sortStatus={sortStatus}
+      onSortStatusChange={onSortStatusChange}
       minHeight={liste.length === 0 ? 160 : undefined}
       noRecordsText="Aucune proforma. Elles s'établissent depuis la fiche d'une vente validée."
       columns={[
         {
           accessor: "numero",
+          sortable: true,
           title: "Numéro",
           render: (p) => (
             <Link href={`/proformas/${p.id}`} className="font-mono font-medium tabular-nums hover:underline">
@@ -51,16 +56,19 @@ export function ProformasTable({ liste }: { liste: Proforma[] }) {
         },
         {
           accessor: "client",
+          sortable: true,
           title: "Client",
           render: (p) => nomAffiche({ nom: p.clientNom, prenom: p.clientPrenom, raisonSociale: p.clientRaisonSociale }),
         },
         {
           accessor: "dateProforma",
+          sortable: true,
           title: "Date",
           render: (p) => <span className="font-mono tabular-nums">{formatDate(p.dateProforma)}</span>,
         },
         {
           accessor: "dateValidite",
+          sortable: true,
           title: "Valable jusqu'au",
           render: (p) => {
             const expiree = p.statut === "EMISE" && p.dateValidite < aujourdHui;
@@ -76,11 +84,13 @@ export function ProformasTable({ liste }: { liste: Proforma[] }) {
         },
         {
           accessor: "statut",
+          sortable: true,
           title: "Statut",
           render: (p) => <Badge {...STATUT_PROFORMA_BADGE[p.statut]}>{libelle(STATUT_PROFORMA_LABEL, p.statut)}</Badge>,
         },
         {
           accessor: "montantTotal",
+          sortable: true,
           title: "Montant TTC",
           textAlign: "right",
           render: (p) => <span className="font-mono tabular-nums">{formatMontant(p.montantTotal)}</span>,

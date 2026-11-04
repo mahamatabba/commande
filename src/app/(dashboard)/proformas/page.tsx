@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { and, eq, gte, lte, sql } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { clients, proformas } from "@/db/schema";
@@ -16,11 +16,13 @@ import {
   lireStatut,
 } from "@/lib/filtres";
 import { PaginationListe } from "@/components/shared/pagination-liste";
-import { Alert, Button, Group, Paper, Select, Stack, Text } from "@mantine/core";
+import { Alert, Button, Group, Paper, Stack, Text } from "@mantine/core";
 import { ProformasTable } from "./proformas-table";
 import { EnTetePage } from "@/components/shared/en-tete-page";
 import { FileSignature } from "lucide-react";
 import { ChampDate } from "@/components/shared/champ-date";
+import { OngletsStatut } from "@/components/shared/onglets-statut";
+import { lireTri } from "@/lib/tri";
 
 /** Nombre de proformas affichées par page. */
 const PAR_PAGE = 50;
@@ -28,7 +30,7 @@ const PAR_PAGE = 50;
 export default async function PageProformas({
   searchParams,
 }: {
-  searchParams: Promise<{ statut?: string; du?: string; au?: string; page?: string; supprimee?: string }>;
+  searchParams: Promise<{ statut?: string; du?: string; au?: string; page?: string; tri?: string; ordre?: string; supprimee?: string }>;
 }) {
   const session = await auth();
   requirePermission(session, "factures:read");
@@ -46,6 +48,32 @@ export default async function PageProformas({
     fin ? lte(proformas.dateProforma, fin) : undefined,
   ].filter(Boolean);
   const filtre = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const tri = lireTri(
+    {
+      numero: proformas.numero,
+      client: clients.nom,
+      dateProforma: proformas.dateProforma,
+      dateValidite: proformas.dateValidite,
+      statut: proformas.statut,
+      montantTotal: proformas.montantTotal,
+    },
+    params,
+    { colonne: "dateProforma", ordre: "desc" },
+    proformas.id,
+  );
+
+  // Compteurs des onglets de statut : même période, tous statuts confondus.
+  const conditionsPeriode = [
+    debut ? gte(proformas.dateProforma, debut) : undefined,
+    fin ? lte(proformas.dateProforma, fin) : undefined,
+  ].filter(Boolean);
+  const repartitionStatuts = await db
+    .select({ statut: proformas.statut, n: sql<number>`count(*)::int` })
+    .from(proformas)
+    .where(conditionsPeriode.length > 0 ? and(...conditionsPeriode) : undefined)
+    .groupBy(proformas.statut);
+  const compteursStatuts = Object.fromEntries(repartitionStatuts.map((r) => [r.statut, r.n]));
 
   const [comptes, liste] = await Promise.all([
     db
@@ -70,7 +98,7 @@ export default async function PageProformas({
       .where(filtre)
       // L'`id` départage deux proformas du même jour, sinon l'ordre peut
       // changer d'une page à l'autre et une ligne se répète ou disparaît.
-      .orderBy(desc(proformas.dateProforma), desc(proformas.id))
+      .orderBy(...tri.orderBy)
       .limit(PAR_PAGE)
       .offset((pageDemandee - 1) * PAR_PAGE),
   ]);
@@ -97,18 +125,18 @@ export default async function PageProformas({
         </Alert>
       )}
 
+      <OngletsStatut
+        base="/proformas"
+        params={params}
+        statuts={STATUTS_PROFORMA.map((s) => ({ valeur: s, libelle: libelle(STATUT_PROFORMA_LABEL, s) }))}
+        compteurs={compteursStatuts}
+        actif={statutFiltre}
+      />
+
       <Paper withBorder radius="lg" p="md">
         <form>
           <Group align="flex-end" wrap="wrap" gap="sm">
-            <Select
-              label="Statut"
-              name="statut"
-              defaultValue={statutFiltre}
-              placeholder="Tous"
-              clearable
-              w={160}
-              data={STATUTS_PROFORMA.map((s) => ({ value: s, label: libelle(STATUT_PROFORMA_LABEL, s) }))}
-            />
+            <input type="hidden" name="statut" value={statutFiltre ?? ""} />
             <ChampDate label="Du" name="du" defaultValue={du} />
             <ChampDate label="Au" name="au" defaultValue={au} />
             <Button type="submit" variant="outline">
@@ -124,7 +152,7 @@ export default async function PageProformas({
       </Paper>
 
       <Paper withBorder radius="lg" style={{ overflow: "hidden" }}>
-        <ProformasTable liste={liste} />
+        <ProformasTable tri={{ colonne: tri.colonne, ordre: tri.ordre }} liste={liste} />
       </Paper>
 
       <PaginationListe

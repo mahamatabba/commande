@@ -20,6 +20,8 @@ import { annulerProforma, convertirProformaEnFacture, supprimerProforma } from "
 import { FileSignature } from "lucide-react";
 import { BandeauConfirmation } from "@/components/documents/bandeau-confirmation";
 import { LienRetour } from "@/components/shared/lien-retour";
+import { Copy } from "lucide-react";
+import { PartagerDocument } from "@/components/documents/partager-document";
 
 function nomAffiche(c: { nom: string; prenom: string | null; raisonSociale: string | null }) {
   if (c.raisonSociale) return c.raisonSociale;
@@ -40,6 +42,8 @@ export default async function PageProforma({
   requirePermission(session, "factures:read");
   const peutConvertir = can(session, "factures:emettre");
   const peutAnnuler = can(session, "annulation:effectuer");
+  // Dupliquer une proforma = repartir d'une copie de sa vente, à chiffrer ensuite.
+  const peutDupliquer = can(session, "commandes_client:write");
 
   const proforma = await db.query.proformas.findFirst({
     where: (p, { eq }) => eq(p.id, proformaId),
@@ -88,6 +92,18 @@ export default async function PageProforma({
               nomFichier={`proforma-${proforma.numero}`}
               trigger={<Button variant="outline">Voir la proforma</Button>}
             />
+            <PartagerDocument
+              href={`/proformas/${proforma.id}/pdf`}
+              nomFichier={`proforma-${proforma.numero}`}
+              libelleDocument={`la facture proforma ${proforma.numero}`}
+              telephone={proforma.client.telephone}
+              email={proforma.client.email}
+            />
+            {peutDupliquer && (
+              <Button variant="default" component={Link} href={`/commandes-client/nouvelle?depuis=${proforma.commandeClient.id}`} leftSection={<Copy size={16} />}>
+                Dupliquer
+              </Button>
+            )}
             {peutConvertir && proforma.statut === "EMISE" && (
               <Button variant="default" component={Link} href={`/proformas/${proforma.id}/modifier`}>
                 Modifier

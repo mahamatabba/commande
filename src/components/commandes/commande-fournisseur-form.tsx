@@ -9,23 +9,29 @@ import { creerFournisseur } from "@/app/(dashboard)/fournisseurs/actions";
 import { creerCommandeFournisseur } from "@/app/(dashboard)/commandes-fournisseur/actions";
 import { formatMontant } from "@/lib/format";
 import { ChampDate } from "@/components/shared/champ-date";
+import type { LigneInput } from "@/lib/validations";
 
 type FournisseurOption = { id: number; nom: string };
 
 export function CommandeFournisseurForm({
   fournisseurs,
   articles,
+  modele,
 }: {
   fournisseurs: FournisseurOption[];
   articles: ArticleCatalogue[];
+  /** Bon de commande dupliqué : fournisseur et lignes pré-remplis. */
+  modele?: { fournisseurId: number; lignes: LigneInput[] };
 }) {
   const [state, formAction, pending] = useActionState(creerCommandeFournisseur, {
     error: null,
     success: false,
   });
   const [listeFournisseurs, setListeFournisseurs] = useState<FournisseurOption[]>(fournisseurs);
-  const [fournisseurId, setFournisseurId] = useState<string>("");
-  const [total, setTotal] = useState(0);
+  const [fournisseurId, setFournisseurId] = useState<string>(modele ? String(modele.fournisseurId) : "");
+  const [total, setTotal] = useState(
+    modele ? modele.lignes.reduce((t, l) => t + Math.round(l.quantite * l.prixUnitaire), 0) : 0,
+  );
 
   return (
     <form action={formAction} className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_340px] 2xl:items-start">
@@ -64,7 +70,13 @@ export function CommandeFournisseurForm({
 
         <Card withBorder radius="md" padding="lg">
           <Text fw={600} mb="md">Articles</Text>
-          <LignesEditor name="lignes" articles={articles} champPrix="achat" onTotalChange={setTotal} />
+          <LignesEditor
+            name="lignes"
+            articles={articles}
+            lignesInitiales={modele?.lignes}
+            champPrix="achat"
+            onTotalChange={setTotal}
+          />
         </Card>
       </div>
 

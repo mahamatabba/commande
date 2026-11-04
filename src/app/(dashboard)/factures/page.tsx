@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { and, eq, gte, lte, sql } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { clients, factures } from "@/db/schema";
@@ -16,11 +16,13 @@ import {
   lireStatut,
 } from "@/lib/filtres";
 import { PaginationListe } from "@/components/shared/pagination-liste";
-import { Alert, Button, Group, Paper, Select, Stack } from "@mantine/core";
+import { Alert, Button, Group, Paper, Stack } from "@mantine/core";
 import { FacturesTable } from "./factures-table";
 import { EnTetePage } from "@/components/shared/en-tete-page";
 import { FileText } from "lucide-react";
 import { ChampDate } from "@/components/shared/champ-date";
+import { OngletsStatut } from "@/components/shared/onglets-statut";
+import { lireTri } from "@/lib/tri";
 
 /** Nombre de factures affichées par page. */
 const PAR_PAGE = 50;
@@ -28,7 +30,7 @@ const PAR_PAGE = 50;
 export default async function PageFactures({
   searchParams,
 }: {
-  searchParams: Promise<{ statut?: string; du?: string; au?: string; page?: string; supprimee?: string }>;
+  searchParams: Promise<{ statut?: string; du?: string; au?: string; page?: string; tri?: string; ordre?: string; supprimee?: string }>;
 }) {
   const session = await auth();
   requirePermission(session, "factures:read");
@@ -52,6 +54,32 @@ export default async function PageFactures({
     fin ? lte(factures.dateFacture, fin) : undefined,
   ].filter(Boolean);
   const filtre = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const tri = lireTri(
+    {
+      numero: factures.numero,
+      client: clients.nom,
+      dateFacture: factures.dateFacture,
+      statut: factures.statut,
+      montantTotal: factures.montantTotal,
+      resteAPayer: factures.resteAPayer,
+    },
+    params,
+    { colonne: "dateFacture", ordre: "desc" },
+    factures.id,
+  );
+
+  // Compteurs des onglets de statut : même période, tous statuts confondus.
+  const conditionsPeriode = [
+    debut ? gte(factures.dateFacture, debut) : undefined,
+    fin ? lte(factures.dateFacture, fin) : undefined,
+  ].filter(Boolean);
+  const repartitionStatuts = peutVoirImpayes ? await db
+    .select({ statut: factures.statut, n: sql<number>`count(*)::int` })
+    .from(factures)
+    .where(conditionsPeriode.length > 0 ? and(...conditionsPeriode) : undefined)
+    .groupBy(factures.statut) : [];
+  const compteursStatuts = Object.fromEntries(repartitionStatuts.map((r) => [r.statut, r.n]));
 
   // Comptage et page de résultats sont indépendants : lancés ensemble, ils ne
   // coûtent qu'un aller-retour au lieu de deux. Compter en base plutôt que
@@ -81,7 +109,7 @@ export default async function PageFactures({
       // L'`id` départage deux factures du même jour : sans lui, PostgreSQL est
       // libre de renvoyer les lignes dans un ordre différent d'une page à
       // l'autre, et la même facture apparaît deux fois ou disparaît.
-      .orderBy(desc(factures.dateFacture), desc(factures.id))
+      .orderBy(...tri.orderBy)
       .limit(PAR_PAGE)
       .offset((pageDemandee - 1) * PAR_PAGE),
   ]);
@@ -104,20 +132,20 @@ export default async function PageFactures({
         </Alert>
       )}
 
+      {peutVoirImpayes && (
+        <OngletsStatut
+          base="/factures"
+          params={params}
+          statuts={STATUTS_FACTURE.map((s) => ({ valeur: s, libelle: libelle(STATUT_FACTURE_LABEL, s) }))}
+          compteurs={compteursStatuts}
+          actif={statutFiltre}
+        />
+      )}
+
       <Paper withBorder radius="lg" p="md">
         <form>
           <Group align="flex-end" wrap="wrap" gap="sm">
-            {peutVoirImpayes && (
-              <Select
-                label="Statut"
-                name="statut"
-                defaultValue={statutFiltre}
-                placeholder="Tous"
-                clearable
-                w={160}
-                data={STATUTS_FACTURE.map((s) => ({ value: s, label: libelle(STATUT_FACTURE_LABEL, s) }))}
-              />
-            )}
+            <input type="hidden" name="statut" value={statutFiltre ?? ""} />
             <ChampDate label="Du" name="du" defaultValue={du} />
             <ChampDate label="Au" name="au" defaultValue={au} />
             <Button type="submit" variant="outline">
@@ -133,7 +161,7 @@ export default async function PageFactures({
       </Paper>
 
       <Paper withBorder radius="lg" style={{ overflow: "hidden" }}>
-        <FacturesTable liste={liste} peutVoirImpayes={peutVoirImpayes} />
+        <FacturesTable tri={{ colonne: tri.colonne, ordre: tri.ordre }} liste={liste} peutVoirImpayes={peutVoirImpayes} />
       </Paper>
 
       <PaginationListe

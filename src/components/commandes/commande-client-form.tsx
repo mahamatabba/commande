@@ -9,6 +9,7 @@ import { creerClient } from "@/app/(dashboard)/clients/actions";
 import { creerCommandeClient } from "@/app/(dashboard)/commandes-client/actions";
 import { formatMontant } from "@/lib/format";
 import { ChampDate } from "@/components/shared/champ-date";
+import type { LigneInput } from "@/lib/validations";
 
 type ClientOption = { id: number; nom: string; prenom: string | null; raisonSociale: string | null };
 
@@ -19,17 +20,22 @@ function nomAffiche(c: ClientOption) {
 export function CommandeClientForm({
   clients,
   articles,
+  modele,
 }: {
   clients: ClientOption[];
   articles: ArticleCatalogue[];
+  /** Vente dupliquée : client, mode de règlement et lignes pré-remplis. */
+  modele?: { clientId: number; modeReglement: "ESPECES" | "BON_DE_COMMANDE"; lignes: LigneInput[] };
 }) {
   const [state, formAction, pending] = useActionState(creerCommandeClient, {
     error: null,
     success: false,
   });
   const [listeClients, setListeClients] = useState<ClientOption[]>(clients);
-  const [clientId, setClientId] = useState<string>("");
-  const [total, setTotal] = useState(0);
+  const [clientId, setClientId] = useState<string>(modele ? String(modele.clientId) : "");
+  const [total, setTotal] = useState(
+    modele ? modele.lignes.reduce((t, l) => t + Math.round(l.quantite * l.prixUnitaire), 0) : 0,
+  );
 
   return (
     <form action={formAction} className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_340px] 2xl:items-start">
@@ -66,7 +72,7 @@ export function CommandeClientForm({
             <Select
               label="Mode de règlement"
               name="modeReglement"
-              defaultValue="ESPECES"
+              defaultValue={modele?.modeReglement ?? "ESPECES"}
               required
               data={[
                 { value: "ESPECES", label: "Espèces (comptant)" },
@@ -78,7 +84,13 @@ export function CommandeClientForm({
 
         <Card withBorder radius="md" padding="lg">
           <Text fw={600} mb="md">Articles</Text>
-          <LignesEditor name="lignes" articles={articles} champPrix="vente" onTotalChange={setTotal} />
+          <LignesEditor
+            name="lignes"
+            articles={articles}
+            lignesInitiales={modele?.lignes}
+            champPrix="vente"
+            onTotalChange={setTotal}
+          />
         </Card>
       </div>
 
