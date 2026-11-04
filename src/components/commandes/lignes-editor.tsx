@@ -117,7 +117,7 @@ export function LignesEditor({
     <div className="space-y-3">
       <input type="hidden" name={name} value={JSON.stringify(lignes)} />
 
-      <div className="overflow-x-auto rounded-md border border-[var(--mantine-color-dark-4)] bg-[var(--mantine-color-dark-6)]">
+      <div className="overflow-x-auto rounded-md border border-[var(--aei-bordure)] bg-[var(--aei-surface-2)]">
         <Table verticalSpacing="xs" miw={880}>
           <Table.Thead>
             <Table.Tr>

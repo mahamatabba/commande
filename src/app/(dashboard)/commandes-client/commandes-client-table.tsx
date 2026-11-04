@@ -45,25 +45,33 @@ export function CommandesClientTable({ commandes, tri }: { commandes: CommandeCl
           sortable: true,
           title: "Numéro",
           render: (c) => (
+            <div>
             <Link href={`/commandes-client/${c.id}`} className="font-mono font-medium tabular-nums hover:underline">
               {c.numero}
             </Link>
+            <div className="text-xs text-[var(--mantine-color-dimmed)] sm:hidden">
+              {nomAffiche({ nom: c.clientNom, prenom: c.clientPrenom, raisonSociale: c.clientRaisonSociale })} · {formatDate(c.dateCommande)}
+            </div>
+            </div>
           ),
         },
         {
           accessor: "client",
+          visibleMediaQuery: "(min-width: 48em)",
           sortable: true,
           title: "Client",
           render: (c) => nomAffiche({ nom: c.clientNom, prenom: c.clientPrenom, raisonSociale: c.clientRaisonSociale }),
         },
         {
           accessor: "dateCommande",
+          visibleMediaQuery: "(min-width: 48em)",
           sortable: true,
           title: "Date",
           render: (c) => <span className="font-mono tabular-nums">{formatDate(c.dateCommande)}</span>,
         },
         {
           accessor: "modeReglement",
+          visibleMediaQuery: "(min-width: 48em)",
           sortable: true,
           title: "Mode",
           render: (c) => libelle(MODE_REGLEMENT_LABEL, c.modeReglement),

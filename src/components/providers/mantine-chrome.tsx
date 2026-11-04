@@ -7,12 +7,12 @@ import "dayjs/locale/fr";
 import { theme } from "@/lib/mantine-theme";
 
 export function AppColorSchemeScript() {
-  return <ColorSchemeScript forceColorScheme="dark" />;
+  return <ColorSchemeScript defaultColorScheme="dark" />;
 }
 
 export function AppMantineProvider({ children }: { children: React.ReactNode }) {
   return (
-    <MantineProvider theme={theme} forceColorScheme="dark">
+    <MantineProvider theme={theme} defaultColorScheme="dark">
       <DatesProvider settings={{ locale: "fr", firstDayOfWeek: 1 }}>
         {children}
         <Notifications position="top-right" />

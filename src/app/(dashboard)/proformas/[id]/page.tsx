@@ -188,7 +188,7 @@ export default async function PageProforma({
             ))}
           </TableTbody>
         </Table>
-        <Group gap="xl" p="sm" justify="flex-end" wrap="wrap" style={{ borderTop: "1px solid var(--mantine-color-dark-4)" }}>
+        <Group gap="xl" p="sm" justify="flex-end" wrap="wrap" style={{ borderTop: "1px solid var(--aei-bordure)" }}>
           <Text size="sm" className="font-mono tabular-nums">
             Total HT : <strong>{formatMontant(proforma.montantHt)}</strong>
           </Text>

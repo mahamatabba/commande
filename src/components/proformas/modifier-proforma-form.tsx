@@ -8,6 +8,7 @@ import { RecapitulatifTva, RegimeTvaFields } from "@/components/documents/regime
 import { ConditionsProformaFields } from "@/components/proformas/emettre-proforma-form";
 import { modifierProforma } from "@/app/(dashboard)/proformas/actions";
 import type { LigneInput } from "@/lib/validations";
+import { useAvertissementQuitter } from "@/components/shared/use-avertissement-quitter";
 
 /**
  * Modification d'une proforma en circulation : lignes (prix, quantités,
@@ -38,6 +39,7 @@ export function ModifierProformaForm({
     error: null,
     success: false,
   });
+  const { marquerModifie, liberer } = useAvertissementQuitter();
   const [exonere, setExonere] = useState(exonereInitial);
   const [taux, setTaux] = useState<string | number>(tauxInitial);
   const [validiteJours, setValiditeJours] = useState<string | number>(validiteInitiale);
@@ -46,7 +48,7 @@ export function ModifierProformaForm({
   );
 
   return (
-    <form action={formAction}>
+    <form action={formAction} onChange={marquerModifie} onSubmit={liberer}>
       <Stack gap="lg">
         <Card withBorder radius="md" padding="lg">
           <Text fw={600} mb="md">Lignes chiffrées</Text>

@@ -148,7 +148,7 @@ export default async function PageFacture({
       )}
 
       {facture.proformaOrigine && (
-        <Paper withBorder radius="md" p="sm" style={{ backgroundColor: "var(--mantine-color-dark-6)" }}>
+        <Paper withBorder radius="md" p="sm" style={{ backgroundColor: "var(--aei-surface-2)" }}>
           <Text size="sm">
             Établie à partir de la proforma{" "}
             <Link href={`/proformas/${facture.proformaOrigine.id}`} className="font-mono tabular-nums underline">
@@ -184,7 +184,7 @@ export default async function PageFacture({
             ))}
           </TableTbody>
         </Table>
-        <Group gap="xl" p="sm" justify="flex-end" wrap="wrap" style={{ borderTop: "1px solid var(--mantine-color-dark-4)" }}>
+        <Group gap="xl" p="sm" justify="flex-end" wrap="wrap" style={{ borderTop: "1px solid var(--aei-bordure)" }}>
           <Text size="sm" className="font-mono tabular-nums">
             Total HT : <strong>{formatMontant(facture.montantHt)}</strong>
           </Text>

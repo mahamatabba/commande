@@ -48,13 +48,13 @@ export function OngletsStatut({
             className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${
               estActif
                 ? "border-[var(--mantine-color-brand-6)] bg-[var(--mantine-color-brand-7)] text-white"
-                : "border-[var(--mantine-color-dark-4)] bg-[var(--mantine-color-dark-7)] text-[var(--mantine-color-dark-0)] hover:border-[var(--mantine-color-dark-2)]"
+                : "border-[var(--aei-bordure)] bg-[var(--aei-surface)] text-[var(--mantine-color-text)] hover:border-[var(--aei-texte-faible)]"
             }`}
           >
             {o.libelle}
             <span
               className={`min-w-6 rounded-full px-1.5 text-center text-xs tabular-nums ${
-                estActif ? "bg-white/20" : "bg-[var(--mantine-color-dark-5)] text-[var(--mantine-color-dark-1)]"
+                estActif ? "bg-white/20" : "bg-[var(--aei-ligne)] text-[var(--aei-texte-doux)]"
               }`}
             >
               {o.n}

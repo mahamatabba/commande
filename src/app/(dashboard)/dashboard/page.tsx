@@ -319,7 +319,7 @@ export default async function PageTableauDeBord() {
         withBorder
         style={{
           background:
-            "linear-gradient(120deg, rgba(0,138,191,0.22) 0%, rgba(17,32,47,0.6) 55%, rgba(250,167,85,0.16) 100%)",
+            "linear-gradient(120deg, rgba(0,138,191,0.22) 0%, var(--aei-hero-milieu) 55%, rgba(250,167,85,0.16) 100%)",
         }}
       >
         <Group justify="space-between" align="flex-end" wrap="wrap" gap="md">
@@ -494,7 +494,7 @@ export default async function PageTableauDeBord() {
                   justify="space-between"
                   wrap="nowrap"
                   py="xs"
-                  style={{ borderTop: "1px solid var(--mantine-color-dark-5)" }}
+                  style={{ borderTop: "1px solid var(--aei-ligne)" }}
                 >
                   <div className="min-w-0">
                     <Text size="sm" fw={600} component={Link} href={`/factures/${f.id}`} className="font-mono tabular-nums hover:underline">
@@ -542,7 +542,7 @@ export default async function PageTableauDeBord() {
                     justify="space-between"
                     wrap="nowrap"
                     py="xs"
-                    style={{ borderTop: "1px solid var(--mantine-color-dark-5)" }}
+                    style={{ borderTop: "1px solid var(--aei-ligne)" }}
                   >
                     <div className="min-w-0">
                       <Text size="sm" fw={600} component={Link} href={`/proformas/${p.id}`} className="font-mono tabular-nums hover:underline">

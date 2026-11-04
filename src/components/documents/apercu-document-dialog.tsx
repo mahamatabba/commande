@@ -41,7 +41,7 @@ export function ApercuDocumentDialog({
     <>
       {cloneElement(triggerNode, { onClick: () => setOpen(true) })}
       <Modal opened={open} onClose={() => setOpen(false)} title={titre} size="xl">
-        <div className="relative flex h-[75vh] flex-col overflow-hidden rounded-md border border-[var(--mantine-color-dark-4)] bg-[var(--mantine-color-dark-6)]">
+        <div className="relative flex h-[75vh] flex-col overflow-hidden rounded-md border border-[var(--aei-bordure)] bg-[var(--aei-surface-2)]">
           {/* L'indicateur reste dessous en permanence : la visionneuse PDF du
               navigateur ne prévient pas toujours de sa fin de chargement, et
               un état « chargé » qui n'arrive jamais laisserait un voile sur

@@ -23,6 +23,7 @@ import { ShoppingCart } from "lucide-react";
 import { ChampDate } from "@/components/shared/champ-date";
 import { OngletsStatut } from "@/components/shared/onglets-statut";
 import { lireTri } from "@/lib/tri";
+import { BoutonExport } from "@/components/shared/bouton-export";
 
 /** Nombre d'achats affichés par page. */
 const PAR_PAGE = 50;
@@ -142,6 +143,7 @@ export default async function PageCommandesFournisseur({
                 Réinitialiser
               </Button>
             )}
+            <BoutonExport href="/commandes-fournisseur/export" params={params} />
           </Group>
         </form>
       </Paper>

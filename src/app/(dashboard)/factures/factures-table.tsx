@@ -48,19 +48,26 @@ export function FacturesTable({ liste, peutVoirImpayes, tri }: { liste: Facture[
           sortable: true,
           title: "Numéro",
           render: (f) => (
+            <div>
             <Link href={`/factures/${f.id}`} className="font-mono font-medium tabular-nums hover:underline">
               {f.numero}
             </Link>
+            <div className="text-xs text-[var(--mantine-color-dimmed)] sm:hidden">
+              {nomAffiche({ nom: f.clientNom, prenom: f.clientPrenom, raisonSociale: f.clientRaisonSociale })} · {formatDate(f.dateFacture)}
+            </div>
+            </div>
           ),
         },
         {
           accessor: "client",
+          visibleMediaQuery: "(min-width: 48em)",
           sortable: true,
           title: "Client",
           render: (f) => nomAffiche({ nom: f.clientNom, prenom: f.clientPrenom, raisonSociale: f.clientRaisonSociale }),
         },
         {
           accessor: "dateFacture",
+          visibleMediaQuery: "(min-width: 48em)",
           sortable: true,
           title: "Date",
           render: (f) => <span className="font-mono tabular-nums">{formatDate(f.dateFacture)}</span>,
@@ -88,6 +95,7 @@ export function FacturesTable({ liste, peutVoirImpayes, tri }: { liste: Facture[
           ? [
               {
                 accessor: "resteAPayer",
+          visibleMediaQuery: "(min-width: 48em)",
           sortable: true,
                 title: "Reste à payer",
                 textAlign: "right" as const,

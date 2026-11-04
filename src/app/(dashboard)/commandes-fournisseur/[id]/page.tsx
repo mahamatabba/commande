@@ -150,7 +150,7 @@ export default async function PageCommandeFournisseur({
             ))}
           </TableTbody>
         </Table>
-        <Group justify="flex-end" gap="xl" p="sm" style={{ borderTop: "1px solid var(--mantine-color-dark-4)" }}>
+        <Group justify="flex-end" gap="xl" p="sm" style={{ borderTop: "1px solid var(--aei-bordure)" }}>
           <Text size="sm" className="font-mono tabular-nums">
             Total : <strong>{formatMontant(commande.montantTotal)}</strong>
           </Text>

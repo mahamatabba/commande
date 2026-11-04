@@ -58,13 +58,13 @@ export function SqueletteTableau({
         wrap="nowrap"
         px="md"
         py="sm"
-        className="border-b border-[var(--mantine-color-dark-4)] bg-[var(--mantine-color-dark-5)]"
+        className="border-b border-[var(--aei-bordure)] bg-[var(--aei-ligne)]"
       >
         {Array.from({ length: colonnes }).map((_, i) => (
           <Skeleton key={i} className="h-3 flex-1" />
         ))}
       </Group>
-      <div className="divide-y divide-[var(--mantine-color-dark-4)]">
+      <div className="divide-y divide-[var(--aei-bordure)]">
         {Array.from({ length: lignes }).map((_, i) => (
           <Group key={i} gap="md" wrap="nowrap" px="md" py={14}>
             {Array.from({ length: colonnes }).map((_, j) => (

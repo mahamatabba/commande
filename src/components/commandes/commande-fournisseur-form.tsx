@@ -10,6 +10,7 @@ import { creerCommandeFournisseur } from "@/app/(dashboard)/commandes-fournisseu
 import { formatMontant } from "@/lib/format";
 import { ChampDate } from "@/components/shared/champ-date";
 import type { LigneInput } from "@/lib/validations";
+import { useAvertissementQuitter } from "@/components/shared/use-avertissement-quitter";
 
 type FournisseurOption = { id: number; nom: string };
 
@@ -27,6 +28,7 @@ export function CommandeFournisseurForm({
     error: null,
     success: false,
   });
+  const { marquerModifie, liberer } = useAvertissementQuitter();
   const [listeFournisseurs, setListeFournisseurs] = useState<FournisseurOption[]>(fournisseurs);
   const [fournisseurId, setFournisseurId] = useState<string>(modele ? String(modele.fournisseurId) : "");
   const [total, setTotal] = useState(
@@ -34,7 +36,7 @@ export function CommandeFournisseurForm({
   );
 
   return (
-    <form action={formAction} className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_340px] 2xl:items-start">
+    <form action={formAction} onChange={marquerModifie} onSubmit={liberer} className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_340px] 2xl:items-start">
       <div className="min-w-0 space-y-6">
         <Card withBorder radius="md" padding="lg">
           <Text fw={600} mb="md">Informations de l&apos;achat</Text>
@@ -84,7 +86,7 @@ export function CommandeFournisseurForm({
         <Card withBorder radius="md" padding="lg">
           <Text fw={600} mb="md">Récapitulatif</Text>
           <Stack gap="md">
-            <Group justify="space-between" align="baseline" style={{ borderTop: "1px solid var(--mantine-color-dark-4)" }} pt="md">
+            <Group justify="space-between" align="baseline" style={{ borderTop: "1px solid var(--aei-bordure)" }} pt="md">
               <Text size="sm" c="dimmed">Total de l&apos;achat</Text>
               <Text className="font-mono" size="xl" fw={600}>{formatMontant(total)}</Text>
             </Group>

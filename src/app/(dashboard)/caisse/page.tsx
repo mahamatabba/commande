@@ -13,6 +13,7 @@ import { CaisseTable } from "./caisse-table";
 import { EnTetePage } from "@/components/shared/en-tete-page";
 import { Wallet } from "lucide-react";
 import { ChampDate } from "@/components/shared/champ-date";
+import { BoutonExport } from "@/components/shared/bouton-export";
 
 /** Nombre de mouvements affichés par page. */
 const PAR_PAGE = 100;
@@ -127,6 +128,7 @@ export default async function PageCaisse({
             <ChampDate label="Du" name="du" defaultValue={du} />
             <ChampDate label="Au" name="au" defaultValue={au} />
             <Button type="submit" variant="outline">Filtrer</Button>
+            <BoutonExport href="/caisse/export" params={params} />
           </Group>
         </form>
       </Paper>

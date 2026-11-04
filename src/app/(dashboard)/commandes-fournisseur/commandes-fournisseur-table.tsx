@@ -46,15 +46,22 @@ export function CommandesFournisseurTable({
           sortable: true,
           title: "Numéro",
           render: (c) => (
+            <div>
             <Link href={`/commandes-fournisseur/${c.id}`} className="font-mono font-medium tabular-nums hover:underline">
               {c.numero}
             </Link>
+            <div className="text-xs text-[var(--mantine-color-dimmed)] sm:hidden">
+              {c.fournisseurNom} · {formatDate(c.dateCommande)}
+            </div>
+            </div>
           ),
         },
         { accessor: "fournisseurNom",
+          visibleMediaQuery: "(min-width: 48em)",
           sortable: true, title: "Fournisseur" },
         {
           accessor: "dateCommande",
+          visibleMediaQuery: "(min-width: 48em)",
           sortable: true,
           title: "Date",
           render: (c) => <span className="font-mono tabular-nums">{formatDate(c.dateCommande)}</span>,
@@ -80,6 +87,7 @@ export function CommandesFournisseurTable({
           ? [
               {
                 accessor: "montantRegle",
+          visibleMediaQuery: "(min-width: 48em)",
           sortable: true,
                 title: "Réglé",
                 textAlign: "right" as const,

@@ -14,7 +14,7 @@ export default function PageConnexion() {
         className="relative hidden flex-col justify-between overflow-hidden px-12 py-14 md:flex"
         style={{
           background:
-            "radial-gradient(circle at 15% 10%, rgba(0,174,239,0.22), transparent 45%), radial-gradient(circle at 90% 95%, rgba(250,167,85,0.22), transparent 45%), var(--mantine-color-dark-8)",
+            "radial-gradient(circle at 15% 10%, rgba(0,174,239,0.22), transparent 45%), radial-gradient(circle at 90% 95%, rgba(250,167,85,0.22), transparent 45%), #0C1622",
         }}
       >
         <div>
@@ -33,13 +33,13 @@ export default function PageConnexion() {
             Gestion commerciale
           </h1>
           <div className="mt-3 h-1 w-14 rounded bg-[#FAA755]" />
-          <p className="mt-5 max-w-[360px] text-[15px] leading-relaxed text-[var(--mantine-color-dark-1)]">
+          <p className="mt-5 max-w-[360px] text-[15px] leading-relaxed text-[#C7D2DE]">
             Bons de commande fournisseurs, ventes, proformas, factures et caisse.
             Un seul registre, tenu à jour.
           </p>
         </div>
         <div className="flex items-center justify-between">
-          <p className="text-xs text-[var(--mantine-color-dark-2)]">
+          <p className="text-xs text-[#A9BBD1]">
             Avenue Charles de Gaulle · N&apos;Djaména, Tchad
           </p>
           <span className="flex size-11 items-center justify-center rounded-full bg-white p-1">
@@ -48,7 +48,7 @@ export default function PageConnexion() {
         </div>
       </div>
 
-      <div className="flex items-center justify-center bg-[var(--mantine-color-dark-7)] px-6 py-14">
+      <div className="flex items-center justify-center bg-[var(--aei-surface)] px-6 py-14">
         <div className="w-full max-w-[380px]">
           <span className="mb-5 flex h-[64px] w-[74px] items-center justify-center rounded-xl bg-white p-1.5 md:hidden">
             <Image src="/brand/aei-icon.png" alt="Logo AEI" width={248} height={215} className="h-full w-auto" />
@@ -84,7 +84,7 @@ export default function PageConnexion() {
             </Button>
           </form>
 
-          <p className="mt-6 border-t border-[var(--mantine-color-dark-4)] pt-4 text-xs text-[var(--mantine-color-dimmed)]">
+          <p className="mt-6 border-t border-[var(--aei-bordure)] pt-4 text-xs text-[var(--mantine-color-dimmed)]">
             Mot de passe oublié ? Contactez l&apos;administrateur.
           </p>
         </div>

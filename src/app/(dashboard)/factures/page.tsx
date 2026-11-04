@@ -23,6 +23,7 @@ import { FileText } from "lucide-react";
 import { ChampDate } from "@/components/shared/champ-date";
 import { OngletsStatut } from "@/components/shared/onglets-statut";
 import { lireTri } from "@/lib/tri";
+import { BoutonExport } from "@/components/shared/bouton-export";
 
 /** Nombre de factures affichées par page. */
 const PAR_PAGE = 50;
@@ -156,6 +157,7 @@ export default async function PageFactures({
                 Réinitialiser
               </Button>
             )}
+            <BoutonExport href="/factures/export" params={params} />
           </Group>
         </form>
       </Paper>

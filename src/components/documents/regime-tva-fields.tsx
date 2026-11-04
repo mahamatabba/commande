@@ -111,7 +111,7 @@ export function RecapitulatifTva({
   const totaux = decomposerTva(montantHt, { exonere, taux: lireTaux(taux) ?? 0 });
 
   return (
-    <Stack gap={6} pt="md" style={{ borderTop: "1px solid var(--mantine-color-dark-4)" }}>
+    <Stack gap={6} pt="md" style={{ borderTop: "1px solid var(--aei-bordure)" }}>
       <Group justify="space-between">
         <Text size="sm" c="dimmed">Total HT</Text>
         <Text size="sm" className="font-mono tabular-nums">{formatMontant(totaux.montantHt)}</Text>
@@ -122,7 +122,7 @@ export function RecapitulatifTva({
         </Text>
         <Text size="sm" className="font-mono tabular-nums">{formatMontant(totaux.montantTva)}</Text>
       </Group>
-      <Group justify="space-between" pt="xs" style={{ borderTop: "1px solid var(--mantine-color-dark-4)" }}>
+      <Group justify="space-between" pt="xs" style={{ borderTop: "1px solid var(--aei-bordure)" }}>
         <Text size="sm" fw={500}>Total TTC</Text>
         <Text size="xl" fw={600} className="font-mono tabular-nums">
           {formatMontant(totaux.montantTotal)}

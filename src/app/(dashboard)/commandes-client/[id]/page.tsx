@@ -146,7 +146,7 @@ export default async function PageCommandeClient({
       )}
 
       {commande.proformas.length > 0 && (
-        <Paper withBorder radius="md" p="sm" style={{ backgroundColor: "var(--mantine-color-dark-6)" }}>
+        <Paper withBorder radius="md" p="sm" style={{ backgroundColor: "var(--aei-surface-2)" }}>
           <Text size="sm">
             <span className="font-medium">Proformas établies :</span>{" "}
             {commande.proformas.map((p, i) => (
@@ -187,7 +187,7 @@ export default async function PageCommandeClient({
             ))}
           </TableTbody>
         </Table>
-        <Group justify="flex-end" p="sm" style={{ borderTop: "1px solid var(--mantine-color-dark-4)" }}>
+        <Group justify="flex-end" p="sm" style={{ borderTop: "1px solid var(--aei-bordure)" }}>
           <Text size="sm" className="font-mono tabular-nums">
             Total : <strong>{formatMontant(commande.montantTotal)}</strong>
           </Text>

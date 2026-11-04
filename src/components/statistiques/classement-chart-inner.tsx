@@ -21,7 +21,7 @@ export default function ClassementChartInner({
   return (
     <ChartContainer config={config} className="aspect-auto w-full" style={{ height: hauteur }}>
       <BarChart data={data} layout="vertical" margin={{ left: 8, right: 24, top: 4, bottom: 4 }}>
-        <CartesianGrid horizontal={false} stroke="var(--mantine-color-dark-4)" />
+        <CartesianGrid horizontal={false} stroke="var(--aei-bordure)" />
         <XAxis type="number" hide />
         <YAxis
           type="category"

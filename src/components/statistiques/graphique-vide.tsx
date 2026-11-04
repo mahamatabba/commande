@@ -12,7 +12,7 @@ export function GraphiqueVide({ message, hauteur = 224 }: { message: string; hau
       justify="center"
       gap="xs"
       h={hauteur}
-      style={{ border: "1px dashed var(--mantine-color-dark-4)", borderRadius: "var(--mantine-radius-md)" }}
+      style={{ border: "1px dashed var(--aei-bordure)", borderRadius: "var(--mantine-radius-md)" }}
     >
       <ThemeIcon variant="light" color="gray" size={44} radius="xl">
         <ChartNoAxesColumn size={22} />

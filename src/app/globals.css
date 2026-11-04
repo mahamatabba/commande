@@ -5,6 +5,37 @@
 @import "@mantine/dates/styles.layer.css";
 @import "mantine-datatable/styles.layer.css";
 
+/*
+ * Couleurs d'interface qui suivent le thème (clair / sombre). Les composants
+ * Mantine s'adaptent seuls ; ces variables couvrent les bordures, fonds et
+ * textes posés à la main (Tailwind, styles en ligne).
+ */
+:root {
+  --aei-fond: #f2f5f9;
+  --aei-surface: #ffffff;
+  --aei-surface-2: #f6f8fb;
+  --aei-ligne: #e6eaf0;
+  --aei-bordure: #d9dee6;
+  --aei-bordure-forte: #b8c1cd;
+  --aei-texte: #1a2533;
+  --aei-texte-doux: #4a5668;
+  --aei-texte-faible: #6b7687;
+  --aei-hero-milieu: rgba(255, 255, 255, 0.75);
+}
+
+[data-mantine-color-scheme="dark"] {
+  --aei-fond: var(--mantine-color-dark-8);
+  --aei-surface: var(--mantine-color-dark-7);
+  --aei-surface-2: var(--mantine-color-dark-6);
+  --aei-ligne: var(--mantine-color-dark-5);
+  --aei-bordure: var(--mantine-color-dark-4);
+  --aei-bordure-forte: var(--mantine-color-dark-3);
+  --aei-texte: var(--mantine-color-dark-0);
+  --aei-texte-doux: var(--mantine-color-dark-1);
+  --aei-texte-faible: var(--mantine-color-dark-2);
+  --aei-hero-milieu: rgba(17, 32, 47, 0.6);
+}
+
 @theme inline {
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
@@ -18,8 +49,8 @@
 @layer components {
   .mantine-datatable thead tr th,
   .mantine-AppShell-main .mantine-Table-thead .mantine-Table-th {
-    background-color: var(--mantine-color-dark-6);
-    color: var(--mantine-color-dark-1);
+    background-color: var(--aei-surface-2);
+    color: var(--aei-texte-doux);
     font-size: 11.5px;
     font-weight: 700;
     letter-spacing: 0.06em;
@@ -41,6 +72,15 @@
   .mantine-datatable tbody tr:hover td,
   .mantine-AppShell-main .mantine-Table-tbody .mantine-Table-tr:hover .mantine-Table-td {
     background-color: rgba(0, 160, 218, 0.07);
+  }
+
+  /* Numéros et montants ne se coupent jamais en deux lignes. */
+  .mantine-datatable td .tabular-nums {
+    white-space: nowrap;
+  }
+
+  .mantine-datatable .mantine-Badge-label {
+    overflow: visible;
   }
 
   .mantine-datatable-empty-state {

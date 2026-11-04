@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ChevronDown, LogOut, PanelLeftClose, PanelLeftOpen, Plus } from "lucide-react";
+import { ChevronDown, LogOut, Moon, PanelLeftClose, PanelLeftOpen, Plus, Sun } from "lucide-react";
 import {
   ActionIcon,
   AppShell,
@@ -17,6 +17,8 @@ import {
   Stack,
   Text,
   UnstyledButton,
+  useComputedColorScheme,
+  useMantineColorScheme,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { SidebarNav } from "./sidebar-nav";
@@ -63,6 +65,8 @@ export function DashboardShell({
 }) {
   const [opened, { toggle, close }] = useDisclosure();
   const [replie, setReplie] = useState(false);
+  const { setColorScheme } = useMantineColorScheme();
+  const schema = useComputedColorScheme("dark", { getInitialValueInEffect: true });
 
   // Préférence relue après le montage : le rendu serveur ne la connaît pas,
   // et la lire pendant le rendu provoquerait un écart d'hydratation.
@@ -97,16 +101,16 @@ export function DashboardShell({
           // Rappel du papier à en-tête : filet orange sous la marque.
           borderBottom: "3px solid #FAA755",
           background:
-            "linear-gradient(90deg, var(--mantine-color-dark-8) 0%, var(--mantine-color-dark-7) 60%, var(--mantine-color-dark-8) 100%)",
+            "linear-gradient(90deg, #0C1622 0%, #11202F 60%, #0C1622 100%)",
         }}
       >
         <Group h="100%" px="md" justify="space-between" wrap="nowrap">
           <Group gap="sm" wrap="nowrap">
-            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" aria-label="Menu" />
+            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" color="white" aria-label="Menu" />
             <Tooltip label={replie ? "Déplier le menu" : "Replier le menu"}>
               <ActionIcon
                 variant="subtle"
-                color="gray"
+                color="gray.3"
                 size="lg"
                 visibleFrom="sm"
                 onClick={basculerMenu}
@@ -141,7 +145,7 @@ export function DashboardShell({
               <span className="flex size-9 items-center justify-center rounded-full bg-white p-[3px]">
                 <Image src="/brand/hp-logo.png" alt="HP" width={66} height={66} className="h-full w-full" />
               </span>
-              <Text size="xs" c="dimmed" lh={1.2}>
+              <Text size="xs" c="gray.5" lh={1.2}>
                 Partenaire
                 <br />
                 agréé HP
@@ -156,11 +160,11 @@ export function DashboardShell({
                       {initiales(userName)}
                     </Avatar>
                     <div className="hidden text-left sm:block">
-                      <Text size="sm" fw={600} lh={1.2}>
+                      <Text size="sm" fw={600} lh={1.2} c="white">
                         {userName}
                       </Text>
                       {role && (
-                        <Text size="xs" c="dimmed" lh={1.2}>
+                        <Text size="xs" c="gray.5" lh={1.2}>
                           {role}
                         </Text>
                       )}
@@ -170,6 +174,13 @@ export function DashboardShell({
               </Menu.Target>
               <Menu.Dropdown>
                 <Menu.Label>{userName}</Menu.Label>
+                <Menu.Item
+                  leftSection={schema === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+                  onClick={() => setColorScheme(schema === "dark" ? "light" : "dark")}
+                >
+                  {schema === "dark" ? "Thème clair" : "Thème sombre"}
+                </Menu.Item>
+                <Menu.Divider />
                 <form action={signOutAction}>
                   <Menu.Item component="button" type="submit" color="red" leftSection={<LogOut size={16} />}>
                     Se déconnecter
@@ -219,7 +230,7 @@ export function DashboardShell({
               gap={6}
               pt="sm"
               align="center"
-              style={{ borderTop: "1px solid var(--mantine-color-dark-4)" }}
+              style={{ borderTop: "1px solid var(--aei-bordure)" }}
             >
               <Tooltip label={`${userName ?? ""}${role ? ` — ${role}` : ""}`} position="right">
                 <Avatar color="brand" radius="xl" size={34}>
@@ -239,7 +250,7 @@ export function DashboardShell({
               gap={6}
               pt="sm"
               px="xs"
-              style={{ borderTop: "1px solid var(--mantine-color-dark-4)" }}
+              style={{ borderTop: "1px solid var(--aei-bordure)" }}
             >
               <Group gap="sm" wrap="nowrap">
                 <Avatar color="brand" radius="xl" size={34}>
@@ -259,7 +270,7 @@ export function DashboardShell({
               <form action={signOutAction}>
                 <button
                   type="submit"
-                  className="flex items-center gap-2 text-[13px] text-[var(--mantine-color-dark-2)] transition-colors hover:text-[var(--mantine-color-red-5)]"
+                  className="flex items-center gap-2 text-[13px] text-[var(--aei-texte-faible)] transition-colors hover:text-[var(--mantine-color-red-5)]"
                 >
                   <LogOut size={14} /> Se déconnecter
                 </button>
@@ -269,7 +280,7 @@ export function DashboardShell({
         </AppShell.Section>
       </AppShell.Navbar>
 
-      <AppShell.Main style={{ backgroundColor: "var(--mantine-color-dark-8)" }}>
+      <AppShell.Main style={{ backgroundColor: "var(--aei-fond)" }}>
         <div className="mx-auto w-full max-w-[1440px]">{children}</div>
       </AppShell.Main>
     </AppShell>

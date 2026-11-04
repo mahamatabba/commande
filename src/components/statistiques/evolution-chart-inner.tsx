@@ -21,7 +21,7 @@ export default function EvolutionChartInner({
   return (
     <ChartContainer config={config} className="aspect-auto h-56 w-full">
       <AreaChart data={data} margin={{ left: 8, right: 8, top: 8, bottom: 0 }}>
-        <CartesianGrid vertical={false} stroke="var(--mantine-color-dark-4)" />
+        <CartesianGrid vertical={false} stroke="var(--aei-bordure)" />
         <XAxis
           dataKey="label"
           tickLine={false}

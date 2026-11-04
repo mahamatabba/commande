@@ -49,25 +49,33 @@ export function ProformasTable({ liste, tri }: { liste: Proforma[]; tri: { colon
           sortable: true,
           title: "Numéro",
           render: (p) => (
+            <div>
             <Link href={`/proformas/${p.id}`} className="font-mono font-medium tabular-nums hover:underline">
               {p.numero}
             </Link>
+            <div className="text-xs text-[var(--mantine-color-dimmed)] sm:hidden">
+              {nomAffiche({ nom: p.clientNom, prenom: p.clientPrenom, raisonSociale: p.clientRaisonSociale })} · {formatDate(p.dateProforma)}
+            </div>
+            </div>
           ),
         },
         {
           accessor: "client",
+          visibleMediaQuery: "(min-width: 48em)",
           sortable: true,
           title: "Client",
           render: (p) => nomAffiche({ nom: p.clientNom, prenom: p.clientPrenom, raisonSociale: p.clientRaisonSociale }),
         },
         {
           accessor: "dateProforma",
+          visibleMediaQuery: "(min-width: 48em)",
           sortable: true,
           title: "Date",
           render: (p) => <span className="font-mono tabular-nums">{formatDate(p.dateProforma)}</span>,
         },
         {
           accessor: "dateValidite",
+          visibleMediaQuery: "(min-width: 48em)",
           sortable: true,
           title: "Valable jusqu'au",
           render: (p) => {

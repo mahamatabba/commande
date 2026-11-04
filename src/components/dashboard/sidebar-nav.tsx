@@ -70,7 +70,7 @@ export function SidebarNav({
       <Stack gap={4} align="center">
         {sections.map((section, i) => (
           <Stack key={section.titre} gap={4} align="center" w="100%">
-            {i > 0 && <Divider w="60%" my={4} color="dark.5" />}
+            {i > 0 && <Divider w="60%" my={4} color="var(--aei-ligne)" />}
             {section.items.map((item) => {
               const actif = estActif(pathname, item.href);
               const Icone = ICONES[item.icone] ?? BookOpenCheck;
@@ -90,7 +90,7 @@ export function SidebarNav({
                     className={`relative flex size-11 items-center justify-center rounded-lg transition-colors ${
                       actif
                         ? "bg-[rgba(0,160,218,0.18)] text-[var(--mantine-color-brand-4)]"
-                        : "text-[var(--mantine-color-dark-1)] hover:bg-[var(--mantine-color-dark-6)] hover:text-white"
+                        : "text-[var(--aei-texte-doux)] hover:bg-[var(--aei-surface-2)] hover:text-[var(--mantine-color-text)]"
                     }`}
                   >
                     <Icone size={20} strokeWidth={1.8} />

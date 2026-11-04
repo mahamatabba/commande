@@ -72,7 +72,7 @@ export function VisuelSignatureCard({
           <Text size="sm" c="dimmed">{description}</Text>
         </div>
 
-        <div className="flex h-[150px] items-center justify-center rounded-lg border border-dashed border-[var(--mantine-color-dark-3)] bg-white p-3">
+        <div className="flex h-[150px] items-center justify-center rounded-lg border border-dashed border-[var(--aei-bordure-forte)] bg-white p-3">
           {affichee ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={affichee} alt={titre} className="max-h-full max-w-full object-contain" />
